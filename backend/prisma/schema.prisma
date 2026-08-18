@@ -50,25 +50,27 @@ model Room {
 }
 
 model Booking {
-  id                   String        @id @default(uuid())
+  id                   String            @id @default(uuid())
   userId               String
   roomId               String
   title                String
-  activityType         String        @default("SEMINAR") // SEMINAR, WORKSHOP, KULIAH, RAPAT, etc.
+  activityType         String            @default("SEMINAR") // SEMINAR, WORKSHOP, PELATIHAN, RAPAT, KUNJUNGAN, KULIAH_TAMU, AKREDITASI, LAINNYA
   startTime            DateTime
   endTime              DateTime
-  status               String        @default("PENDING") // PENDING, RECOMMENDED, APPROVED, REJECTED, RETURNED, CANCELED
-  additionalFacilities String?       // Stored as JSON or comma separated string
+  status               String            @default("PENDING") // PENDING, RECOMMENDED, APPROVED, REJECTED, RETURNED, CANCELED
+  additionalFacilities String?           // Stored as JSON or comma separated string
   notes                String?
   attachmentUrl        String?
-  isLeaderApproved     Boolean       @default(false)
-  isAcademicBulk       Boolean       @default(false)
+  dokumenUrl           String?
+  isLeaderApproved     Boolean           @default(false)
+  isAcademicBulk       Boolean           @default(false)
   bulkGroupId          String?
-  createdAt            DateTime      @default(now())
-  updatedAt            DateTime      @updatedAt
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
 
-  user                 User          @relation(fields: [userId], references: [id])
-  room                 Room          @relation(fields: [roomId], references: [id])
+  user                 User              @relation(fields: [userId], references: [id])
+  room                 Room              @relation(fields: [roomId], references: [id])
+  logistik             BookingLogistik[]
   approvalLogs         ApprovalLog[]
   feedback             Feedback?
 
@@ -76,13 +78,26 @@ model Booking {
   @@map("bookings")
 }
 
+model BookingLogistik {
+  id        String   @id @default(uuid())
+  bookingId String
+  jenisItem String   // "meja", "kursi", "colokan_listrik", "sound_system", dll
+  jumlah    Int
+  catatan   String?
+  createdAt DateTime @default(now())
+
+  booking   Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@map("booking_logistik")
+}
+
 model ApprovalLog {
   id         String   @id @default(uuid())
   bookingId  String
   approverId String
   fromStatus String
-  toStatus   String
-  notes      String?
+  toStatus   String   // DIREKOMENDASIKAN, DISETUJUI, DIKEMBALIKAN, DITOLAK, DIBATALKAN, PENDING
+  notes      String?  // WAJIB diisi jika toStatus = DIKEMBALIKAN atau DITOLAK
   createdAt  DateTime @default(now())
 
   booking    Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)

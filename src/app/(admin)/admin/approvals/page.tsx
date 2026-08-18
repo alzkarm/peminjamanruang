@@ -10,6 +10,7 @@ import {
   ShieldCheck,
   CheckCircle2,
   XCircle,
+  RotateCcw,
   Clock,
   AlertTriangle,
   Building2,
@@ -17,16 +18,14 @@ import {
   Users,
   FileText,
   Search,
-  Filter,
   Send,
-  Sparkles,
-  ExternalLink,
+  PackageCheck,
   Phone,
 } from 'lucide-react';
 import Link from 'next/link';
 
 export default function LpfApprovalsPage() {
-  const { bookings, approveBookingLPF, rejectBooking, currentUser } = useAppStore();
+  const { bookings, approveBookingLPF, rejectBooking, returnBooking, currentUser } = useAppStore();
 
   const [activeFilter, setActiveFilter] = useState<'pending' | 'yayasan' | 'all'>('pending');
   const [searchQuery, setSearchQuery] = useState('');
@@ -34,8 +33,14 @@ export default function LpfApprovalsPage() {
   // Modals state
   const [approvalTarget, setApprovalTarget] = useState<Booking | null>(null);
   const [approvalNotes, setApprovalNotes] = useState('');
+
+  // Reject Modal State (Prioritas 3)
   const [rejectionTarget, setRejectionTarget] = useState<Booking | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
+
+  // Revision / Return Modal State (Prioritas 3)
+  const [returnTarget, setReturnTarget] = useState<Booking | null>(null);
+  const [returnNotes, setReturnNotes] = useState('');
 
   // Bulk selection
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -78,20 +83,30 @@ export default function LpfApprovalsPage() {
     );
   };
 
-  const handleApprove = (booking: Booking) => {
-    approveBookingLPF(booking.id, approvalNotes, currentUser.name);
+  const handleApprove = async (booking: Booking) => {
+    await approveBookingLPF(booking.id, approvalNotes, currentUser.name);
     setApprovalTarget(null);
     setApprovalNotes('');
   };
 
-  const handleReject = (booking: Booking) => {
-    if (!rejectionReason) {
-      alert('Wajib mengisi alasan penolakan.');
+  const handleReject = async (booking: Booking) => {
+    if (!rejectionReason.trim()) {
+      alert('Catatan/alasan penolakan wajib diisi.');
       return;
     }
-    rejectBooking(booking.id, rejectionReason, currentUser.name);
+    await rejectBooking(booking.id, rejectionReason.trim(), currentUser.name);
     setRejectionTarget(null);
     setRejectionReason('');
+  };
+
+  const handleReturn = async (booking: Booking) => {
+    if (!returnNotes.trim()) {
+      alert('Catatan perbaikan / revisi wajib diisi agar pemohon mengetahui hal yang perlu diperbaiki.');
+      return;
+    }
+    await returnBooking(booking.id, returnNotes.trim(), currentUser.name);
+    setReturnTarget(null);
+    setReturnNotes('');
   };
 
   const handleBulkApprove = () => {
@@ -108,13 +123,13 @@ export default function LpfApprovalsPage() {
         <div>
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-yarsi-primary text-xs font-bold mb-2 border border-emerald-200">
             <ShieldCheck className="w-4 h-4 text-yarsi-primary" />
-            <span>Biro Layanan Pengelolaan Fasilitas (LPF)</span>
+            <span>Biro Layanan Pengelolaan Fasilitas (LPF Univ)</span>
           </div>
           <h1 className="text-2xl font-black text-slate-900">
             Verifikasi & Persetujuan Peminjaman Ruang
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-            Kelola persetujuan ruang kelas, lab, aula, dan rekomendasi auditorium ke Yayasan.
+            Kelola verifikasi ruang kuliah, lab, aula, dan alur rekomendasi Auditorium ke Yayasan.
           </p>
         </div>
 
@@ -158,7 +173,7 @@ export default function LpfApprovalsPage() {
                 : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
             }`}
           >
-            Diteruskan ke Yayasan ({yayasanCount})
+            Direkomendasikan ke Yayasan ({yayasanCount})
           </button>
 
           <button
@@ -195,7 +210,7 @@ export default function LpfApprovalsPage() {
             Tidak ada permohonan dalam antrean ini
           </h3>
           <p className="text-xs text-slate-400">
-            Semua permohonan peminjaman ruangan telah selesai diverifikasi.
+            Semua permohonan peminjaman ruangan telah selesai diverifikasi oleh Admin LPF.
           </p>
         </div>
       ) : (
@@ -255,9 +270,16 @@ export default function LpfApprovalsPage() {
                 {/* Middle Content */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
                   <div className="lg:col-span-8 space-y-2">
-                    <h3 className="text-base font-bold text-slate-900 leading-snug">
-                      {booking.title}
-                    </h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-base font-bold text-slate-900 leading-snug">
+                        {booking.title}
+                      </h3>
+                      {booking.jenisKegiatan && (
+                        <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-emerald-100 text-yarsi-primary border border-emerald-300">
+                          {booking.jenisKegiatan}
+                        </span>
+                      )}
+                    </div>
 
                     <div className="flex flex-wrap items-center gap-y-1 gap-x-4 text-xs text-slate-600">
                       <span className="font-semibold text-slate-800 flex items-center gap-1">
@@ -285,17 +307,23 @@ export default function LpfApprovalsPage() {
                       <p><strong>Deskripsi:</strong> {booking.description}</p>
                     </div>
 
-                    {/* Equipments required */}
-                    {booking.equipments && booking.equipments.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 pt-1">
-                        {booking.equipments.map((eq, i) => (
-                          <span
-                            key={i}
-                            className="text-[11px] bg-emerald-50 text-emerald-800 border border-emerald-200 px-2 py-0.5 rounded-lg font-medium"
-                          >
-                            ✓ {eq.equipmentName} ({eq.quantity}x)
-                          </span>
-                        ))}
+                    {/* Logistics items */}
+                    {booking.logistik && booking.logistik.length > 0 && (
+                      <div className="pt-1">
+                        <p className="text-[11px] font-bold text-slate-500 mb-1 flex items-center gap-1">
+                          <PackageCheck className="w-3.5 h-3.5 text-emerald-600" />
+                          <span>Kebutuhan Logistik & Fasilitas:</span>
+                        </p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {booking.logistik.map((l, i) => (
+                            <span
+                              key={i}
+                              className="text-[11px] bg-emerald-50 text-emerald-900 border border-emerald-200 px-2 py-0.5 rounded-lg font-medium"
+                            >
+                              ✓ {l.jenisItem} ({l.jumlah}x) {l.catatan ? `— ${l.catatan}` : ''}
+                            </span>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -324,19 +352,19 @@ export default function LpfApprovalsPage() {
                             type="button"
                             onClick={() => {
                               setApprovalTarget(booking);
-                              setApprovalNotes('Kesiapan LPF terverifikasi lengkap. Diteruskan ke Yayasan YARSI untuk izin Auditorium.');
+                              setApprovalNotes('Kesiapan fasilitas LPF terverifikasi lengkap. Direkomendasikan ke Sekretariat Yayasan YARSI untuk izin Auditorium.');
                             }}
                             className="w-full py-2.5 px-3 bg-sky-600 hover:bg-sky-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm transition-all"
                           >
                             <Send className="w-4 h-4" />
-                            <span>Teruskan ke Yayasan</span>
+                            <span>Rekomendasikan ke Yayasan</span>
                           </button>
                         ) : (
                           <button
                             type="button"
                             onClick={() => {
                               setApprovalTarget(booking);
-                              setApprovalNotes('Disetujui oleh Bagian LPF Universitas YARSI.');
+                              setApprovalNotes('Disetujui secara resmi oleh Biro Layanan Pengelolaan Fasilitas (LPF).');
                             }}
                             className="w-full py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-sm transition-all"
                           >
@@ -345,16 +373,31 @@ export default function LpfApprovalsPage() {
                           </button>
                         )}
 
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setRejectionTarget(booking);
-                            setRejectionReason('Jadwal bentrok dengan kegiatan universitas / kapasitas tidak memadai.');
-                          }}
-                          className="w-full py-1.5 px-3 bg-white hover:bg-rose-50 text-rose-600 border border-rose-200 rounded-xl text-xs font-semibold transition-colors"
-                        >
-                          Tolak Permohonan
-                        </button>
+                        <div className="grid grid-cols-2 gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setReturnTarget(booking);
+                              setReturnNotes('');
+                            }}
+                            className="py-1.5 px-2 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1"
+                          >
+                            <RotateCcw className="w-3.5 h-3.5" />
+                            <span>Kembalikan</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setRejectionTarget(booking);
+                              setRejectionReason('');
+                            }}
+                            className="py-1.5 px-2 bg-white hover:bg-rose-50 text-rose-600 border border-rose-200 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1"
+                          >
+                            <XCircle className="w-3.5 h-3.5" />
+                            <span>Tolak</span>
+                          </button>
+                        </div>
                       </div>
                     ) : (
                       <div className="text-right text-xs text-slate-500 font-medium">
@@ -414,7 +457,7 @@ export default function LpfApprovalsPage() {
                 className="px-5 py-2.5 text-xs font-bold text-white bg-yarsi-primary hover:bg-yarsi-dark rounded-xl shadow-md"
               >
                 {approvalTarget.requiresYayasanApproval
-                  ? 'Kirim ke Yayasan'
+                  ? 'Kirim Rekomendasi ke Yayasan'
                   : 'Setujui & Terbitkan Tiket'}
               </button>
             </div>
@@ -422,7 +465,60 @@ export default function LpfApprovalsPage() {
         </Modal>
       )}
 
-      {/* REJECT MODAL */}
+      {/* RETURN / REVISION MODAL (Prioritas 3 - Catatan Wajib) */}
+      {returnTarget && (
+        <Modal
+          isOpen={!!returnTarget}
+          onClose={() => setReturnTarget(null)}
+          title="Kembalikan Permohonan untuk Revisi"
+          subtitle={returnTarget.bookingCode}
+          maxWidth="md"
+        >
+          <div className="space-y-4">
+            <div className="p-3 bg-amber-50 border border-amber-300 rounded-xl text-xs text-amber-950">
+              <p className="font-bold">{returnTarget.title}</p>
+              <p>{returnTarget.userName} ({returnTarget.userOrganization})</p>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">
+                Catatan Revisi / Hal yang Perlu Diperbaiki (Wajib Diisi) *
+              </label>
+              <textarea
+                rows={4}
+                required
+                value={returnNotes}
+                onChange={(e) => setReturnNotes(e.target.value)}
+                placeholder="Contoh: Mohon perbaiki estimasi jumlah peserta dan lampirkan surat rekomendasi resmi Dekanat..."
+                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 text-slate-800"
+              />
+              <p className="text-[11px] text-slate-500 mt-1">
+                Catatan ini akan tampil langsung di halaman dashboard pemohon.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setReturnTarget(null)}
+                className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                disabled={!returnNotes.trim()}
+                onClick={() => handleReturn(returnTarget)}
+                className="px-5 py-2.5 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-xl shadow-md disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                Kirim Catatan Revisi
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* REJECT MODAL (Prioritas 3 - Catatan Wajib) */}
       {rejectionTarget && (
         <Modal
           isOpen={!!rejectionTarget}
@@ -439,16 +535,19 @@ export default function LpfApprovalsPage() {
 
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">
-                Alasan Penolakan (Akan dikirimkan ke pemohon) *
+                Alasan Penolakan Resmi (Wajib Diisi) *
               </label>
               <textarea
-                rows={3}
+                rows={4}
                 required
                 value={rejectionReason}
                 onChange={(e) => setRejectionReason(e.target.value)}
-                placeholder="Tuliskan alasan penolakan secara jelas..."
-                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500"
+                placeholder="Tuliskan alasan penolakan secara jelas agar pemohon memahami pertimbangan LPF..."
+                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 text-slate-800"
               />
+              <p className="text-[11px] text-slate-500 mt-1">
+                Alasan ini akan disimpan di Audit Log dan ditampilkan ke pemohon.
+              </p>
             </div>
 
             <div className="flex items-center justify-end gap-2 pt-2">
@@ -461,8 +560,9 @@ export default function LpfApprovalsPage() {
               </button>
               <button
                 type="button"
+                disabled={!rejectionReason.trim()}
                 onClick={() => handleReject(rejectionTarget)}
-                className="px-5 py-2.5 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl shadow-md"
+                className="px-5 py-2.5 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl shadow-md disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 Konfirmasi Tolak Permohonan
               </button>

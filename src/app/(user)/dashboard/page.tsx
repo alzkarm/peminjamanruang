@@ -6,7 +6,7 @@ import { useAppStore } from '@/lib/store';
 import { Booking, BookingStatus } from '@/lib/types';
 import { StatusBadge } from '@/components/common/StatusBadge';
 import { Modal } from '@/components/common/Modal';
-import { formatDateIndo, formatShortDateIndo } from '@/lib/utils';
+import { formatDateIndo } from '@/lib/utils';
 import {
   Calendar,
   Clock,
@@ -20,12 +20,9 @@ import {
   FileText,
   Star,
   Download,
-  Share2,
-  Info,
-  ChevronRight,
-  ArrowRight,
+  RotateCcw,
   ShieldCheck,
-  Building,
+  PackageCheck,
 } from 'lucide-react';
 
 export default function UserDashboardPage() {
@@ -33,6 +30,7 @@ export default function UserDashboardPage() {
   const [activeTab, setActiveTab] = useState<string>('all');
   const [selectedTicket, setSelectedTicket] = useState<Booking | null>(null);
   const [cancelTargetId, setCancelTargetId] = useState<string | null>(null);
+  const [cancelReason, setCancelReason] = useState<string>('Agenda internal dibatalkan / dipindahkan');
 
   // Filter user's bookings (or all if demo admin)
   const userBookings = bookings.filter((b) => {
@@ -47,6 +45,7 @@ export default function UserDashboardPage() {
     if (activeTab === 'all') return true;
     if (activeTab === 'pending') return b.status === 'PENDING_LPF' || b.status === 'RECOMMENDED_YAYASAN';
     if (activeTab === 'approved') return b.status === 'APPROVED';
+    if (activeTab === 'returned') return b.status === 'RETURNED';
     if (activeTab === 'completed') return b.status === 'COMPLETED';
     if (activeTab === 'rejected') return b.status === 'REJECTED' || b.status === 'CANCELLED';
     return true;
@@ -58,12 +57,14 @@ export default function UserDashboardPage() {
   const pendingCount = userBookings.filter(
     (b) => b.status === 'PENDING_LPF' || b.status === 'RECOMMENDED_YAYASAN'
   ).length;
+  const returnedCount = userBookings.filter((b) => b.status === 'RETURNED').length;
   const completedCount = userBookings.filter((b) => b.status === 'COMPLETED').length;
 
-  const handleConfirmCancel = () => {
+  const handleConfirmCancel = async () => {
     if (cancelTargetId) {
-      cancelBooking(cancelTargetId);
+      await cancelBooking(cancelTargetId, cancelReason);
       setCancelTargetId(null);
+      setCancelReason('Agenda internal dibatalkan / dipindahkan');
     }
   };
 
@@ -83,8 +84,32 @@ export default function UserDashboardPage() {
     else if (booking.status === 'RECOMMENDED_YAYASAN') currentStepIndex = 2;
     else if (booking.status === 'APPROVED' || booking.status === 'COMPLETED')
       currentStepIndex = steps.length - 1;
-    else if (booking.status === 'REJECTED' || booking.status === 'CANCELLED')
+    else if (booking.status === 'RETURNED' || booking.status === 'REJECTED' || booking.status === 'CANCELLED')
       currentStepIndex = -1;
+
+    if (booking.status === 'RETURNED') {
+      return (
+        <div className="p-3.5 bg-amber-50 border-2 border-amber-300 rounded-2xl text-xs text-amber-950 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="flex items-start gap-2">
+            <RotateCcw className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <span className="font-bold">Permohonan Dikembalikan untuk Revisi</span>
+              {booking.rejectionReason && (
+                <p className="text-[11px] text-amber-900 mt-0.5">
+                  <strong>Catatan Verifikator:</strong> {booking.rejectionReason}
+                </p>
+              )}
+            </div>
+          </div>
+          <Link
+            href={`/dashboard/booking/new?roomId=${booking.roomId}&date=${booking.date}&startTime=${booking.startTime}&endTime=${booking.endTime}`}
+            className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold text-[11px] shrink-0 text-center shadow-sm"
+          >
+            Ajukan Ulang / Perbaiki
+          </Link>
+        </div>
+      );
+    }
 
     if (booking.status === 'REJECTED' || booking.status === 'CANCELLED') {
       return (
@@ -96,7 +121,7 @@ export default function UserDashboardPage() {
             </span>
           </div>
           {booking.rejectionReason && (
-            <span className="text-[11px] text-rose-700 italic max-w-xs truncate">
+            <span className="text-[11px] text-rose-700 italic max-w-md truncate">
               Alasan: {booking.rejectionReason}
             </span>
           )}
@@ -189,7 +214,7 @@ export default function UserDashboardPage() {
       </div>
 
       {/* Summary Counter Badges */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
           <div>
             <p className="text-xs text-slate-400 font-semibold">Total Pengajuan</p>
@@ -202,11 +227,21 @@ export default function UserDashboardPage() {
 
         <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
           <div>
-            <p className="text-xs text-slate-400 font-semibold">Menunggu Review</p>
+            <p className="text-xs text-slate-400 font-semibold">Antrean Review</p>
             <h3 className="text-2xl font-black text-amber-600">{pendingCount}</h3>
           </div>
           <div className="p-3 bg-amber-50 text-amber-600 rounded-xl">
             <Clock className="w-5 h-5" />
+          </div>
+        </div>
+
+        <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
+          <div>
+            <p className="text-xs text-slate-400 font-semibold">Perlu Revisi</p>
+            <h3 className="text-2xl font-black text-amber-700">{returnedCount}</h3>
+          </div>
+          <div className="p-3 bg-amber-100 text-amber-800 rounded-xl">
+            <RotateCcw className="w-5 h-5" />
           </div>
         </div>
 
@@ -220,7 +255,7 @@ export default function UserDashboardPage() {
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
+        <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between col-span-2 sm:col-span-1">
           <div>
             <p className="text-xs text-slate-400 font-semibold">Selesai Digunakan</p>
             <h3 className="text-2xl font-black text-teal-700">{completedCount}</h3>
@@ -242,7 +277,8 @@ export default function UserDashboardPage() {
           <div className="flex items-center gap-1.5 overflow-x-auto pb-1">
             {[
               { id: 'all', label: `Semua (${userBookings.length})` },
-              { id: 'pending', label: `Dalam Antrean (${pendingCount})` },
+              { id: 'pending', label: `Antrean (${pendingCount})` },
+              { id: 'returned', label: `Revisi (${returnedCount})` },
               { id: 'approved', label: `Disetujui (${approvedCount})` },
               { id: 'completed', label: `Selesai (${completedCount})` },
               { id: 'rejected', label: 'Ditolak / Batal' },
@@ -305,9 +341,16 @@ export default function UserDashboardPage() {
                 {/* Body Details */}
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
                   <div className="md:col-span-8 space-y-2">
-                    <h3 className="text-base font-bold text-slate-900 leading-snug">
-                      {booking.title}
-                    </h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-base font-bold text-slate-900 leading-snug">
+                        {booking.title}
+                      </h3>
+                      {booking.jenisKegiatan && (
+                        <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-emerald-100 text-yarsi-primary border border-emerald-300">
+                          {booking.jenisKegiatan}
+                        </span>
+                      )}
+                    </div>
 
                     <div className="flex flex-wrap items-center gap-y-1 gap-x-4 text-xs text-slate-600">
                       <span className="flex items-center gap-1 font-semibold text-slate-800">
@@ -334,19 +377,42 @@ export default function UserDashboardPage() {
                     <p className="text-xs text-slate-500 line-clamp-2 pt-1 leading-relaxed">
                       {booking.description}
                     </p>
+
+                    {/* Logistics items preview */}
+                    {booking.logistik && booking.logistik.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 pt-1">
+                        {booking.logistik.map((l, i) => (
+                          <span
+                            key={i}
+                            className="text-[10px] bg-slate-100 text-slate-700 border border-slate-200 px-2 py-0.5 rounded font-medium"
+                          >
+                            ✓ {l.jenisItem} ({l.jumlah}x)
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   {/* Right Actions & QR Preview */}
                   <div className="md:col-span-4 flex flex-col justify-between border-t md:border-t-0 md:border-l border-slate-100 pt-3 md:pt-0 md:pl-4 space-y-3">
                     {booking.status === 'APPROVED' ? (
-                      <button
-                        type="button"
-                        onClick={() => setSelectedTicket(booking)}
-                        className="w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm transition-all"
-                      >
-                        <QrCode className="w-4 h-4" />
-                        <span>Lihat E-Ticket & QR Akses</span>
-                      </button>
+                      <div className="space-y-2">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedTicket(booking)}
+                          className="w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm transition-all"
+                        >
+                          <QrCode className="w-4 h-4" />
+                          <span>Lihat E-Ticket & QR Akses</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setCancelTargetId(booking.id)}
+                          className="w-full text-center text-xs font-medium text-rose-600 hover:text-rose-800 py-1 hover:underline"
+                        >
+                          Batalkan Peminjaman
+                        </button>
+                      </div>
                     ) : booking.status === 'COMPLETED' ? (
                       <div className="space-y-2">
                         {booking.feedbackSubmitted ? (
@@ -510,7 +576,7 @@ export default function UserDashboardPage() {
         </Modal>
       )}
 
-      {/* CANCEL CONFIRMATION MODAL */}
+      {/* CANCEL CONFIRMATION MODAL (Prioritas 6 - Real-time cancel + Soft-cancel) */}
       {cancelTargetId && (
         <Modal
           isOpen={!!cancelTargetId}
@@ -519,9 +585,27 @@ export default function UserDashboardPage() {
           maxWidth="sm"
         >
           <div className="space-y-4">
-            <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800 flex items-start gap-2">
-              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
-              <span>Apakah Anda yakin ingin membatalkan permohonan ini? Ruangan akan segera dibuka untuk pemohon lain.</span>
+            <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800 space-y-1">
+              <div className="flex items-center gap-1.5 font-bold">
+                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                <span>Apakah Anda yakin ingin membatalkan permohonan ini?</span>
+              </div>
+              <p className="text-[11px] text-rose-700 leading-relaxed">
+                Slot ruangan akan segera dibebaskan kembali secara real-time di kalender dan riwayat pembatalan dicatat di Audit Log sistem.
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">
+                Alasan Pembatalan:
+              </label>
+              <textarea
+                rows={2}
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                placeholder="Contoh: Agenda acara dipindahkan atau dibatalkan..."
+                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 text-slate-800"
+              />
             </div>
 
             <div className="flex items-center justify-end gap-2 pt-2">

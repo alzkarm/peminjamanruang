@@ -6,9 +6,29 @@ import {
   IsOptional,
   IsBoolean,
   IsDateString,
+  ValidateNested,
+  IsNumber,
+  Min,
+  ValidateIf,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { ActivityType, BookingStatus } from '@/common/types';
+
+export class CreateBookingLogistikDto {
+  @IsNotEmpty({ message: 'Jenis item logistik wajib diisi.' })
+  @IsString()
+  jenisItem: string;
+
+  @IsNotEmpty({ message: 'Jumlah item logistik wajib diisi.' })
+  @IsNumber({}, { message: 'Jumlah harus berupa angka.' })
+  @Min(1, { message: 'Jumlah minimal 1.' })
+  @Type(() => Number)
+  jumlah: number;
+
+  @IsOptional()
+  @IsString()
+  catatan?: string;
+}
 
 export class CreateBookingDto {
   @IsNotEmpty({ message: 'ID Ruangan wajib diisi.' })
@@ -37,8 +57,22 @@ export class CreateBookingDto {
   additionalFacilities?: string[];
 
   @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => CreateBookingLogistikDto)
+  logistik?: CreateBookingLogistikDto[];
+
+  @IsOptional()
   @IsString()
   notes?: string;
+
+  @IsOptional()
+  @IsString()
+  catatan?: string;
+
+  @IsOptional()
+  @IsString()
+  dokumenUrl?: string;
 
   @IsOptional()
   @IsBoolean()
@@ -51,9 +85,15 @@ export class UpdateBookingStatusDto {
   @IsEnum(BookingStatus, { message: 'Status booking tidak valid.' })
   status: BookingStatus;
 
-  @IsOptional()
-  @IsString()
+  @ValidateIf((o) => (o.status === BookingStatus.REJECTED || o.status === BookingStatus.RETURNED) && !o.catatan)
+  @IsNotEmpty({ message: 'Catatan/alasan wajib diisi ketika status ditolak atau dikembalikan untuk revisi.' })
+  @IsString({ message: 'Catatan harus berupa teks.' })
   notes?: string;
+
+  @ValidateIf((o) => (o.status === BookingStatus.REJECTED || o.status === BookingStatus.RETURNED) && !o.notes)
+  @IsNotEmpty({ message: 'Catatan/alasan wajib diisi ketika status ditolak atau dikembalikan untuk revisi.' })
+  @IsString({ message: 'Catatan harus berupa teks.' })
+  catatan?: string;
 }
 
 export class QueryBookingDto {

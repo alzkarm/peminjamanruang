@@ -10,28 +10,33 @@ import {
   Building2,
   CheckCircle2,
   XCircle,
+  RotateCcw,
   FileText,
   ShieldCheck,
   Calendar,
   Clock,
   Users,
   Award,
-  Sparkles,
   Phone,
-  ArrowRight,
   Download,
-  Stamp,
+  PackageCheck,
 } from 'lucide-react';
 
 export default function YayasanApprovalsPage() {
-  const { bookings, approveBookingYayasan, rejectBooking, currentUser } = useAppStore();
+  const { bookings, approveBookingYayasan, rejectBooking, returnBooking, currentUser } = useAppStore();
 
   const [approvalTarget, setApprovalTarget] = useState<Booking | null>(null);
   const [yayasanMemo, setYayasanMemo] = useState(
     'Disetujui oleh Sekretariat Yayasan YARSI. Wajib mematuhi protokol kebersihan dan ketertiban gedung.'
   );
+
+  // Reject Modal State (Prioritas 3 - Catatan Wajib)
   const [rejectionTarget, setRejectionTarget] = useState<Booking | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
+
+  // Return/Revision Modal State (Prioritas 3 - Catatan Wajib)
+  const [returnTarget, setReturnTarget] = useState<Booking | null>(null);
+  const [returnNotes, setReturnNotes] = useState('');
 
   // Bookings that require Yayasan approval
   const yayasanQueue = bookings.filter(
@@ -41,22 +46,32 @@ export default function YayasanApprovalsPage() {
   const yayasanHistory = bookings.filter(
     (b) =>
       b.requiresYayasanApproval &&
-      (b.status === 'APPROVED' || b.status === 'REJECTED')
+      (b.status === 'APPROVED' || b.status === 'REJECTED' || b.status === 'RETURNED')
   );
 
-  const handleApproveYayasan = (booking: Booking) => {
-    approveBookingYayasan(booking.id, yayasanMemo, currentUser.name);
+  const handleApproveYayasan = async (booking: Booking) => {
+    await approveBookingYayasan(booking.id, yayasanMemo, currentUser.name);
     setApprovalTarget(null);
   };
 
-  const handleRejectYayasan = (booking: Booking) => {
-    if (!rejectionReason) {
-      alert('Wajib mengisi catatan penolakan.');
+  const handleRejectYayasan = async (booking: Booking) => {
+    if (!rejectionReason.trim()) {
+      alert('Wajib mengisi memo alasan penolakan.');
       return;
     }
-    rejectBooking(booking.id, rejectionReason, currentUser.name);
+    await rejectBooking(booking.id, rejectionReason.trim(), currentUser.name);
     setRejectionTarget(null);
     setRejectionReason('');
+  };
+
+  const handleReturnYayasan = async (booking: Booking) => {
+    if (!returnNotes.trim()) {
+      alert('Wajib mengisi catatan revisi permohonan.');
+      return;
+    }
+    await returnBooking(booking.id, returnNotes.trim(), currentUser.name);
+    setReturnTarget(null);
+    setReturnNotes('');
   };
 
   return (
@@ -146,7 +161,7 @@ export default function YayasanApprovalsPage() {
                       {booking.bookingCode}
                     </span>
                     <span className="text-xs text-slate-500">
-                      Rekomendasi LPF: {booking.lpfApprovedAt} oleh {booking.lpfApprovedBy}
+                      Rekomendasi LPF: {booking.lpfApprovedAt || 'Baru Saja'} oleh {booking.lpfApprovedBy || 'Admin LPF'}
                     </span>
                   </div>
 
@@ -156,9 +171,16 @@ export default function YayasanApprovalsPage() {
                 {/* Details */}
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                   <div className="lg:col-span-8 space-y-3">
-                    <h3 className="text-lg font-black text-slate-900 leading-snug">
-                      {booking.title}
-                    </h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-lg font-black text-slate-900 leading-snug">
+                        {booking.title}
+                      </h3>
+                      {booking.jenisKegiatan && (
+                        <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-amber-100 text-amber-900 border border-amber-300">
+                          {booking.jenisKegiatan}
+                        </span>
+                      )}
+                    </div>
 
                     <div className="flex flex-wrap items-center gap-y-1 gap-x-4 text-xs text-slate-700">
                       <span className="font-bold text-slate-900 flex items-center gap-1">
@@ -186,30 +208,53 @@ export default function YayasanApprovalsPage() {
                       {booking.description}
                     </p>
 
+                    {/* Logistics items */}
+                    {booking.logistik && booking.logistik.length > 0 && (
+                      <div className="pt-1">
+                        <p className="text-[11px] font-bold text-slate-500 mb-1 flex items-center gap-1">
+                          <PackageCheck className="w-3.5 h-3.5 text-amber-700" />
+                          <span>Daftar Logistik & Fasilitas Diajukan:</span>
+                        </p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {booking.logistik.map((l, i) => (
+                            <span
+                              key={i}
+                              className="text-[11px] bg-amber-50 text-amber-900 border border-amber-200 px-2 py-0.5 rounded-lg font-medium"
+                            >
+                              ✓ {l.jenisItem} ({l.jumlah}x)
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
                     {/* LPF Verification Notes */}
                     <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-950 space-y-1">
                       <p className="font-bold flex items-center gap-1 text-emerald-800">
                         <ShieldCheck className="w-4 h-4 text-emerald-600" />
                         <span>Catatan Hasil Verifikasi Lapangan LPF:</span>
                       </p>
-                      <p className="text-emerald-900 italic">"{booking.lpfNotes}"</p>
+                      <p className="text-emerald-900 italic">"{booking.lpfNotes || 'Disetujui dan direkomendasikan oleh LPF.'}"</p>
                     </div>
 
                     {/* Attached proposal file */}
-                    {booking.documentName && (
+                    {(booking.documentName || booking.dokumenUrl || booking.documentUrl) && (
                       <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs">
                         <div className="flex items-center gap-2">
                           <FileText className="w-4 h-4 text-rose-500" />
-                          <span className="font-bold text-slate-800">{booking.documentName}</span>
+                          <span className="font-bold text-slate-800">
+                            {booking.documentName || 'Dokumen_Proposal_Kegiatan.pdf'}
+                          </span>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => alert(`Membuka berkas ${booking.documentName} untuk verifikasi Yayasan.`)}
+                        <a
+                          href={booking.dokumenUrl || booking.documentUrl || '#'}
+                          target="_blank"
+                          rel="noreferrer"
                           className="text-amber-800 hover:text-amber-900 font-bold flex items-center gap-1"
                         >
-                          <span>Review Proposal</span>
+                          <span>Unduh & Review Proposal</span>
                           <Download className="w-3.5 h-3.5" />
-                        </button>
+                        </a>
                       </div>
                     )}
                   </div>
@@ -240,16 +285,31 @@ export default function YayasanApprovalsPage() {
                         <span>Setujui Izin Yayasan</span>
                       </button>
 
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setRejectionTarget(booking);
-                          setRejectionReason('Jadwal Auditorium dialokasikan untuk Agenda Utama Yayasan / Rektorat.');
-                        }}
-                        className="w-full py-2 px-4 bg-white hover:bg-rose-50 text-rose-600 border border-rose-200 rounded-xl text-xs font-bold transition-colors"
-                      >
-                        Tolak Izin
-                      </button>
+                      <div className="grid grid-cols-2 gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setReturnTarget(booking);
+                            setReturnNotes('');
+                          }}
+                          className="py-2 px-2 bg-amber-100 hover:bg-amber-200 text-amber-900 border border-amber-300 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1"
+                        >
+                          <RotateCcw className="w-3.5 h-3.5" />
+                          <span>Revisi</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setRejectionTarget(booking);
+                            setRejectionReason('');
+                          }}
+                          className="py-2 px-2 bg-white hover:bg-rose-50 text-rose-600 border border-rose-200 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1"
+                        >
+                          <XCircle className="w-3.5 h-3.5" />
+                          <span>Tolak</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -319,7 +379,57 @@ export default function YayasanApprovalsPage() {
         </Modal>
       )}
 
-      {/* REJECT MODAL */}
+      {/* RETURN / REVISION MODAL (Prioritas 3 - Catatan Wajib) */}
+      {returnTarget && (
+        <Modal
+          isOpen={!!returnTarget}
+          onClose={() => setReturnTarget(null)}
+          title="Kembalikan Permohonan Venue Yayasan untuk Revisi"
+          subtitle={returnTarget.bookingCode}
+          maxWidth="md"
+        >
+          <div className="space-y-4">
+            <div className="p-3 bg-amber-50 border border-amber-300 rounded-xl text-xs text-amber-950">
+              <p className="font-bold">{returnTarget.title}</p>
+              <p>{returnTarget.userName} ({returnTarget.userOrganization})</p>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">
+                Catatan Revisi Yayasan (Wajib Diisi) *
+              </label>
+              <textarea
+                rows={4}
+                required
+                value={returnNotes}
+                onChange={(e) => setReturnNotes(e.target.value)}
+                placeholder="Tuliskan hal-hal yang perlu diperbaiki atau disesuaikan sebelum disetujui Yayasan..."
+                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 text-slate-800"
+              />
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => setReturnTarget(null)}
+                className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                disabled={!returnNotes.trim()}
+                onClick={() => handleReturnYayasan(returnTarget)}
+                className="px-5 py-2.5 text-xs font-bold text-white bg-amber-600 hover:bg-amber-700 rounded-xl shadow-md disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                Kirim Catatan Revisi
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* REJECT MODAL (Prioritas 3 - Catatan Wajib) */}
       {rejectionTarget && (
         <Modal
           isOpen={!!rejectionTarget}
@@ -329,17 +439,22 @@ export default function YayasanApprovalsPage() {
           maxWidth="md"
         >
           <div className="space-y-4">
+            <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-900">
+              <p className="font-bold">{rejectionTarget.title}</p>
+              <p>{rejectionTarget.userName} ({rejectionTarget.userOrganization})</p>
+            </div>
+
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">
-                Alasan Penolakan Yayasan *
+                Alasan Penolakan Yayasan (Wajib Diisi) *
               </label>
               <textarea
-                rows={3}
+                rows={4}
                 required
                 value={rejectionReason}
                 onChange={(e) => setRejectionReason(e.target.value)}
-                placeholder="Tuliskan memo alasan penolakan..."
-                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500"
+                placeholder="Tuliskan memo alasan penolakan permohonan..."
+                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 text-slate-800"
               />
             </div>
 
@@ -353,10 +468,11 @@ export default function YayasanApprovalsPage() {
               </button>
               <button
                 type="button"
+                disabled={!rejectionReason.trim()}
                 onClick={() => handleRejectYayasan(rejectionTarget)}
-                className="px-5 py-2.5 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl shadow-md"
+                className="px-5 py-2.5 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl shadow-md disabled:opacity-40 disabled:cursor-not-allowed"
               >
-                Konfirmasi Tolak
+                Konfirmasi Tolak Izin
               </button>
             </div>
           </div>

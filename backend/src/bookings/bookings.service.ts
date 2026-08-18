@@ -23,13 +23,16 @@ export class BookingsService {
   /**
    * Collision-Proof Atomic Booking Creator
    */
-  async create(userId: string, dto: CreateBookingDto, attachmentUrl?: string) {
+  async create(userId: string, dto: CreateBookingDto, uploadedAttachmentUrl?: string) {
     const start = new Date(dto.startTime);
     const end = new Date(dto.endTime);
 
     if (start >= end) {
       throw new BadRequestException('Waktu mulai harus lebih awal dari waktu selesai.');
     }
+
+    const finalAttachmentUrl = dto.dokumenUrl || uploadedAttachmentUrl;
+    const finalNotes = dto.notes || dto.catatan;
 
     // Atomic interactive Prisma transaction
     return this.prisma.$transaction(async (tx) => {
@@ -77,7 +80,7 @@ export class BookingsService {
         });
       }
 
-      // 3. Create Booking
+      // 3. Create Booking & Logistics
       const facilitiesStr = JSON.stringify(dto.additionalFacilities || []);
 
       const newBooking = await tx.booking.create({
@@ -90,13 +93,22 @@ export class BookingsService {
           endTime: end,
           status: BookingStatus.PENDING,
           additionalFacilities: facilitiesStr,
-          notes: dto.notes,
-          attachmentUrl,
+          notes: finalNotes,
+          attachmentUrl: finalAttachmentUrl,
+          dokumenUrl: finalAttachmentUrl,
           isLeaderApproved: dto.isLeaderApproved ?? false,
+          logistik: dto.logistik && dto.logistik.length > 0 ? {
+            create: dto.logistik.map((item) => ({
+              jenisItem: item.jenisItem,
+              jumlah: item.jumlah,
+              catatan: item.catatan,
+            })),
+          } : undefined,
         },
         include: {
           room: { include: { floor: true } },
           user: { select: { id: true, fullName: true, username: true, unitName: true, role: true } },
+          logistik: true,
         },
       });
 
@@ -135,54 +147,71 @@ export class BookingsService {
       }
 
       const currentStatus = booking.status as BookingStatus;
-      const targetStatus = dto.status;
-      const isSpecialRoom = booking.room.isSpecialRoom;
+      let targetStatus = dto.status;
+      const notes = (dto.notes || dto.catatan || '').trim();
+
+      // Check if room requires Yayasan approval (Auditorium, Workshop, Senat, or isSpecialRoom)
+      const isAuditoriumOrWorkshop =
+        booking.room.isSpecialRoom ||
+        booking.room.name.toLowerCase().includes('auditorium') ||
+        booking.room.name.toLowerCase().includes('senat') ||
+        booking.room.name.toLowerCase().includes('workshop');
+
       const userRole = currentUser.role as Role;
+
+      // Validation for Catatan Wajib when returning or rejecting
+      if (targetStatus === BookingStatus.REJECTED || targetStatus === BookingStatus.RETURNED) {
+        if (!notes) {
+          throw new BadRequestException('Catatan alasan wajib diisi ketika permohonan ditolak atau dikembalikan untuk revisi.');
+        }
+        if (userRole !== Role.ADMIN_UNIV && userRole !== Role.ADMIN_YAYASAN) {
+          throw new ForbiddenException('Hanya Admin yang berwenang menolak atau mengembalikan permohonan.');
+        }
+      }
 
       // State Machine Transition Rules
       if (targetStatus === BookingStatus.CANCELED) {
         // Only owner or admin can cancel
-        if (booking.userId !== currentUser.id && userRole !== Role.ADMIN_UNIV) {
+        if (booking.userId !== currentUser.id && userRole !== Role.ADMIN_UNIV && userRole !== Role.ADMIN_YAYASAN) {
           throw new ForbiddenException('Hanya pemohon atau Admin yang dapat membatalkan permohonan.');
         }
-        if (currentStatus === BookingStatus.APPROVED || currentStatus === BookingStatus.REJECTED) {
-          throw new BadRequestException('Peminjaman yang telah selesai diproses tidak dapat dibatalkan.');
+        if (currentStatus === BookingStatus.APPROVED && userRole !== Role.ADMIN_UNIV && userRole !== Role.ADMIN_YAYASAN) {
+          throw new BadRequestException('Peminjaman yang telah disetujui hanya dapat dibatalkan oleh Admin LPF / Yayasan.');
         }
       } else if (targetStatus === BookingStatus.RECOMMENDED) {
         // Only Admin Univ can recommend special room to Yayasan
         if (userRole !== Role.ADMIN_UNIV && userRole !== Role.ADMIN_YAYASAN) {
           throw new ForbiddenException('Hanya Admin Universitas (LPF) yang dapat merekomendasikan ke Yayasan.');
         }
-        if (!isSpecialRoom) {
-          throw new BadRequestException('Ruangan reguler tidak memerlukan rekomendasi ke Yayasan.');
-        }
       } else if (targetStatus === BookingStatus.APPROVED) {
-        if (isSpecialRoom && userRole !== Role.ADMIN_YAYASAN) {
-          throw new ForbiddenException('Ruangan khusus (Auditorium/Senat) memerlukan otorisasi persetujuan dari Yayasan YARSI.');
-        }
-        if (!isSpecialRoom && userRole !== Role.ADMIN_UNIV && userRole !== Role.ADMIN_YAYASAN) {
+        // Business Rule (Prioritas 2): For Auditorium & Workshop, Admin LPF cannot directly approve;
+        // system automatically routes to RECOMMENDED (Direkomendasikan) for Yayasan final approval.
+        if (isAuditoriumOrWorkshop && userRole === Role.ADMIN_UNIV) {
+          targetStatus = BookingStatus.RECOMMENDED;
+          this.logger.log(`Auto-routing special room booking ${booking.id} to RECOMMENDED for Yayasan approval`);
+        } else if (isAuditoriumOrWorkshop && userRole !== Role.ADMIN_YAYASAN) {
+          throw new ForbiddenException('Ruangan khusus (Auditorium/Workshop/Senat) memerlukan otorisasi persetujuan final dari Yayasan YARSI.');
+        } else if (!isAuditoriumOrWorkshop && userRole !== Role.ADMIN_UNIV && userRole !== Role.ADMIN_YAYASAN) {
           throw new ForbiddenException('Hanya Admin Universitas yang berwenang menyetujui ruangan reguler.');
         }
 
-        // Final atomic check for collision before approval
-        const conflict = await tx.booking.findFirst({
-          where: {
-            roomId: booking.roomId,
-            id: { not: booking.id },
-            status: BookingStatus.APPROVED,
-            AND: [
-              { startTime: { lt: booking.endTime } },
-              { endTime: { gt: booking.startTime } },
-            ],
-          },
-        });
+        if (targetStatus === BookingStatus.APPROVED) {
+          // Final atomic check for collision before approval
+          const conflict = await tx.booking.findFirst({
+            where: {
+              roomId: booking.roomId,
+              id: { not: booking.id },
+              status: BookingStatus.APPROVED,
+              AND: [
+                { startTime: { lt: booking.endTime } },
+                { endTime: { gt: booking.startTime } },
+              ],
+            },
+          });
 
-        if (conflict) {
-          throw new ConflictException(`Tidak dapat menyetujui: ruangan telah disetujui untuk kegiatan lain ("${conflict.title}").`);
-        }
-      } else if (targetStatus === BookingStatus.REJECTED || targetStatus === BookingStatus.RETURNED) {
-        if (userRole !== Role.ADMIN_UNIV && userRole !== Role.ADMIN_YAYASAN) {
-          throw new ForbiddenException('Hanya Admin yang berwenang menolak atau mengembalikan permohonan.');
+          if (conflict) {
+            throw new ConflictException(`Tidak dapat menyetujui: ruangan telah disetujui untuk kegiatan lain ("${conflict.title}").`);
+          }
         }
       }
 
@@ -195,9 +224,24 @@ export class BookingsService {
         include: {
           room: { include: { floor: true } },
           user: true,
+          logistik: true,
           approvalLogs: { orderBy: { createdAt: 'desc' } },
         },
       });
+
+      // Default notes formatting
+      let finalLogNote = notes;
+      if (!finalLogNote) {
+        if (targetStatus === BookingStatus.RECOMMENDED) {
+          finalLogNote = `Diverifikasi oleh LPF (${currentUser.fullName}) & Direkomendasikan ke Sekretariat Yayasan YARSI.`;
+        } else if (targetStatus === BookingStatus.APPROVED) {
+          finalLogNote = `Permohonan disetujui secara resmi oleh ${currentUser.fullName} (${userRole}).`;
+        } else if (targetStatus === BookingStatus.CANCELED) {
+          finalLogNote = `Peminjaman dibatalkan oleh ${currentUser.fullName}.`;
+        } else {
+          finalLogNote = `Status diubah menjadi ${targetStatus} oleh ${currentUser.fullName}.`;
+        }
+      }
 
       // Append Audit Log
       await tx.approvalLog.create({
@@ -206,12 +250,26 @@ export class BookingsService {
           approverId: currentUser.id,
           fromStatus: currentStatus.toString(),
           toStatus: targetStatus.toString(),
-          notes: dto.notes || `Status diubah dari ${currentStatus} menjadi ${targetStatus} oleh ${currentUser.fullName}.`,
+          notes: finalLogNote,
         },
       });
 
       this.logger.log(`Booking ${booking.id} transitioned from ${currentStatus} -> ${targetStatus} by ${currentUser.fullName} (${userRole})`);
       return updatedBooking;
+    });
+  }
+
+  /**
+   * Dedicated Cancel Booking Handler (Prioritas 6)
+   */
+  async cancelBooking(
+    bookingId: string,
+    currentUser: { id: string; role: string; fullName: string },
+    reason?: string,
+  ) {
+    return this.updateStatus(bookingId, currentUser, {
+      status: BookingStatus.CANCELED,
+      notes: reason || `Dibatalkan oleh pemohon/admin (${currentUser.fullName})`,
     });
   }
 
@@ -238,6 +296,7 @@ export class BookingsService {
       include: {
         room: { include: { floor: true } },
         user: { select: { id: true, fullName: true, username: true, unitName: true, role: true } },
+        logistik: true,
         approvalLogs: {
           include: { approver: { select: { fullName: true, role: true } } },
           orderBy: { createdAt: 'desc' },
@@ -254,6 +313,7 @@ export class BookingsService {
       include: {
         room: { include: { floor: true } },
         user: { select: { id: true, fullName: true, username: true, unitName: true, email: true, role: true } },
+        logistik: true,
         approvalLogs: {
           include: { approver: { select: { fullName: true, role: true } } },
           orderBy: { createdAt: 'desc' },

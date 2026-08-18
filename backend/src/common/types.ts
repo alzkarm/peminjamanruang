@@ -17,10 +17,12 @@ export enum BookingStatus {
 export enum ActivityType {
   SEMINAR = 'SEMINAR',
   WORKSHOP = 'WORKSHOP',
-  KULIAH = 'KULIAH',
-  RAPAT = 'RAPAT',
   PELATIHAN = 'PELATIHAN',
+  RAPAT = 'RAPAT',
   KUNJUNGAN = 'KUNJUNGAN',
+  KULIAH_TAMU = 'KULIAH_TAMU',
+  KULIAH = 'KULIAH',
   AKREDITASI = 'AKREDITASI',
   LAINNYA = 'LAINNYA',
 }
+

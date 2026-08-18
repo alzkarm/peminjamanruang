@@ -1,10 +1,9 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAppStore } from '@/lib/store';
-import { AVAILABLE_EQUIPMENTS } from '@/lib/mockData';
-import { BookingCategory, BookingEquipment } from '@/lib/types';
+import { BookingCategory, BookingEquipment, BookingLogistikItem } from '@/lib/types';
 import { checkRoomConflict, formatDateIndo } from '@/lib/utils';
 import confetti from 'canvas-confetti';
 import {
@@ -19,27 +18,33 @@ import {
   UploadCloud,
   Sparkles,
   ArrowRight,
-  HelpCircle,
-  Laptop,
-  Mic,
-  Video,
-  Armchair,
-  Tv,
-  Wind,
-  Utensils,
-  Headset,
+  PackageCheck,
+  Plus,
+  Trash2,
+  CheckSquare,
 } from 'lucide-react';
 import Link from 'next/link';
+
+const STANDARD_EQUIPMENTS = [
+  { id: 'eq-proj-laser', name: 'Laser Projector & Motorized Screen', category: 'audio_visual' },
+  { id: 'eq-sound-mic', name: 'Wireless Microphone Set & Sound System', category: 'audio_visual' },
+  { id: 'eq-hybrid-zoom', name: 'Hybrid Meeting / PTZ 4K Camera Kit', category: 'audio_visual' },
+  { id: 'eq-extra-chairs', name: 'Kursi Tambahan Futura (50 Pcs)', category: 'furniture' },
+  { id: 'eq-extra-tables', name: 'Meja Registrasi & Taplak Standar', category: 'furniture' },
+  { id: 'eq-power-sockets', name: 'Colokan Listrik / Kabel Roll 10 Meter', category: 'connectivity' },
+  { id: 'eq-podium-vip', name: 'Podium Resmi & Banner Stand', category: 'furniture' },
+  { id: 'eq-videotron', name: 'Videotron LED Display 8x4m (Khusus Auditorium)', category: 'audio_visual', isSpecial: true },
+];
 
 function NewBookingForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const { currentUser, rooms, bookings, academicBlocks, addBooking } = useAppStore();
+  const { currentUser, rooms, bookings, academicBlocks, addBooking, error } = useAppStore();
 
   // Prefilled params from URL
   const initialRoomId = searchParams.get('roomId') || rooms[0]?.id || '';
-  const initialDate = searchParams.get('date') || '2026-08-16';
+  const initialDate = searchParams.get('date') || new Date().toISOString().slice(0, 10);
   const initialStartTime = searchParams.get('startTime') || '09:00';
   const initialEndTime = searchParams.get('endTime') || '12:00';
 
@@ -61,30 +66,58 @@ function NewBookingForm() {
   const [userOrganization, setUserOrganization] = useState(
     currentUser.organization || 'BEM FTI Universitas YARSI'
   );
-  const [department, setDepartment] = useState(currentUser.department || 'Teknik Informatika');
+  const [department, setDepartment] = useState(currentUser.department || 'Fakultas Teknologi Informasi');
 
   // Facilities Checklist
   const [selectedEquipments, setSelectedEquipments] = useState<
     Record<string, { selected: boolean; quantity: number; notes: string }>
   >({
     'eq-proj-laser': { selected: true, quantity: 1, notes: '' },
-    'eq-sound-mic': { selected: true, quantity: 1, notes: '' },
+    'eq-sound-mic': { selected: true, quantity: 2, notes: '' },
+    'eq-power-sockets': { selected: true, quantity: 3, notes: '' },
   });
 
+  // Dynamic Custom Logistics List
+  const [customLogistics, setCustomLogistics] = useState<BookingLogistikItem[]>([
+    { jenisItem: 'Meja Registrasi', jumlah: 2, catatan: 'Diletakkan di depan pintu masuk' },
+    { jenisItem: 'Kursi Tambahan', jumlah: 20, catatan: 'Disusun di baris belakang' },
+    { jenisItem: 'Colokan Listrik', jumlah: 4, catatan: 'Untuk meja narasumber & panitia' },
+  ]);
+  const [newLogistikItem, setNewLogistikItem] = useState('');
+  const [newLogistikQty, setNewLogistikQty] = useState(1);
+  const [newLogistikNotes, setNewLogistikNotes] = useState('');
+
   // Document Upload
-  const [uploadedFileName, setUploadedFileName] = useState<string>(
-    'Proposal_Kegiatan_Resmi_2026.pdf'
-  );
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploadedFileName, setUploadedFileName] = useState<string>('Proposal_Resmi_Kegiatan_2026.pdf');
+
+  // Prioritas 5: Internal Approval Confirmation Checkbox
+  const [isInternalApproved, setIsInternalApproved] = useState<boolean>(true);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   // Selected Room Object
-  const selectedRoom = rooms.find((r) => r.id === roomId) || rooms[0];
+  const selectedRoom = rooms.find((r) => r.id === roomId) || rooms[0] || {
+    id: roomId || 'room-1',
+    name: 'Auditorium Ar-Rahman (Menara YARSI Lt. 12)',
+    code: 'MY-1201',
+    building: 'Menara YARSI',
+    floor: 12,
+    capacity: 700,
+    type: 'auditorium',
+    requiresYayasanApproval: true,
+    facilities: ['Videotron 8x4', 'Sound Line Array', 'VIP Lounge'],
+    imageUrl: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800',
+    description: 'Auditorium utama dengan kapasitas 700 kursi.',
+    isActive: true,
+    locationDetails: 'Menara YARSI Lt. 12',
+  };
 
   // Run Real-Time Conflict Detection
   const conflictResult = checkRoomConflict(
-    roomId,
+    roomId || selectedRoom.id,
     date,
     startTime,
     endTime,
@@ -117,11 +150,44 @@ function NewBookingForm() {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleAddCustomLogistik = () => {
+    if (!newLogistikItem.trim()) return;
+    setCustomLogistics([
+      ...customLogistics,
+      {
+        jenisItem: newLogistikItem.trim(),
+        jumlah: Math.max(1, newLogistikQty),
+        catatan: newLogistikNotes.trim() || undefined,
+      },
+    ]);
+    setNewLogistikItem('');
+    setNewLogistikQty(1);
+    setNewLogistikNotes('');
+  };
+
+  const handleRemoveCustomLogistik = (index: number) => {
+    setCustomLogistics(customLogistics.filter((_, i) => i !== index));
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      setUploadedFileName(file.name);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMessage('');
+
+    if (!isInternalApproved) {
+      setErrorMessage('Anda wajib mencentang konfirmasi persetujuan internal fakultas/kemahasiswaan sebelum mengajukan permohonan.');
+      return;
+    }
 
     if (conflictResult.hasConflict) {
-      alert('Tidak dapat mengajukan permohonan karena ada jadwal bentrok!');
+      setErrorMessage('Tidak dapat mengajukan permohonan karena ada bentrok jadwal dengan kegiatan lain.');
       return;
     }
 
@@ -131,7 +197,7 @@ function NewBookingForm() {
     const equipmentsList: BookingEquipment[] = Object.entries(selectedEquipments)
       .filter(([_, val]) => val.selected)
       .map(([id, val]) => {
-        const eqObj = AVAILABLE_EQUIPMENTS.find((e) => e.id === id);
+        const eqObj = STANDARD_EQUIPMENTS.find((e) => e.id === id);
         return {
           equipmentId: id,
           equipmentName: eqObj?.name || id,
@@ -140,41 +206,58 @@ function NewBookingForm() {
         };
       });
 
-    setTimeout(() => {
-      const created = addBooking({
-        roomId: selectedRoom.id,
-        roomName: selectedRoom.name,
-        building: selectedRoom.building,
-        floor: selectedRoom.floor,
-        userId: currentUser.id,
-        userName,
-        userEmail: currentUser.email,
-        userNimNidn,
-        userRole: currentUser.role,
-        userPhone,
-        userOrganization,
-        department,
-        title,
-        category,
-        description,
-        estimatedAttendees: Number(estimatedAttendees),
-        date,
-        startTime,
-        endTime,
-        requiresYayasanApproval: selectedRoom.requiresYayasanApproval,
-        equipments: equipmentsList,
-        documentName: uploadedFileName,
-        documentUrl: '#',
-      });
+    // Combine standard and custom logistics
+    const combinedLogistik: BookingLogistikItem[] = [
+      ...equipmentsList.map((eq) => ({
+        jenisItem: eq.equipmentName,
+        jumlah: eq.quantity,
+        catatan: eq.notes,
+      })),
+      ...customLogistics,
+    ];
+
+    try {
+      await addBooking(
+        {
+          roomId: selectedRoom.id,
+          roomName: selectedRoom.name,
+          building: selectedRoom.building,
+          floor: selectedRoom.floor,
+          userId: currentUser.id,
+          userName: userName || currentUser.name,
+          userEmail: currentUser.email,
+          userNimNidn: userNimNidn || currentUser.identifier,
+          userRole: currentUser.role,
+          userPhone,
+          userOrganization,
+          department,
+          title,
+          category,
+          jenisKegiatan: category.toUpperCase(),
+          description,
+          estimatedAttendees: Number(estimatedAttendees),
+          date,
+          startTime,
+          endTime,
+          requiresYayasanApproval: selectedRoom.requiresYayasanApproval,
+          isLeaderApproved: isInternalApproved,
+          equipments: equipmentsList,
+          logistik: combinedLogistik,
+          documentName: uploadedFileName,
+          dokumenUrl: selectedFile ? `/uploads/${uploadedFileName}` : undefined,
+          documentUrl: selectedFile ? `/uploads/${uploadedFileName}` : undefined,
+        },
+        selectedFile || undefined
+      );
 
       setIsSubmitting(false);
       setSubmitSuccess(true);
 
-      // Trigger Confetti!
+      // Trigger Celebration Confetti
       try {
         confetti({
-          particleCount: 100,
-          spread: 70,
+          particleCount: 120,
+          spread: 80,
           origin: { y: 0.6 },
           colors: ['#0D7A5F', '#10B981', '#F59E0B', '#3B82F6'],
         });
@@ -184,8 +267,11 @@ function NewBookingForm() {
 
       setTimeout(() => {
         router.push('/dashboard');
-      }, 1800);
-    }, 600);
+      }, 1600);
+    } catch (err: any) {
+      setIsSubmitting(false);
+      setErrorMessage(err.message || 'Gagal mengirimkan permohonan peminjaman ruangan.');
+    }
   };
 
   return (
@@ -201,12 +287,23 @@ function NewBookingForm() {
           </Link>
         </div>
         <h1 className="text-2xl sm:text-3xl font-black text-slate-900">
-          Formulir Pengajuan Peminjaman Ruangan
+          Formulir Digital Terpadu Peminjaman Ruangan
         </h1>
         <p className="text-xs sm:text-sm text-slate-500">
-          Sistem otomatis memverifikasi ketersediaan slot waktu dan kebutuhan fasilitas audio-visual.
+          Menggabungkan Surat Pernyataan, Form Pemakaian Fasilitas, dan Form Kelengkapan ke dalam satu alur digital.
         </p>
       </div>
+
+      {/* Error Alert */}
+      {errorMessage && (
+        <div className="p-4 bg-rose-50 border-2 border-rose-400 rounded-2xl text-xs text-rose-900 flex items-start gap-3 animate-shake">
+          <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+          <div>
+            <p className="font-bold text-rose-950">Validasi Pengajuan</p>
+            <p className="mt-0.5 text-rose-800">{errorMessage}</p>
+          </div>
+        </div>
+      )}
 
       {submitSuccess && (
         <div className="p-6 bg-emerald-50 border-2 border-emerald-400 rounded-3xl text-center space-y-2 animate-fade-in shadow-xl">
@@ -214,10 +311,10 @@ function NewBookingForm() {
             <CheckCircle2 className="w-8 h-8" />
           </div>
           <h2 className="text-lg font-black text-emerald-950">
-            Permohonan Berhasil Dikirimkan!
+            Permohonan Peminjaman Berhasil Dikirimkan!
           </h2>
           <p className="text-xs text-emerald-800">
-            Permohonan Anda telah masuk ke dalam antrean review LPF Universitas YARSI. Mengalihkan ke dashboard...
+            Permohonan Anda telah masuk ke sistem database PostgreSQL dan antrean LPF. Mengalihkan ke dashboard...
           </p>
         </div>
       )}
@@ -231,10 +328,10 @@ function NewBookingForm() {
             </div>
             <div>
               <h2 className="text-base font-bold text-slate-900">
-                1. Pilih Ruangan & Waktu Pelaksanaan
+                1. Ruangan & Jadwal Pelaksanaan
               </h2>
               <p className="text-xs text-slate-400">
-                Tentukan ruangan kampus dan durasi waktu kegiatan
+                Pilih ruangan kampus YARSI dan tentukan tanggal serta rentang jam kegiatan
               </p>
             </div>
           </div>
@@ -243,7 +340,7 @@ function NewBookingForm() {
             {/* Room Selector */}
             <div className="space-y-2">
               <label className="block text-xs font-bold text-slate-700">
-                Ruangan Kampus YARSI *
+                Pilihan Ruangan Kampus *
               </label>
               <select
                 value={roomId}
@@ -278,7 +375,7 @@ function NewBookingForm() {
                     <div className="p-2.5 bg-amber-50 border border-amber-300 rounded-xl text-amber-900 flex items-start gap-2">
                       <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                       <div className="text-[11px] leading-relaxed">
-                        <strong className="font-bold">Perhatian Khusus:</strong> Ruangan ini tergolong tier tinggi dan membutuhkan persetujuan multi-level: diverifikasi oleh LPF lalu diteruskan ke Sekretariat Yayasan YARSI.
+                        <strong className="font-bold">Persetujuan Multi-Tier Yayasan:</strong> Ruangan auditorium & senat memerlukan verifikasi teknis LPF lalu direkomendasikan untuk persetujuan final Sekretariat Yayasan YARSI.
                       </div>
                     </div>
                   )}
@@ -343,7 +440,7 @@ function NewBookingForm() {
                       {conflictResult.reason}
                     </p>
                     <p className="text-[10px] text-rose-600 font-semibold">
-                      Silakan pilih ruangan lain atau geser jam pelaksanaan agar permohonan dapat diajukan.
+                      Silakan pilih ruangan lain atau ganti jam kegiatan agar permohonan dapat disubmit.
                     </p>
                   </div>
                 </div>
@@ -353,7 +450,7 @@ function NewBookingForm() {
                   <div>
                     <p className="font-bold text-emerald-950">Slot Waktu Tersedia</p>
                     <p className="text-[11px] text-emerald-700">
-                      Tidak ada bentrok jadwal kuliah maupun permohonan lain pada slot waktu ini.
+                      Ruangan tidak terpakai oleh perkuliahan atau agenda resmi lain pada slot ini.
                     </p>
                   </div>
                 </div>
@@ -362,7 +459,7 @@ function NewBookingForm() {
           </div>
         </div>
 
-        {/* STEP 2: EVENT DETAILS */}
+        {/* STEP 2: EVENT DETAILS & JENIS KEGIATAN */}
         <div className="bg-white rounded-3xl border border-slate-200/80 shadow-card p-6 sm:p-8 space-y-6">
           <div className="flex items-center gap-2.5 pb-4 border-b border-slate-100">
             <div className="p-2 rounded-xl bg-amber-50 text-amber-700">
@@ -370,10 +467,10 @@ function NewBookingForm() {
             </div>
             <div>
               <h2 className="text-base font-bold text-slate-900">
-                2. Detail Acara & Estimasi Peserta
+                2. Detail Kegiatan & Klasifikasi Acara
               </h2>
               <p className="text-xs text-slate-400">
-                Informasi agenda dan keperluan perizinan resmi
+                Pilih jenis kegiatan sesuai enum terstandarisasi universitas
               </p>
             </div>
           </div>
@@ -387,7 +484,7 @@ function NewBookingForm() {
                 <input
                   type="text"
                   required
-                  placeholder="Contoh: Seminar Nasional AI & Workshop Python BEM FTI"
+                  placeholder="Contoh: Seminar Nasional AI Healthcare & Workshop Python FTI"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   className="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yarsi-primary text-slate-900"
@@ -396,20 +493,22 @@ function NewBookingForm() {
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Kategori Kegiatan *
+                  Jenis Kegiatan (Enum Prisma) *
                 </label>
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value as BookingCategory)}
-                  className="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yarsi-primary text-slate-900"
+                  className="w-full px-3.5 py-2.5 text-xs sm:text-sm font-bold bg-emerald-50/70 border border-emerald-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-yarsi-primary text-emerald-950"
                 >
-                  <option value="seminar">Seminar / Kuliah Tamu</option>
-                  <option value="workshop">Workshop / Pelatihan</option>
-                  <option value="rapat">Rapat Kerja / Sidang</option>
-                  <option value="kemahasiswaan">Kegiatan Ormawa / BEM / UKM</option>
-                  <option value="kuliah">Perkuliahan Khusus</option>
-                  <option value="ujian">Ujian / Sertifikasi</option>
-                  <option value="yayasan">Acara Khusus Yayasan</option>
+                  <option value="seminar">Seminar</option>
+                  <option value="workshop">Workshop</option>
+                  <option value="pelatihan">Pelatihan</option>
+                  <option value="rapat">Rapat</option>
+                  <option value="kunjungan">Kunjungan</option>
+                  <option value="kuliah_tamu">Kuliah / Kuliah Tamu</option>
+                  <option value="akreditasi">Akreditasi</option>
+                  <option value="kemahasiswaan">Kegiatan Ormawa / Kemahasiswaan</option>
+                  <option value="yayasan">Acara Yayasan</option>
                   <option value="lainnya">Lainnya</option>
                 </select>
               </div>
@@ -441,7 +540,7 @@ function NewBookingForm() {
 
               <div className="sm:col-span-2">
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Organisasi / Lembaga / Unit Pengusul *
+                  Organisasi / Unit Pengusul *
                 </label>
                 <input
                   type="text"
@@ -456,100 +555,161 @@ function NewBookingForm() {
 
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">
-                Deskripsi Singkat Acara & Kebutuhan Khusus *
+                Deskripsi Singkat Acara & Kebutuhan Ruangan *
               </label>
               <textarea
                 rows={3}
                 required
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Jelaskan ringkasan acara, susunan narasumber, dan kebutuhan pendukung..."
+                placeholder="Tuliskan tujuan acara, susunan pembicara, dan catatan teknis pendukung..."
                 className="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yarsi-primary text-slate-900"
               />
             </div>
           </div>
         </div>
 
-        {/* STEP 3: FACILITIES & EQUIPMENT CHECKLIST */}
+        {/* STEP 3: LOGISTICS & FASILITAS TAMBAHAN (BookingLogistik Model) */}
         <div className="bg-white rounded-3xl border border-slate-200/80 shadow-card p-6 sm:p-8 space-y-6">
           <div className="flex items-center gap-2.5 pb-4 border-b border-slate-100">
             <div className="p-2 rounded-xl bg-teal-50 text-teal-700">
-              <Sparkles className="w-5 h-5" />
+              <PackageCheck className="w-5 h-5" />
             </div>
             <div>
               <h2 className="text-base font-bold text-slate-900">
-                3. Fasilitas & Peralatan Pendukung LPF
+                3. Fasilitas & Logistik Tambahan (BookingLogistik)
               </h2>
               <p className="text-xs text-slate-400">
-                Centang peralatan yang dibutuhkan agar disiapkan oleh teknisi LPF sebelum acara
+                Permintaan item meja, kursi, colokan listrik, dan sound system yang akan disiapkan petugas LPF
               </p>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {AVAILABLE_EQUIPMENTS.map((eq) => {
-              const state = selectedEquipments[eq.id] || {
-                selected: false,
-                quantity: 1,
-                notes: '',
-              };
+          {/* Quick Equipment Checklist */}
+          <div className="space-y-2">
+            <p className="text-xs font-bold text-slate-700">Fasilitas Standar Ruang:</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {STANDARD_EQUIPMENTS.map((eq) => {
+                const state = selectedEquipments[eq.id] || {
+                  selected: false,
+                  quantity: 1,
+                  notes: '',
+                };
 
-              return (
-                <div
-                  key={eq.id}
-                  onClick={() => handleEquipmentToggle(eq.id)}
-                  className={`p-4 rounded-2xl border transition-all cursor-pointer flex items-start gap-3.5 ${
-                    state.selected
-                      ? 'bg-emerald-50/70 border-emerald-300 ring-2 ring-emerald-500/20'
-                      : 'bg-slate-50/60 border-slate-200/80 hover:bg-slate-100'
-                  }`}
-                >
-                  <input
-                    type="checkbox"
-                    checked={state.selected}
-                    onChange={() => {}}
-                    className="mt-1 rounded text-yarsi-primary focus:ring-yarsi-primary"
-                  />
+                return (
+                  <div
+                    key={eq.id}
+                    onClick={() => handleEquipmentToggle(eq.id)}
+                    className={`p-3 rounded-xl border transition-all cursor-pointer flex items-start gap-3 ${
+                      state.selected
+                        ? 'bg-emerald-50/70 border-emerald-300 ring-1 ring-emerald-500/30'
+                        : 'bg-slate-50/60 border-slate-200/80 hover:bg-slate-100'
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={state.selected}
+                      onChange={() => {}}
+                      className="mt-0.5 rounded text-yarsi-primary focus:ring-yarsi-primary"
+                    />
 
-                  <div className="flex-1 space-y-1">
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-xs text-slate-900">
-                        {eq.name}
-                      </span>
+                    <div className="flex-1 text-xs">
+                      <p className="font-bold text-slate-800">{eq.name}</p>
+                      {state.selected && (
+                        <div
+                          className="pt-1.5 flex items-center gap-2"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <span className="text-[11px] text-slate-500">Jumlah:</span>
+                          <input
+                            type="number"
+                            min={1}
+                            max={20}
+                            value={state.quantity}
+                            onChange={(e) =>
+                              handleEquipmentQty(eq.id, parseInt(e.target.value) || 1)
+                            }
+                            className="w-16 px-2 py-0.5 text-xs border rounded bg-white text-slate-800 font-bold"
+                          />
+                        </div>
+                      )}
                     </div>
-
-                    {eq.isSpecialRequest && (
-                      <span className="inline-block text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-0.2 rounded border border-amber-200">
-                        Izin Khusus / Koordinasi LPF
-                      </span>
-                    )}
-
-                    {state.selected && (
-                      <div
-                        className="pt-2 flex items-center gap-2"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <span className="text-[11px] text-slate-500">Jumlah:</span>
-                        <input
-                          type="number"
-                          min={1}
-                          max={10}
-                          value={state.quantity}
-                          onChange={(e) =>
-                            handleEquipmentQty(eq.id, parseInt(e.target.value) || 1)
-                          }
-                          className="w-16 px-2 py-1 text-xs border rounded bg-white text-slate-800 font-bold"
-                        />
-                      </div>
-                    )}
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Custom Logistics Multi-Item Table */}
+          <div className="space-y-3 pt-3 border-t border-slate-100">
+            <p className="text-xs font-bold text-slate-700">Daftar Rincian Logistik Tambahan:</p>
+
+            {customLogistics.length > 0 && (
+              <div className="space-y-2">
+                {customLogistics.map((item, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="font-bold text-slate-900">{item.jenisItem}</span>
+                      <span className="px-2 py-0.5 bg-emerald-100 text-yarsi-primary font-bold rounded">
+                        {item.jumlah} Unit
+                      </span>
+                      {item.catatan && (
+                        <span className="text-slate-500 italic">"{item.catatan}"</span>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveCustomLogistik(idx)}
+                      className="text-rose-500 hover:text-rose-700 p-1"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Add Custom Logistics Input Bar */}
+            <div className="p-3 bg-slate-100/70 rounded-2xl border border-slate-200/80 flex flex-col sm:flex-row items-center gap-2">
+              <input
+                type="text"
+                placeholder="Jenis Item (misal: Kabel Colokan Listrik 10m)"
+                value={newLogistikItem}
+                onChange={(e) => setNewLogistikItem(e.target.value)}
+                className="flex-1 px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yarsi-primary"
+              />
+              <input
+                type="number"
+                min={1}
+                max={100}
+                placeholder="Jumlah"
+                value={newLogistikQty}
+                onChange={(e) => setNewLogistikQty(parseInt(e.target.value) || 1)}
+                className="w-20 px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl font-bold"
+              />
+              <input
+                type="text"
+                placeholder="Catatan penempatan (opsional)"
+                value={newLogistikNotes}
+                onChange={(e) => setNewLogistikNotes(e.target.value)}
+                className="flex-1 px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl"
+              />
+              <button
+                type="button"
+                onClick={handleAddCustomLogistik}
+                className="w-full sm:w-auto px-4 py-2 bg-yarsi-primary hover:bg-yarsi-dark text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1 shrink-0"
+              >
+                <Plus className="w-4 h-4" />
+                <span>Tambah Item</span>
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* STEP 4: DOCUMENT ATTACHMENT */}
+        {/* STEP 4: DOCUMENT UPLOAD (dokumenUrl / attachment) */}
         <div className="bg-white rounded-3xl border border-slate-200/80 shadow-card p-6 sm:p-8 space-y-6">
           <div className="flex items-center gap-2.5 pb-4 border-b border-slate-100">
             <div className="p-2 rounded-xl bg-purple-50 text-purple-700">
@@ -557,10 +717,10 @@ function NewBookingForm() {
             </div>
             <div>
               <h2 className="text-base font-bold text-slate-900">
-                4. Dokumen Permohonan / Proposal
+                4. Dokumen Pendukung (Proposal / Poster Kegiatan)
               </h2>
               <p className="text-xs text-slate-400">
-                Lampirkan surat permohonan resmi bertanda tangan Pimpinan Unit / Dekanat / Ormawa
+                Opsional — Lampirkan proposal atau poster dalam format PDF / Gambar (Maks. 15MB)
               </p>
             </div>
           </div>
@@ -569,23 +729,43 @@ function NewBookingForm() {
             <FileText className="w-10 h-10 text-slate-400 mx-auto" />
             <div>
               <p className="text-xs font-bold text-slate-700">
-                Dokumen Terlampir: <span className="text-yarsi-primary">{uploadedFileName}</span>
+                Berkas Terpilih: <span className="text-yarsi-primary">{uploadedFileName}</span>
               </p>
               <p className="text-[11px] text-slate-400 mt-0.5">
-                Format PDF, Maks. 10 MB. Dokumen dapat ditinjau oleh Admin LPF dan Yayasan.
+                File akan disimpan ke penyimpanan static backend (/uploads) dan URL disimpan ke database.
               </p>
             </div>
 
-            <button
-              type="button"
-              onClick={() => {
-                const newName = prompt('Ganti nama file simulasi:', uploadedFileName);
-                if (newName) setUploadedFileName(newName);
-              }}
-              className="px-4 py-2 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 shadow-xs"
-            >
-              Ganti File Dokumen
-            </button>
+            <label className="inline-block cursor-pointer px-4 py-2 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 shadow-xs">
+              <span>Pilih Dokumen (PDF / Gambar)</span>
+              <input
+                type="file"
+                accept=".pdf,.png,.jpg,.jpeg,.doc,.docx"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+            </label>
+          </div>
+        </div>
+
+        {/* STEP 5: VERIFIKASI INTERNAL HIMA / BEM (PRIORITAS 5) */}
+        <div className="bg-emerald-50/80 rounded-3xl border-2 border-emerald-300 p-6 sm:p-8 space-y-4">
+          <div className="flex items-start gap-3">
+            <input
+              type="checkbox"
+              id="internalApprovalCheck"
+              checked={isInternalApproved}
+              onChange={(e) => setIsInternalApproved(e.target.checked)}
+              className="mt-1 w-5 h-5 rounded text-yarsi-primary focus:ring-yarsi-primary border-emerald-400"
+            />
+            <label htmlFor="internalApprovalCheck" className="cursor-pointer space-y-1">
+              <p className="text-sm font-bold text-emerald-950 leading-snug">
+                Konfirmasi Verifikasi Internal Fakultas / Kemahasiswaan (Wajib Dicontang) *
+              </p>
+              <p className="text-xs text-emerald-800 leading-relaxed">
+                Saya menyatakan bahwa kegiatan ini telah diverifikasi dan disetujui secara internal oleh Pimpinan Fakultas, Dekanat, BEM/DPM, atau Pembina Kemahasiswaan terkait sebelum diajukan ke sistem SIPERU. Bukti konfirmasi ini dicatat sebagai audit digital resmi (<code className="font-mono text-emerald-950 font-bold">isLeaderApproved = true</code>).
+              </p>
+            </label>
           </div>
         </div>
 
@@ -600,11 +780,11 @@ function NewBookingForm() {
 
           <button
             type="submit"
-            disabled={isSubmitting || conflictResult.hasConflict}
+            disabled={isSubmitting || conflictResult.hasConflict || !isInternalApproved}
             className="w-full sm:w-auto px-8 py-3.5 rounded-2xl font-bold text-sm text-white bg-yarsi-primary hover:bg-yarsi-dark shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSubmitting ? (
-              <span>Memproses Pengajuan...</span>
+              <span>Mengirimkan Permohonan ke PostgreSQL...</span>
             ) : (
               <>
                 <span>Kirim Permohonan Peminjaman</span>

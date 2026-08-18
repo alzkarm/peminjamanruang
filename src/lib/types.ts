@@ -1,4 +1,4 @@
-export type Role = 'mahasiswa' | 'dosen' | 'tendik' | 'admin_lpf' | 'admin_yayasan';
+export type Role = 'mahasiswa' | 'dosen' | 'tendik' | 'admin_lpf' | 'admin_yayasan' | 'guest' | 'security_cs';
 
 export type RoomType = 'auditorium' | 'classroom' | 'lab' | 'meeting' | 'studio' | 'hall';
 
@@ -7,18 +7,23 @@ export type BookingStatus =
   | 'RECOMMENDED_YAYASAN'
   | 'APPROVED'
   | 'REJECTED'
+  | 'RETURNED'
   | 'CANCELLED'
   | 'ACADEMIC_BLOCKED'
   | 'COMPLETED';
 
 export type BookingCategory =
-  | 'kuliah'
   | 'seminar'
-  | 'rapat'
-  | 'ujian'
   | 'workshop'
-  | 'yayasan'
+  | 'pelatihan'
+  | 'rapat'
+  | 'kunjungan'
+  | 'kuliah_tamu'
+  | 'kuliah'
+  | 'ujian'
+  | 'akreditasi'
   | 'kemahasiswaan'
+  | 'yayasan'
   | 'lainnya';
 
 export interface Room {
@@ -54,6 +59,23 @@ export interface BookingEquipment {
   notes?: string;
 }
 
+export interface BookingLogistikItem {
+  id?: string;
+  jenisItem: string;
+  jumlah: number;
+  catatan?: string;
+}
+
+export interface ApprovalLogEntry {
+  id: string;
+  approverId: string;
+  approverName?: string;
+  fromStatus: string;
+  toStatus: string;
+  notes?: string;
+  createdAt: string;
+}
+
 export interface Booking {
   id: string;
   bookingCode: string;
@@ -71,6 +93,7 @@ export interface Booking {
   department: string;
   title: string;
   category: BookingCategory;
+  jenisKegiatan?: string;
   description: string;
   estimatedAttendees: number;
   date: string; // YYYY-MM-DD
@@ -78,8 +101,11 @@ export interface Booking {
   endTime: string; // HH:mm
   status: BookingStatus;
   requiresYayasanApproval: boolean;
+  isLeaderApproved?: boolean;
   equipments: BookingEquipment[];
+  logistik?: BookingLogistikItem[];
   documentUrl?: string;
+  dokumenUrl?: string;
   documentName?: string;
   lpfNotes?: string;
   lpfApprovedAt?: string;
@@ -88,6 +114,8 @@ export interface Booking {
   yayasanApprovedAt?: string;
   yayasanApprovedBy?: string;
   rejectionReason?: string;
+  catatan?: string;
+  approvalLogs?: ApprovalLogEntry[];
   qrCodeToken: string;
   createdAt: string;
   feedbackSubmitted?: boolean;
@@ -131,11 +159,12 @@ export interface AcademicBlock {
 export interface UserSession {
   id: string;
   name: string;
-  identifier: string; // NIM / NIDN / NIK
+  identifier: string; // NIM / NIDN / NIK / username
   role: Role;
   email: string;
   department: string;
   organization?: string;
   phone: string;
   avatarUrl?: string;
+  token?: string;
 }

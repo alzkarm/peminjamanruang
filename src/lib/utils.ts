@@ -125,6 +125,7 @@ export function checkRoomConflict(
 export function getStatusBadgeConfig(status: BookingStatus) {
   switch (status) {
     case "PENDING_LPF":
+    case "PENDING" as any:
       return {
         label: "Pending LPF (Admin Univ)",
         bg: "bg-amber-50 text-amber-800 border-amber-300 ring-amber-500/20",
@@ -132,8 +133,9 @@ export function getStatusBadgeConfig(status: BookingStatus) {
         iconName: "Clock",
       };
     case "RECOMMENDED_YAYASAN":
+    case "RECOMMENDED" as any:
       return {
-        label: "Rekomendasi Yayasan",
+        label: "Direkomendasikan (Menunggu Yayasan)",
         bg: "bg-sky-50 text-sky-800 border-sky-300 ring-sky-500/20",
         dot: "bg-sky-500",
         iconName: "Building2",
@@ -145,6 +147,13 @@ export function getStatusBadgeConfig(status: BookingStatus) {
         dot: "bg-emerald-500",
         iconName: "CheckCircle2",
       };
+    case "RETURNED":
+      return {
+        label: "Perlu Revisi (Dikembalikan)",
+        bg: "bg-amber-100 text-amber-900 border-amber-400 ring-amber-500/20",
+        dot: "bg-amber-600",
+        iconName: "RotateCcw",
+      };
     case "REJECTED":
       return {
         label: "Ditolak",
@@ -153,6 +162,7 @@ export function getStatusBadgeConfig(status: BookingStatus) {
         iconName: "XCircle",
       };
     case "CANCELLED":
+    case "CANCELED" as any:
       return {
         label: "Dibatalkan",
         bg: "bg-gray-100 text-gray-700 border-gray-300 ring-gray-400/20",
@@ -172,6 +182,13 @@ export function getStatusBadgeConfig(status: BookingStatus) {
         bg: "bg-purple-50 text-purple-800 border-purple-300 ring-purple-500/20",
         dot: "bg-purple-500",
         iconName: "GraduationCap",
+      };
+    default:
+      return {
+        label: String(status || "Status"),
+        bg: "bg-slate-100 text-slate-700 border-slate-300 ring-slate-400/20",
+        dot: "bg-slate-400",
+        iconName: "Clock",
       };
   }
 }

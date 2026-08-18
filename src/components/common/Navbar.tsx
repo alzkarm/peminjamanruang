@@ -3,8 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useAppStore } from '@/lib/store';
-import { DEMO_USERS } from '@/lib/mockData';
+import { useAppStore, DEMO_ACCOUNTS } from '@/lib/store';
 import { Role } from '@/lib/types';
 import {
   CalendarDays,
@@ -192,12 +191,14 @@ export function Navbar() {
                         <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-3 py-1">
                           Simulasi Ganti Role (LDAP SSO)
                         </p>
-                        {DEMO_USERS.map((u) => (
+                        {Object.entries(DEMO_ACCOUNTS)
+                          .filter(([role]) => role !== 'guest')
+                          .map(([role, u]) => (
                           <button
-                            key={u.id}
-                            onClick={() => handleRoleChange(u.role)}
+                            key={role}
+                            onClick={() => handleRoleChange(role as Role)}
                             className={`w-full flex items-center justify-between px-3 py-2 text-xs rounded-lg transition-colors ${
-                              currentUser.role === u.role
+                              currentUser.role === role
                                 ? 'bg-emerald-50 text-yarsi-primary font-bold'
                                 : 'text-slate-700 hover:bg-slate-50'
                             }`}
@@ -206,10 +207,10 @@ export function Navbar() {
                               <User className="w-3.5 h-3.5 text-slate-400" />
                               <div>
                                 <p className="font-semibold">{u.name.split(',')[0]}</p>
-                                <p className="text-[10px] text-slate-400">{u.department.split('(')[0]}</p>
+                                <p className="text-[10px] text-slate-400">{u.dept.split('(')[0]}</p>
                               </div>
                             </div>
-                            {getRoleBadge(u.role)}
+                            {getRoleBadge(role as Role)}
                           </button>
                         ))}
                       </div>

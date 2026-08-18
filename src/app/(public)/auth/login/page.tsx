@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppStore } from '@/lib/store';
-import { DEMO_USERS } from '@/lib/mockData';
 import { Role } from '@/lib/types';
 import {
   Building2,
@@ -15,52 +14,57 @@ import {
   ArrowRight,
   GraduationCap,
   Briefcase,
-  CheckCircle2,
+  AlertCircle,
 } from 'lucide-react';
 import Link from 'next/link';
 
 export default function LoginPage() {
   const router = useRouter();
-  const { loginAsRole, setCurrentUser } = useAppStore();
+  const { login, loginAsRole, error, clearError } = useAppStore();
 
   const [username, setUsername] = useState('1402022001');
-  const [password, setPassword] = useState('••••••••••••');
+  const [password, setPassword] = useState('password123');
   const [selectedRole, setSelectedRole] = useState<Role>('mahasiswa');
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
-  const handleQuickLogin = (role: Role) => {
+  const handleQuickLogin = async (role: Role) => {
     setIsLoading(true);
-    setTimeout(() => {
-      loginAsRole(role);
+    setErrorMessage('');
+    clearError();
+    try {
+      await loginAsRole(role);
       setIsLoading(false);
       if (role === 'admin_lpf' || role === 'admin_yayasan') {
         router.push('/admin/approvals');
       } else {
         router.push('/dashboard');
       }
-    }, 400);
+    } catch (err: any) {
+      setIsLoading(false);
+      setErrorMessage(err.message || 'Gagal masuk akun demo.');
+    }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setErrorMessage('');
+    clearError();
 
-    setTimeout(() => {
-      // Find matching user from DEMO_USERS or fallback
-      const found = DEMO_USERS.find(
-        (u) => u.identifier === username || u.role === selectedRole
-      ) || DEMO_USERS[0];
-
-      setCurrentUser(found);
+    try {
+      const user = await login(username, password);
       setIsLoading(false);
 
-      if (found.role === 'admin_lpf' || found.role === 'admin_yayasan') {
+      if (user.role === 'admin_lpf' || user.role === 'admin_yayasan') {
         router.push('/admin/approvals');
       } else {
         router.push('/dashboard');
       }
-    }, 500);
+    } catch (err: any) {
+      setIsLoading(false);
+      setErrorMessage(err.message || 'Kombinasi username atau password salah.');
+    }
   };
 
   return (
@@ -183,6 +187,16 @@ export default function LoginPage() {
                 Masukkan identitas civitas akademika Universitas YARSI.
               </p>
             </div>
+
+            {(errorMessage || error) && (
+              <div className="p-3.5 bg-rose-50 border border-rose-300 rounded-2xl text-xs text-rose-900 flex items-start gap-2.5 animate-shake">
+                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-bold">Gagal Masuk</p>
+                  <p className="text-[11px] text-rose-700">{errorMessage || error}</p>
+                </div>
+              </div>
+            )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Role selector dropdown */}

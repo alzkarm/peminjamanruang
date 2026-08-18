@@ -70,4 +70,14 @@ export class BookingsController {
   ) {
     return this.bookingsService.updateStatus(id, currentUser, dto);
   }
+
+  @Patch(':id/cancel')
+  async cancel(
+    @Param('id') id: string,
+    @CurrentUser() currentUser: { id: string; role: Role; fullName: string },
+    @Body() body?: { notes?: string; catatan?: string },
+  ) {
+    const reason = body?.notes || body?.catatan;
+    return this.bookingsService.cancelBooking(id, currentUser, reason);
+  }
 }

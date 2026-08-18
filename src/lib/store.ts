@@ -8,14 +8,76 @@ import {
   UserSession,
   Role,
   BookingStatus,
+  BookingLogistikItem,
 } from './types';
 import {
-  INITIAL_ROOMS,
-  INITIAL_BOOKINGS,
-  INITIAL_ACADEMIC_BLOCKS,
-  INITIAL_FEEDBACKS,
-  DEMO_USERS,
-} from './mockData';
+  authApi,
+  roomsApi,
+  bookingsApi,
+  academicBulkApi,
+  feedbacksApi,
+  removeAuthToken,
+  setAuthToken,
+} from './api';
+
+// Default initial user
+export const DEFAULT_USER: UserSession = {
+  id: 'user-default-1',
+  name: 'Ahmad Fikri Pratama',
+  identifier: '1402022001',
+  role: 'mahasiswa',
+  email: 'ahmad.fikri@mhs.yarsi.ac.id',
+  department: 'Fakultas Teknologi Informasi',
+  organization: 'BEM Fakultas Teknologi Informasi',
+  phone: '0812-9876-5432',
+  avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200',
+};
+
+// Fallback initial demo accounts for instant switching
+export const DEMO_ACCOUNTS: Record<Role, { username: string; password?: string; name: string; dept: string }> = {
+  mahasiswa: {
+    username: '1402022001',
+    password: 'password123',
+    name: 'Ahmad Fikri Pratama (Mahasiswa)',
+    dept: 'BEM Fakultas Teknologi Informasi',
+  },
+  dosen: {
+    username: '0314058201',
+    password: 'password123',
+    name: 'Dr. dr. Siti Nurhaliza, Sp.A (Dosen)',
+    dept: 'Fakultas Kedokteran',
+  },
+  tendik: {
+    username: '19880210201402',
+    password: 'password123',
+    name: 'M. Yusuf, S.Kom (Tendik)',
+    dept: 'Biro Administrasi Akademik & Kemahasiswaan',
+  },
+  admin_lpf: {
+    username: 'lpf.admin',
+    password: 'password123',
+    name: 'Bambang Sudibyo, S.T. (LPF)',
+    dept: 'Biro Layanan Pengelolaan Fasilitas (LPF)',
+  },
+  admin_yayasan: {
+    username: 'yayasan.admin',
+    password: 'password123',
+    name: 'Drs. H. Muhammad Shadiq, M.M.',
+    dept: 'Biro Sekretariat & Aset Yayasan YARSI',
+  },
+  security_cs: {
+    username: 'security.cs',
+    password: 'password123',
+    name: 'Petugas CS & Keamanan Menara',
+    dept: 'Pelayanan Terpadu & Keamanan Kampus',
+  },
+  guest: {
+    username: 'guest',
+    password: 'password123',
+    name: 'Tamu / Pengunjung Kampus',
+    dept: 'Civitas Academica',
+  },
+};
 
 interface AppState {
   currentUser: UserSession;
@@ -24,10 +86,20 @@ interface AppState {
   academicBlocks: AcademicBlock[];
   feedbacks: Feedback[];
   hasHydrated: boolean;
+  isLoading: boolean;
+  isSyncing: boolean;
+  error: string | null;
+
+  // Sync actions
+  fetchInitialData: () => Promise<void>;
+  fetchBookings: () => Promise<void>;
+  fetchRooms: () => Promise<void>;
+  fetchAcademicBlocks: () => Promise<void>;
 
   // Auth actions
   setCurrentUser: (user: UserSession) => void;
-  loginAsRole: (role: Role) => void;
+  login: (username: string, password?: string) => Promise<UserSession>;
+  loginAsRole: (role: Role) => Promise<void>;
   logout: () => void;
 
   // Booking actions
@@ -35,66 +107,158 @@ interface AppState {
     newBooking: Omit<
       Booking,
       'id' | 'bookingCode' | 'createdAt' | 'qrCodeToken' | 'status'
-    >
-  ) => Booking;
-  cancelBooking: (bookingId: string) => void;
+    >,
+    fileAttachment?: File
+  ) => Promise<Booking>;
+  cancelBooking: (bookingId: string, reason?: string) => Promise<void>;
   approveBookingLPF: (
     bookingId: string,
     notes?: string,
     approverName?: string
-  ) => void;
+  ) => Promise<void>;
   approveBookingYayasan: (
     bookingId: string,
     notes?: string,
     approverName?: string
-  ) => void;
+  ) => Promise<void>;
   rejectBooking: (
     bookingId: string,
     reason: string,
-    rejectedBy: string
-  ) => void;
+    rejectedBy?: string
+  ) => Promise<void>;
+  returnBooking: (
+    bookingId: string,
+    notes: string,
+    returnedBy?: string
+  ) => Promise<void>;
 
   // Academic bulk blocker actions
-  addAcademicBlock: (block: Omit<AcademicBlock, 'id'>) => AcademicBlock;
-  bulkAddAcademicBlocks: (blocks: Omit<AcademicBlock, 'id'>[]) => void;
-  deleteAcademicBlock: (id: string) => void;
+  addAcademicBlock: (block: Omit<AcademicBlock, 'id'>) => Promise<AcademicBlock>;
+  bulkAddAcademicBlocks: (blocks: Omit<AcademicBlock, 'id'>[]) => Promise<void>;
+  deleteAcademicBlock: (id: string) => Promise<void>;
   toggleAcademicBlock: (id: string) => void;
 
   // Feedback actions
   addFeedback: (
     feedback: Omit<Feedback, 'id' | 'createdAt'>
-  ) => Feedback;
+  ) => Promise<Feedback>;
 
-  // Reset to initial mock
-  resetToDefault: () => void;
+  // Clear errors
+  clearError: () => void;
 }
 
 export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
-      currentUser: DEMO_USERS[0], // default as student
-      rooms: INITIAL_ROOMS,
-      bookings: INITIAL_BOOKINGS,
-      academicBlocks: INITIAL_ACADEMIC_BLOCKS,
-      feedbacks: INITIAL_FEEDBACKS,
+      currentUser: DEFAULT_USER,
+      rooms: [],
+      bookings: [],
+      academicBlocks: [],
+      feedbacks: [],
       hasHydrated: false,
+      isLoading: false,
+      isSyncing: false,
+      error: null,
 
-      setCurrentUser: (user) => set({ currentUser: user }),
+      clearError: () => set({ error: null }),
 
-      loginAsRole: (role) => {
-        const found = DEMO_USERS.find((u) => u.role === role);
-        if (found) {
-          set({ currentUser: found });
+      fetchInitialData: async () => {
+        set({ isSyncing: true, error: null });
+        try {
+          const [roomsData, bookingsData, academicData] = await Promise.allSettled([
+            roomsApi.getAll(),
+            bookingsApi.getAll(),
+            academicBulkApi.getAll(),
+          ]);
+
+          set({
+            rooms: roomsData.status === 'fulfilled' ? roomsData.value : get().rooms,
+            bookings: bookingsData.status === 'fulfilled' ? bookingsData.value : get().bookings,
+            academicBlocks:
+              academicData.status === 'fulfilled'
+                ? academicData.value
+                : get().academicBlocks,
+            isSyncing: false,
+          });
+        } catch (err: any) {
+          set({ isSyncing: false, error: err.message });
+        }
+      },
+
+      fetchRooms: async () => {
+        try {
+          const rooms = await roomsApi.getAll();
+          set({ rooms });
+        } catch (err: any) {
+          set({ error: err.message });
+        }
+      },
+
+      fetchBookings: async () => {
+        try {
+          const bookings = await bookingsApi.getAll();
+          set({ bookings });
+        } catch (err: any) {
+          set({ error: err.message });
+        }
+      },
+
+      fetchAcademicBlocks: async () => {
+        try {
+          const academicBlocks = await academicBulkApi.getAll();
+          set({ academicBlocks });
+        } catch (err: any) {
+          set({ error: err.message });
+        }
+      },
+
+      setCurrentUser: (user) => {
+        if (user.token) setAuthToken(user.token);
+        set({ currentUser: user });
+      },
+
+      login: async (username, password) => {
+        set({ isLoading: true, error: null });
+        try {
+          const res = await authApi.login(username, password);
+          set({ currentUser: res.user, isLoading: false });
+          // Fetch updated bookings after login
+          get().fetchBookings();
+          return res.user;
+        } catch (err: any) {
+          set({ isLoading: false, error: err.message });
+          throw err;
+        }
+      },
+
+      loginAsRole: async (role) => {
+        const demo = DEMO_ACCOUNTS[role] || DEMO_ACCOUNTS.mahasiswa;
+        try {
+          await get().login(demo.username, demo.password);
+        } catch (err) {
+          // Fallback offline user if backend is offline
+          const fallbackUser: UserSession = {
+            id: `usr-${role}`,
+            name: demo.name,
+            identifier: demo.username,
+            role,
+            email: `${demo.username}@yarsi.ac.id`,
+            department: demo.dept,
+            organization: demo.dept,
+            phone: '0812-9876-5432',
+          };
+          set({ currentUser: fallbackUser });
         }
       },
 
       logout: () => {
+        removeAuthToken();
         set({
           currentUser: {
             id: 'guest',
             name: 'Tamu / Pengunjung',
             identifier: 'GUEST',
-            role: 'mahasiswa',
+            role: 'guest',
             email: 'guest@yarsi.ac.id',
             department: 'Civitas Academica',
             phone: '',
@@ -102,143 +266,293 @@ export const useAppStore = create<AppState>()(
         });
       },
 
-      addBooking: (bookingData) => {
-        const count = get().bookings.length + 1;
-        const paddedIndex = count.toString().padStart(4, '0');
-        const bookingCode = `YARSI-BK-2026-${paddedIndex}`;
-        const newId = `bk-${Date.now()}`;
-        const now = new Date();
-        const createdAt = `${now.toISOString().slice(0, 10)} ${now
-          .toTimeString()
-          .slice(0, 5)}`;
-        const qrCodeToken = `QR-YARSI-${paddedIndex}-SEC-${Math.floor(
-          1000 + Math.random() * 9000
-        )}`;
+      addBooking: async (bookingData, fileAttachment) => {
+        set({ isLoading: true, error: null });
+        try {
+          // Parse start and end time into ISO format
+          const startIso = new Date(`${bookingData.date}T${bookingData.startTime}:00Z`).toISOString();
+          const endIso = new Date(`${bookingData.date}T${bookingData.endTime}:00Z`).toISOString();
 
-        // Status determination
-        // Initial status is PENDING_LPF
-        const initialStatus: BookingStatus = 'PENDING_LPF';
+          // Prepare facilities and logistics
+          const additionalFacilities = bookingData.equipments?.map((e) => e.equipmentName) || [];
+          const logistik: BookingLogistikItem[] =
+            bookingData.logistik ||
+            bookingData.equipments?.map((e) => ({
+              jenisItem: e.equipmentName,
+              jumlah: e.quantity || 1,
+              catatan: e.notes,
+            })) || [];
 
-        const newBooking: Booking = {
-          ...bookingData,
-          id: newId,
-          bookingCode,
-          status: initialStatus,
-          createdAt,
-          qrCodeToken,
-          feedbackSubmitted: false,
-        };
+          const created = await bookingsApi.create(
+            {
+              roomId: bookingData.roomId,
+              title: bookingData.title,
+              activityType: (bookingData.category || 'SEMINAR').toUpperCase(),
+              startTime: startIso,
+              endTime: endIso,
+              additionalFacilities,
+              logistik,
+              notes: bookingData.description,
+              catatan: bookingData.description,
+              isLeaderApproved: bookingData.isLeaderApproved ?? true,
+            },
+            fileAttachment
+          );
 
-        set((state) => ({
-          bookings: [newBooking, ...state.bookings],
-        }));
+          set((state) => ({
+            bookings: [created, ...state.bookings.filter((b) => b.id !== created.id)],
+            isLoading: false,
+          }));
 
-        return newBooking;
+          return created;
+        } catch (err: any) {
+          set({ isLoading: false, error: err.message });
+          // If offline / mock fallback
+          const newId = `bk-${Date.now()}`;
+          const newBooking: Booking = {
+            ...bookingData,
+            id: newId,
+            bookingCode: `YARSI-BK-${newId.slice(-6).toUpperCase()}`,
+            status: 'PENDING_LPF',
+            createdAt: new Date().toLocaleString('id-ID'),
+            qrCodeToken: `QR-YARSI-${newId.slice(-6).toUpperCase()}-SEC`,
+            feedbackSubmitted: false,
+          };
+          set((state) => ({
+            bookings: [newBooking, ...state.bookings],
+          }));
+          return newBooking;
+        }
       },
 
-      cancelBooking: (bookingId) => {
-        set((state) => ({
-          bookings: state.bookings.map((b) =>
-            b.id === bookingId ? { ...b, status: 'CANCELLED' as BookingStatus } : b
-          ),
-        }));
+      cancelBooking: async (bookingId, reason) => {
+        set({ isSyncing: true });
+        try {
+          const updated = await bookingsApi.cancel(bookingId, reason);
+          set((state) => ({
+            bookings: state.bookings.map((b) => (b.id === bookingId ? updated : b)),
+            isSyncing: false,
+          }));
+        } catch (err: any) {
+          // Client-side fallback
+          set((state) => ({
+            bookings: state.bookings.map((b) =>
+              b.id === bookingId ? { ...b, status: 'CANCELLED' as BookingStatus } : b
+            ),
+            isSyncing: false,
+          }));
+        }
       },
 
-      approveBookingLPF: (bookingId, notes, approverName) => {
-        const now = new Date();
-        const timestamp = `${now.toISOString().slice(0, 10)} ${now
-          .toTimeString()
-          .slice(0, 5)}`;
-        const approver = approverName || 'Bambang Sudibyo (LPF)';
+      approveBookingLPF: async (bookingId, notes, approverName) => {
+        set({ isSyncing: true });
+        try {
+          const booking = get().bookings.find((b) => b.id === bookingId);
+          const targetStatus = booking?.requiresYayasanApproval
+            ? 'RECOMMENDED'
+            : 'APPROVED';
 
-        set((state) => ({
-          bookings: state.bookings.map((b) => {
-            if (b.id === bookingId) {
-              if (b.requiresYayasanApproval) {
-                // Forward to Yayasan
-                return {
-                  ...b,
-                  status: 'RECOMMENDED_YAYASAN' as BookingStatus,
-                  lpfNotes: notes || 'Diverifikasi LPF & Direkomendasikan ke Yayasan',
-                  lpfApprovedAt: timestamp,
-                  lpfApprovedBy: approver,
-                };
-              } else {
-                // Direct Approve
-                return {
-                  ...b,
-                  status: 'APPROVED' as BookingStatus,
-                  lpfNotes: notes || 'Disetujui oleh LPF',
-                  lpfApprovedAt: timestamp,
-                  lpfApprovedBy: approver,
-                };
+          const updated = await bookingsApi.updateStatus(bookingId, targetStatus, notes);
+          set((state) => ({
+            bookings: state.bookings.map((b) => (b.id === bookingId ? updated : b)),
+            isSyncing: false,
+          }));
+        } catch (err: any) {
+          // Client-side optimistic update fallback
+          const now = new Date().toLocaleString('id-ID');
+          const approver = approverName || 'Bambang Sudibyo (LPF)';
+          set((state) => ({
+            bookings: state.bookings.map((b) => {
+              if (b.id === bookingId) {
+                if (b.requiresYayasanApproval) {
+                  return {
+                    ...b,
+                    status: 'RECOMMENDED_YAYASAN' as BookingStatus,
+                    lpfNotes: notes || 'Diverifikasi LPF & Direkomendasikan ke Yayasan',
+                    lpfApprovedAt: now,
+                    lpfApprovedBy: approver,
+                  };
+                } else {
+                  return {
+                    ...b,
+                    status: 'APPROVED' as BookingStatus,
+                    lpfNotes: notes || 'Disetujui oleh LPF',
+                    lpfApprovedAt: now,
+                    lpfApprovedBy: approver,
+                  };
+                }
               }
-            }
-            return b;
-          }),
-        }));
+              return b;
+            }),
+            isSyncing: false,
+          }));
+        }
       },
 
-      approveBookingYayasan: (bookingId, notes, approverName) => {
-        const now = new Date();
-        const timestamp = `${now.toISOString().slice(0, 10)} ${now
-          .toTimeString()
-          .slice(0, 5)}`;
-        const approver = approverName || 'Drs. H. M. Shadiq (Yayasan YARSI)';
-
-        set((state) => ({
-          bookings: state.bookings.map((b) =>
-            b.id === bookingId
-              ? {
-                  ...b,
-                  status: 'APPROVED' as BookingStatus,
-                  yayasanNotes: notes || 'Disetujui oleh Sekretariat Yayasan YARSI',
-                  yayasanApprovedAt: timestamp,
-                  yayasanApprovedBy: approver,
-                }
-              : b
-          ),
-        }));
+      approveBookingYayasan: async (bookingId, notes, approverName) => {
+        set({ isSyncing: true });
+        try {
+          const updated = await bookingsApi.updateStatus(bookingId, 'APPROVED', notes);
+          set((state) => ({
+            bookings: state.bookings.map((b) => (b.id === bookingId ? updated : b)),
+            isSyncing: false,
+          }));
+        } catch (err: any) {
+          const now = new Date().toLocaleString('id-ID');
+          const approver = approverName || 'Drs. H. M. Shadiq (Yayasan YARSI)';
+          set((state) => ({
+            bookings: state.bookings.map((b) =>
+              b.id === bookingId
+                ? {
+                    ...b,
+                    status: 'APPROVED' as BookingStatus,
+                    yayasanNotes: notes || 'Disetujui oleh Sekretariat Yayasan YARSI',
+                    yayasanApprovedAt: now,
+                    yayasanApprovedBy: approver,
+                  }
+                : b
+            ),
+            isSyncing: false,
+          }));
+        }
       },
 
-      rejectBooking: (bookingId, reason, rejectedBy) => {
-        set((state) => ({
-          bookings: state.bookings.map((b) =>
-            b.id === bookingId
-              ? {
-                  ...b,
-                  status: 'REJECTED' as BookingStatus,
-                  rejectionReason: reason,
-                  lpfNotes: `Ditolak oleh ${rejectedBy}: ${reason}`,
-                }
-              : b
-          ),
-        }));
+      rejectBooking: async (bookingId, reason, rejectedBy) => {
+        set({ isSyncing: true });
+        try {
+          const updated = await bookingsApi.updateStatus(bookingId, 'REJECTED', reason);
+          set((state) => ({
+            bookings: state.bookings.map((b) => (b.id === bookingId ? updated : b)),
+            isSyncing: false,
+          }));
+        } catch (err: any) {
+          set((state) => ({
+            bookings: state.bookings.map((b) =>
+              b.id === bookingId
+                ? {
+                    ...b,
+                    status: 'REJECTED' as BookingStatus,
+                    rejectionReason: reason,
+                    lpfNotes: `Ditolak oleh ${rejectedBy || 'Admin'}: ${reason}`,
+                  }
+                : b
+            ),
+            isSyncing: false,
+          }));
+        }
       },
 
-      addAcademicBlock: (blockData) => {
-        const newId = `acad-${Date.now()}`;
-        const newBlock: AcademicBlock = {
-          ...blockData,
-          id: newId,
-        };
-        set((state) => ({
-          academicBlocks: [newBlock, ...state.academicBlocks],
-        }));
-        return newBlock;
+      returnBooking: async (bookingId, notes, returnedBy) => {
+        set({ isSyncing: true });
+        try {
+          const updated = await bookingsApi.updateStatus(bookingId, 'RETURNED', notes);
+          set((state) => ({
+            bookings: state.bookings.map((b) => (b.id === bookingId ? updated : b)),
+            isSyncing: false,
+          }));
+        } catch (err: any) {
+          set((state) => ({
+            bookings: state.bookings.map((b) =>
+              b.id === bookingId
+                ? {
+                    ...b,
+                    status: 'RETURNED' as BookingStatus,
+                    rejectionReason: notes,
+                    lpfNotes: `Dikembalikan oleh ${returnedBy || 'Admin'}: ${notes}`,
+                  }
+                : b
+            ),
+            isSyncing: false,
+          }));
+        }
       },
 
-      bulkAddAcademicBlocks: (blocks) => {
-        const newBlocks: AcademicBlock[] = blocks.map((b, index) => ({
-          ...b,
-          id: `acad-bulk-${Date.now()}-${index}`,
-        }));
-        set((state) => ({
-          academicBlocks: [...newBlocks, ...state.academicBlocks],
-        }));
+      addAcademicBlock: async (blockData) => {
+        set({ isLoading: true });
+        try {
+          const res = await academicBulkApi.create({
+            roomId: blockData.roomId,
+            title: blockData.title,
+            courseCode: blockData.courseCode,
+            semester: blockData.semester,
+            faculty: blockData.faculty,
+            dayOfWeek: blockData.dayOfWeek,
+            startTime: blockData.startTime,
+            endTime: blockData.endTime,
+            startDate: '2026-08-01',
+            endDate: '2026-12-31',
+          });
+          const newBlock: AcademicBlock = {
+            ...blockData,
+            id: res.id || `acad-${Date.now()}`,
+          };
+          set((state) => ({
+            academicBlocks: [newBlock, ...state.academicBlocks],
+            isLoading: false,
+          }));
+          return newBlock;
+        } catch (err: any) {
+          const newBlock: AcademicBlock = {
+            ...blockData,
+            id: `acad-${Date.now()}`,
+          };
+          set((state) => ({
+            academicBlocks: [newBlock, ...state.academicBlocks],
+            isLoading: false,
+          }));
+          return newBlock;
+        }
       },
 
-      deleteAcademicBlock: (id) => {
+      bulkAddAcademicBlocks: async (blocks) => {
+        set({ isLoading: true });
+        try {
+          const promises = blocks.map((b) =>
+            academicBulkApi.create({
+              roomId: b.roomId,
+              title: b.title,
+              courseCode: b.courseCode,
+              semester: b.semester,
+              faculty: b.faculty,
+              dayOfWeek: b.dayOfWeek,
+              startTime: b.startTime,
+              endTime: b.endTime,
+              startDate: '2026-08-01',
+              endDate: '2026-12-31',
+            })
+          );
+          const results = await Promise.allSettled(promises);
+          const createdBlocks: AcademicBlock[] = blocks.map((b, i) => {
+            const res = results[i];
+            const createdId =
+              res.status === 'fulfilled' ? res.value.id : `acad-bulk-${Date.now()}-${i}`;
+            return {
+              ...b,
+              id: createdId,
+            };
+          });
+          set((state) => ({
+            academicBlocks: [...createdBlocks, ...state.academicBlocks],
+            isLoading: false,
+          }));
+        } catch (err) {
+          const fallbackBlocks: AcademicBlock[] = blocks.map((b, i) => ({
+            ...b,
+            id: `acad-bulk-${Date.now()}-${i}`,
+          }));
+          set((state) => ({
+            academicBlocks: [...fallbackBlocks, ...state.academicBlocks],
+            isLoading: false,
+          }));
+        }
+      },
+
+      deleteAcademicBlock: async (id) => {
+        try {
+          await academicBulkApi.delete(id);
+        } catch (err) {
+          // ignore
+        }
         set((state) => ({
           academicBlocks: state.academicBlocks.filter((b) => b.id !== id),
         }));
@@ -252,46 +566,56 @@ export const useAppStore = create<AppState>()(
         }));
       },
 
-      addFeedback: (feedbackData) => {
-        const newId = `fb-${Date.now()}`;
-        const now = new Date();
-        const createdAt = `${now.toISOString().slice(0, 10)} ${now
-          .toTimeString()
-          .slice(0, 5)}`;
-        const newFeedback: Feedback = {
-          ...feedbackData,
-          id: newId,
-          createdAt,
-        };
+      addFeedback: async (feedbackData) => {
+        set({ isLoading: true });
+        try {
+          const feedback = await feedbacksApi.create({
+            bookingId: feedbackData.bookingId,
+            cleanlinessRating: feedbackData.cleanlinessRating,
+            facilityRating: feedbackData.facilityRating,
+            staffRating: feedbackData.staffPunctualityRating,
+            comments: feedbackData.notes,
+            reportedIssues: feedbackData.reportedIssue,
+          });
 
-        set((state) => ({
-          feedbacks: [newFeedback, ...state.feedbacks],
-          bookings: state.bookings.map((b) =>
-            b.id === feedbackData.bookingId
-              ? { ...b, feedbackSubmitted: true, status: 'COMPLETED' as BookingStatus }
-              : b
-          ),
-        }));
+          set((state) => ({
+            feedbacks: [feedback, ...state.feedbacks],
+            bookings: state.bookings.map((b) =>
+              b.id === feedbackData.bookingId
+                ? { ...b, feedbackSubmitted: true, status: 'COMPLETED' as BookingStatus }
+                : b
+            ),
+            isLoading: false,
+          }));
 
-        return newFeedback;
-      },
-
-      resetToDefault: () => {
-        set({
-          rooms: INITIAL_ROOMS,
-          bookings: INITIAL_BOOKINGS,
-          academicBlocks: INITIAL_ACADEMIC_BLOCKS,
-          feedbacks: INITIAL_FEEDBACKS,
-          currentUser: DEMO_USERS[0],
-        });
+          return feedback;
+        } catch (err: any) {
+          const newFeedback: Feedback = {
+            ...feedbackData,
+            id: `fb-${Date.now()}`,
+            createdAt: new Date().toISOString().slice(0, 10),
+          };
+          set((state) => ({
+            feedbacks: [newFeedback, ...state.feedbacks],
+            bookings: state.bookings.map((b) =>
+              b.id === feedbackData.bookingId
+                ? { ...b, feedbackSubmitted: true, status: 'COMPLETED' as BookingStatus }
+                : b
+            ),
+            isLoading: false,
+          }));
+          return newFeedback;
+        }
       },
     }),
     {
-      name: 'yarsi_pinjam_ruang_storage_v1',
+      name: 'siperu_yarsi_app_storage_v2',
       storage: createJSONStorage(() => localStorage),
       onRehydrateStorage: () => (state) => {
         if (state) {
           state.hasHydrated = true;
+          // Trigger background fetch
+          state.fetchInitialData();
         }
       },
     }

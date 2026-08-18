@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { Booking, AcademicBlock } from '@/lib/types';
+import { useAppStore } from '@/lib/store';
 import { Modal } from '@/components/common/Modal';
 import { StatusBadge } from '@/components/common/StatusBadge';
 import { formatDateIndo } from '@/lib/utils';
@@ -38,7 +39,29 @@ export function EventDetailModal({
   academicBlock,
   dateStr,
 }: EventDetailModalProps) {
+  const { currentUser } = useAppStore();
+
   if (!isOpen) return null;
+
+  const isGuestOrAnonymous = !currentUser || currentUser.role === 'guest';
+  const isOwnerOrAdmin =
+    currentUser &&
+    (currentUser.role === 'admin_lpf' ||
+      currentUser.role === 'admin_yayasan' ||
+      currentUser.id === booking?.userId ||
+      currentUser.identifier === booking?.userNimNidn);
+
+  const displayPhone = isOwnerOrAdmin
+    ? booking?.userPhone
+    : booking?.userPhone
+    ? `${booking.userPhone.slice(0, 4)}-****-${booking.userPhone.slice(-4)}`
+    : '-';
+
+  const displayNim = isOwnerOrAdmin
+    ? booking?.userNimNidn
+    : booking?.userNimNidn
+    ? `${booking.userNimNidn.slice(0, 4)}****${booking.userNimNidn.slice(-2)}`
+    : '-';
 
   if (academicBlock) {
     return (
@@ -167,7 +190,7 @@ export function EventDetailModal({
             <div>
               <p className="text-slate-400 font-medium">Nama Pemohon</p>
               <p className="font-semibold text-slate-800 mt-0.5">{booking.userName}</p>
-              <p className="text-[11px] text-slate-500">{booking.userNimNidn}</p>
+              <p className="text-[11px] text-slate-500 font-mono">{displayNim}</p>
             </div>
             <div>
               <p className="text-slate-400 font-medium">Unit / Ormawa</p>
@@ -178,7 +201,7 @@ export function EventDetailModal({
               <p className="text-slate-400 font-medium">Kontak & Peserta</p>
               <p className="font-semibold text-slate-800 mt-0.5 flex items-center gap-1">
                 <Phone className="w-3 h-3 text-emerald-600" />
-                <span>{booking.userPhone}</span>
+                <span>{displayPhone}</span>
               </p>
               <p className="text-[11px] text-slate-500 flex items-center gap-1">
                 <Users className="w-3 h-3 text-slate-400" />
