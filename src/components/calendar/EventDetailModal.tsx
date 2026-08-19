@@ -15,7 +15,6 @@ import {
   Users,
   ShieldCheck,
   FileText,
-  Sparkles,
   GraduationCap,
   Info,
   CheckCircle2,

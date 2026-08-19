@@ -269,9 +269,9 @@ export const useAppStore = create<AppState>()(
       addBooking: async (bookingData, fileAttachment) => {
         set({ isLoading: true, error: null });
         try {
-          // Parse start and end time into ISO format
-          const startIso = new Date(`${bookingData.date}T${bookingData.startTime}:00Z`).toISOString();
-          const endIso = new Date(`${bookingData.date}T${bookingData.endTime}:00Z`).toISOString();
+          // Parse start and end time into ISO format using local timezone
+          const startIso = new Date(`${bookingData.date}T${bookingData.startTime}:00`).toISOString();
+          const endIso = new Date(`${bookingData.date}T${bookingData.endTime}:00`).toISOString();
 
           // Prepare facilities and logistics
           const additionalFacilities = bookingData.equipments?.map((e) => e.equipmentName) || [];
@@ -471,20 +471,20 @@ export const useAppStore = create<AppState>()(
         set({ isLoading: true });
         try {
           const res = await academicBulkApi.create({
-            roomId: blockData.roomId,
-            title: blockData.title,
-            courseCode: blockData.courseCode,
-            semester: blockData.semester,
-            faculty: blockData.faculty,
+            courseName: blockData.title,
+            lecturerName: blockData.lecturerName,
+            roomIds: [blockData.roomId],
             dayOfWeek: blockData.dayOfWeek,
-            startTime: blockData.startTime,
-            endTime: blockData.endTime,
-            startDate: '2026-08-01',
-            endDate: '2026-12-31',
+            startTimeStr: blockData.startTime,
+            endTimeStr: blockData.endTime,
+            semesterStartDate: '2026-09-01',
+            semesterEndDate: '2027-01-15',
+            faculty: blockData.faculty,
+            studentGroup: blockData.studentGroup,
           });
           const newBlock: AcademicBlock = {
             ...blockData,
-            id: res.id || `acad-${Date.now()}`,
+            id: res?.bulkGroupId || `acad-${Date.now()}`,
           };
           set((state) => ({
             academicBlocks: [newBlock, ...state.academicBlocks],
@@ -507,30 +507,33 @@ export const useAppStore = create<AppState>()(
       bulkAddAcademicBlocks: async (blocks) => {
         set({ isLoading: true });
         try {
-          const promises = blocks.map((b) =>
-            academicBulkApi.create({
-              roomId: b.roomId,
-              title: b.title,
-              courseCode: b.courseCode,
-              semester: b.semester,
-              faculty: b.faculty,
-              dayOfWeek: b.dayOfWeek,
-              startTime: b.startTime,
-              endTime: b.endTime,
-              startDate: '2026-08-01',
-              endDate: '2026-12-31',
-            })
-          );
-          const results = await Promise.allSettled(promises);
-          const createdBlocks: AcademicBlock[] = blocks.map((b, i) => {
-            const res = results[i];
-            const createdId =
-              res.status === 'fulfilled' ? res.value.id : `acad-bulk-${Date.now()}-${i}`;
-            return {
-              ...b,
-              id: createdId,
-            };
-          });
+          const createdBlocks: AcademicBlock[] = [];
+          for (let i = 0; i < blocks.length; i++) {
+            const b = blocks[i];
+            try {
+              const res = await academicBulkApi.create({
+                courseName: b.title,
+                lecturerName: b.lecturerName,
+                roomIds: [b.roomId],
+                dayOfWeek: b.dayOfWeek,
+                startTimeStr: b.startTime,
+                endTimeStr: b.endTime,
+                semesterStartDate: '2026-09-01',
+                semesterEndDate: '2027-01-15',
+                faculty: b.faculty,
+                studentGroup: b.studentGroup,
+              });
+              createdBlocks.push({
+                ...b,
+                id: res?.bulkGroupId || `acad-bulk-${Date.now()}-${i}`,
+              });
+            } catch (innerErr) {
+              createdBlocks.push({
+                ...b,
+                id: `acad-bulk-${Date.now()}-${i}`,
+              });
+            }
+          }
           set((state) => ({
             academicBlocks: [...createdBlocks, ...state.academicBlocks],
             isLoading: false,

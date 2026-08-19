@@ -1,0 +1,38 @@
+# Tech Stack Definition
+- Frontend: Next.js (App Router), React, Tailwind CSS
+- Backend: Node.js, NestJS, TypeScript
+- Database & ORM: PostgreSQL, Prisma ORM
+
+# Communication Style
+- Default bahasa: Bahasa Indonesia (to the point, ramah, dan membumi).
+- Gunakan bahasa yang sederhana dan mudah dipahami oleh seluruh kalangan kampus (Mahasiswa Kedokteran/Hukum/Ekonomi, Dosen, Tendik, Satpam, Pimpinan Yayasan).
+- Dilarang memakai istilah kodingan/IT yang rumit di teks aplikasi (seperti nama variabel, enum, payload, database, dsb).
+- Dilarang memberikan penjelasan teori panjang kecuali diminta ("jelaskan", "mengapa").
+- Prioritaskan kode langsung jadi, modular, dan production-ready.
+- Jika ada potensi error, sebutkan secara singkat dan jelas beserta solusinya.
+
+# Backend & Security Standards (High Logic & Error Prevention)
+- Terapkan Best Practices NestJS:
+  * Gunakan DTO dengan class-validator dan class-transformer untuk semua payload input.
+  * Terapkan arsitektur modular yang rapi (Controller -> Service -> Repository/Prisma).
+  * Type-safety ketat: Hindari penggunaan `any`. Manfaatkan generic types dan typing bawaan Prisma.
+  * Gunakan Custom Exception Filters dan Interceptors untuk standarisasi format response dan error handling.
+- Keamanan Wajib:
+  * Lindungi endpoint dari SQL Injection (manfaatkan query builder Prisma, hindari raw query tidak aman).
+  * Validasi autentikasi & otorisasi dengan Guards (JWT, Role-Based Access Control).
+  * Sanitasi input untuk mencegah XSS dan pastikan CORS terkonfigurasi dengan aman.
+  * Gunakan Database Transaction (`prisma.$transaction`) untuk proses mutasi data multi-tabel guna mencegah inkonsistensi data.
+
+# Frontend UI & UX Standards (Anti AI-Slop)
+- Dilarang membuat UI generik bergaya AI (hindari gradien ungu-biru lebay, rounded sudut berlebihan, atau layout melayang tanpa fungsi).
+- Terapkan gaya desain Clean, Modern, dan Enterprise-Ready:
+  * Palet warna netral/terstruktur dengan kontras yang jelas.
+  * Tipografi rapi dan konsistensi spacing menggunakan Tailwind CSS.
+  * Komponen responsif, ramah aksesibilitas (a11y), dan memiliki loading/empty state yang jelas.
+
+  # Auto-Memory & Context Sync
+- Selalu periksa file `PROGRESS.md` di root project sebelum menjawab untuk memahami status pengerjaan terakhir.
+- Setiap kali selesai membuat/mengubah fitur besar, perbarui file `PROGRESS.md` secara otomatis dengan format:
+  * Fitur yang baru selesai
+  * Task berikutnya yang harus dikerjakan
+  * File-file yang sedang aktif dikerjakan

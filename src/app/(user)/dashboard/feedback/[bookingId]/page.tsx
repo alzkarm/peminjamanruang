@@ -11,10 +11,10 @@ import {
   Clock,
   CheckCircle2,
   ArrowRight,
-  Sparkles,
   Camera,
   AlertTriangle,
   FileCheck2,
+  MapPin,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -142,7 +142,7 @@ export default function FeedbackPage() {
       </div>
 
       {submitted ? (
-        <div className="p-8 bg-emerald-50 border-2 border-emerald-400 rounded-3xl text-center space-y-3 shadow-lg animate-fade-in">
+        <div className="p-8 bg-emerald-50 border-2 border-emerald-400 rounded-2xl text-center space-y-3 shadow-md animate-fade-in">
           <div className="w-12 h-12 rounded-full bg-emerald-600 text-white mx-auto flex items-center justify-center">
             <CheckCircle2 className="w-8 h-8" />
           </div>
@@ -156,7 +156,7 @@ export default function FeedbackPage() {
       ) : (
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Booking Summary Box */}
-          <div className="bg-white rounded-3xl border border-slate-200/80 shadow-sm p-6 space-y-3">
+          <div className="bg-white rounded-xl border border-slate-200/80 shadow-xs p-6 space-y-3">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <span className="text-xs font-mono font-bold text-yarsi-primary bg-emerald-50 px-2 py-0.5 rounded">
                 {booking.bookingCode}
@@ -165,13 +165,14 @@ export default function FeedbackPage() {
             </div>
 
             <h3 className="text-base font-bold text-slate-900">{booking.title}</h3>
-            <p className="text-xs text-slate-600 font-medium">
-              📍 {booking.roomName} • {booking.building} (Lt. {booking.floor})
+            <p className="text-xs text-slate-600 font-medium flex items-center gap-1.5">
+              <MapPin className="w-3.5 h-3.5 text-yarsi-primary shrink-0" />
+              <span>{booking.roomName} • {booking.building} (Lt. {booking.floor})</span>
             </p>
           </div>
 
           {/* Rating Criteria Cards */}
-          <div className="bg-white rounded-3xl border border-slate-200/80 shadow-card p-6 sm:p-8 space-y-4">
+          <div className="bg-white rounded-xl border border-slate-200/80 shadow-sm p-6 sm:p-8 space-y-4">
             <h3 className="text-sm font-bold uppercase tracking-wider text-slate-700 flex items-center gap-2">
               <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
               <span>Penilaian Kualitas Fasilitas & Petugas</span>
@@ -200,7 +201,7 @@ export default function FeedbackPage() {
           </div>
 
           {/* Written Feedback & Issue Reporting */}
-          <div className="bg-white rounded-3xl border border-slate-200/80 shadow-card p-6 sm:p-8 space-y-4">
+          <div className="bg-white rounded-xl border border-slate-200/80 shadow-sm p-6 sm:p-8 space-y-4">
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">
                 Catatan & Saran Perbaikan

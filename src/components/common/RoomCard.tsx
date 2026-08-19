@@ -10,7 +10,6 @@ import {
   ShieldAlert,
   CheckCircle2,
   Calendar,
-  Sparkles,
   ArrowRight,
 } from 'lucide-react';
 

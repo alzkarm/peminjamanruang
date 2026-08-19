@@ -10,7 +10,7 @@ import {
   Calendar,
   Building2,
   Users,
-  Sparkles,
+  Activity,
   ArrowRight,
   ShieldCheck,
   CheckCircle2,
@@ -84,16 +84,14 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-slate-50 space-y-12 pb-16">
       {/* HERO SECTION */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-yarsi-dark via-yarsi-primary to-emerald-900 text-white pt-12 pb-20 px-4 sm:px-6 lg:px-8">
-        {/* Decorative Grid Pattern */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-yarsi-dark via-yarsi-primary to-emerald-900 text-white pt-12 pb-20 px-4 sm:px-6 lg:px-8 border-b border-emerald-800/30">
+        {/* Subtle Grid Pattern */}
         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none" />
-        <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-emerald-400/20 blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-24 -left-24 w-96 h-96 rounded-full bg-teal-300/10 blur-3xl pointer-events-none" />
 
         <div className="max-w-7xl mx-auto relative z-10 space-y-8">
           <div className="max-w-3xl space-y-4">
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur border border-white/20 text-xs font-semibold text-emerald-200">
-              <Sparkles className="w-4 h-4 text-amber-300" />
+              <ShieldCheck className="w-4 h-4 text-emerald-300" />
               <span>Smart Campus Universitas YARSI • Sistem Terintegrasi 2026</span>
             </div>
 
@@ -146,7 +144,7 @@ export default function HomePage() {
                   onChange={(e) => setSelectedBuilding(e.target.value)}
                   className="w-full px-3 py-2.5 bg-slate-50 hover:bg-slate-100/80 focus:bg-white text-xs sm:text-sm font-medium rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-yarsi-primary text-slate-700"
                 >
-                  <option value="all">🏢 Semua Gedung Kampus</option>
+                  <option value="all">Semua Gedung Kampus</option>
                   {buildings.map((b) => (
                     <option key={b} value={b}>
                       {b}
@@ -209,7 +207,7 @@ export default function HomePage() {
 
           <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-card flex items-center gap-3.5">
             <div className="p-3 bg-amber-50 text-amber-700 rounded-xl shrink-0">
-              <Sparkles className="w-6 h-6" />
+              <Activity className="w-6 h-6" />
             </div>
             <div>
               <p className="text-xs text-slate-400 font-semibold">Tingkat Okupansi</p>
@@ -308,7 +306,7 @@ export default function HomePage() {
 
       {/* HOW IT WORKS / STEP-BY-STEP WORKFLOW */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-yarsi-dark text-white rounded-3xl p-8 sm:p-12 shadow-xl border border-slate-700/60 space-y-8">
+        <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-yarsi-dark text-white rounded-2xl p-8 sm:p-12 shadow-xl border border-slate-700/60 space-y-8">
           <div className="text-center max-w-2xl mx-auto space-y-2">
             <span className="text-xs font-bold uppercase tracking-wider text-emerald-400 bg-emerald-950 px-3 py-1 rounded-full border border-emerald-800">
               Alur Digital SIPERU
@@ -326,9 +324,9 @@ export default function HomePage() {
               <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 font-black text-lg flex items-center justify-center">
                 1
               </div>
-              <h3 className="font-bold text-sm text-white">Login Akun LDAP SSO</h3>
+              <h3 className="font-bold text-sm text-white">Masuk Akun YARSI</h3>
               <p className="text-xs text-slate-300 leading-relaxed">
-                Masuk menggunakan akun civitas YARSI resmi (NIM untuk Mahasiswa / NIDN untuk Dosen & Tendik).
+                Gunakan username dan kata sandi akun resmi YARSI Anda (seperti saat masuk ke SISAKAD).
               </p>
             </div>
 
@@ -338,7 +336,7 @@ export default function HomePage() {
               </div>
               <h3 className="font-bold text-sm text-white">Pilih Ruang & Cek Jadwal</h3>
               <p className="text-xs text-slate-300 leading-relaxed">
-                Sistem mendeteksi bentrok jadwal kuliah dan permohonan lain secara otomatis dan instan.
+                Sistem otomatis memeriksa apakah ruangan sedang kosong atau sudah terpakai jadwal kuliah dan acara lain.
               </p>
             </div>
 
@@ -346,9 +344,9 @@ export default function HomePage() {
               <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 font-black text-lg flex items-center justify-center">
                 3
               </div>
-              <h3 className="font-bold text-sm text-white">Multi-Level Approval</h3>
+              <h3 className="font-bold text-sm text-white">Persetujuan Petugas</h3>
               <p className="text-xs text-slate-300 leading-relaxed">
-                Ruang reguler diverifikasi Admin LPF. Auditorium dan ruang VIP diteruskan ke Yayasan YARSI.
+                Ruang kelas diperiksa oleh Petugas Fasilitas (LPF). Auditorium dan ruang khusus diteruskan ke Pengurus Yayasan.
               </p>
             </div>
 
@@ -356,9 +354,9 @@ export default function HomePage() {
               <div className="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 font-black text-lg flex items-center justify-center">
                 4
               </div>
-              <h3 className="font-bold text-sm text-white">E-Ticket & QR Akses</h3>
+              <h3 className="font-bold text-sm text-white">Tiket Izin & QR Code</h3>
               <p className="text-xs text-slate-300 leading-relaxed">
-                Dapatkan tiket QR resmi untuk akses petugas security dan fasilitas audio-visual siap pakai.
+                Dapatkan bukti izin resmi dengan QR Code untuk ditunjukkan kepada petugas keamanan dan fasilitas saat acara.
               </p>
             </div>
           </div>

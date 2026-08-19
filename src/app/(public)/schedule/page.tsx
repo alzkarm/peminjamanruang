@@ -9,7 +9,6 @@ import {
   CalendarDays,
   LayoutGrid,
   Clock,
-  Sparkles,
   PlusCircle,
   Building,
   Info,
@@ -30,7 +29,7 @@ function ScheduleContent() {
       <div className="bg-gradient-to-r from-yarsi-dark to-yarsi-primary text-white rounded-2xl p-6 sm:p-8 shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 text-emerald-200 text-xs font-semibold mb-2">
-            <Sparkles className="w-3.5 h-3.5 text-amber-300" />
+            <CalendarDays className="w-3.5 h-3.5 text-emerald-300" />
             <span>Interactive Room Schedule Engine</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black">

@@ -155,13 +155,17 @@ export function mapBackendBookingToFrontend(b: any): Booking {
   const startDate = b.startTime ? new Date(b.startTime) : new Date();
   const endDate = b.endTime ? new Date(b.endTime) : new Date();
 
-  // Extract YYYY-MM-DD
-  const dateStr = startDate.toISOString().slice(0, 10);
-  // Extract HH:mm in Local/WIB
-  const startHH = startDate.getHours().toString().padStart(2, '0');
-  const startMM = startDate.getMinutes().toString().padStart(2, '0');
-  const endHH = endDate.getHours().toString().padStart(2, '0');
-  const endMM = endDate.getMinutes().toString().padStart(2, '0');
+  // Extract YYYY-MM-DD in local time
+  const year = startDate.getFullYear();
+  const month = String(startDate.getMonth() + 1).padStart(2, '0');
+  const day = String(startDate.getDate()).padStart(2, '0');
+  const dateStr = `${year}-${month}-${day}`;
+
+  // Extract HH:mm in local time
+  const startHH = String(startDate.getHours()).padStart(2, '0');
+  const startMM = String(startDate.getMinutes()).padStart(2, '0');
+  const endHH = String(endDate.getHours()).padStart(2, '0');
+  const endMM = String(endDate.getMinutes()).padStart(2, '0');
 
   // Parse additional facilities
   let equipments: BookingEquipment[] = [];
@@ -537,37 +541,49 @@ export const bookingsApi = {
 export const academicBulkApi = {
   async getAll(): Promise<AcademicBlock[]> {
     const data = await request<any[]>('/academic-bulk');
-    return data.map((b: any) => ({
-      id: b.id,
-      title: b.title,
-      courseCode: b.courseCode || 'MK-YARSI',
-      lecturerName: b.user?.fullName || 'Dosen Pengampu',
-      roomId: b.roomId,
-      roomName: b.room?.name || 'Ruang Kuliah',
-      building: b.room?.name?.includes('Menara')
-        ? 'Menara YARSI'
-        : 'Gedung C Kampus YARSI',
-      dayOfWeek: new Date(b.startTime).getDay() || 1,
-      startTime: new Date(b.startTime).toISOString().slice(11, 16),
-      endTime: new Date(b.endTime).toISOString().slice(11, 16),
-      semester: 'Semester Ganjil 2026/2027',
-      faculty: 'Fakultas Teknologi Informasi',
-      studentGroup: 'Reguler A',
-      isActive: true,
-    }));
+    return data.map((b: any) => {
+      const start = new Date(b.startTime);
+      const end = new Date(b.endTime);
+      const startHH = String(start.getHours()).padStart(2, '0');
+      const startMM = String(start.getMinutes()).padStart(2, '0');
+      const endHH = String(end.getHours()).padStart(2, '0');
+      const endMM = String(end.getMinutes()).padStart(2, '0');
+      const day = start.getDay();
+
+      return {
+        id: b.id,
+        title: b.title,
+        courseCode: b.notes?.includes(':') ? b.notes.split(':')[1]?.trim() : 'MK-YARSI',
+        lecturerName: b.user?.fullName || 'Dosen Pengampu',
+        roomId: b.roomId,
+        roomName: b.room?.name || 'Ruang Kuliah',
+        building: b.room?.name?.includes('Menara')
+          ? 'Menara YARSI'
+          : b.room?.name?.includes('FK')
+          ? 'Gedung Fakultas Kedokteran'
+          : 'Gedung C Kampus YARSI',
+        dayOfWeek: day === 0 ? 7 : day,
+        startTime: `${startHH}:${startMM}`,
+        endTime: `${endHH}:${endMM}`,
+        semester: 'Semester Ganjil 2026/2027',
+        faculty: 'Fakultas Teknologi Informasi',
+        studentGroup: 'Reguler A',
+        isActive: true,
+      };
+    });
   },
 
   async create(dto: {
-    roomId: string;
-    title: string;
-    courseCode: string;
-    semester: string;
-    faculty: string;
+    courseName: string;
+    lecturerName: string;
+    roomIds: string[];
     dayOfWeek: number;
-    startTime: string;
-    endTime: string;
-    startDate: string;
-    endDate: string;
+    startTimeStr: string;
+    endTimeStr: string;
+    semesterStartDate: string;
+    semesterEndDate: string;
+    faculty?: string;
+    studentGroup?: string;
   }): Promise<any> {
     return request<any>('/academic-bulk', {
       method: 'POST',
@@ -575,8 +591,8 @@ export const academicBulkApi = {
     });
   },
 
-  async delete(id: string): Promise<any> {
-    return request<any>(`/academic-bulk/${id}`, {
+  async delete(bulkGroupId: string): Promise<any> {
+    return request<any>(`/academic-bulk/${bulkGroupId}`, {
       method: 'DELETE',
     });
   },

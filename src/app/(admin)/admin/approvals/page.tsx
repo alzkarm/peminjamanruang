@@ -21,6 +21,7 @@ import {
   Send,
   PackageCheck,
   Phone,
+  Check,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -119,7 +120,7 @@ export default function LpfApprovalsPage() {
   return (
     <div className="space-y-6">
       {/* Top Header */}
-      <div className="bg-white rounded-3xl border border-slate-200/80 shadow-sm p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-yarsi-primary text-xs font-bold mb-2 border border-emerald-200">
             <ShieldCheck className="w-4 h-4 text-yarsi-primary" />
@@ -204,7 +205,7 @@ export default function LpfApprovalsPage() {
 
       {/* Approvals Table / Card Queue */}
       {lpfQueue.length === 0 ? (
-        <div className="bg-white rounded-3xl border border-slate-200 p-12 text-center space-y-3">
+        <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center space-y-3">
           <CheckCircle2 className="w-12 h-12 text-emerald-500 mx-auto" />
           <h3 className="text-base font-bold text-slate-800">
             Tidak ada permohonan dalam antrean ini
@@ -318,9 +319,10 @@ export default function LpfApprovalsPage() {
                           {booking.logistik.map((l, i) => (
                             <span
                               key={i}
-                              className="text-[11px] bg-emerald-50 text-emerald-900 border border-emerald-200 px-2 py-0.5 rounded-lg font-medium"
+                              className="inline-flex items-center gap-1 text-[11px] bg-emerald-50 text-emerald-900 border border-emerald-200 px-2 py-0.5 rounded-lg font-medium"
                             >
-                              ✓ {l.jenisItem} ({l.jumlah}x) {l.catatan ? `— ${l.catatan}` : ''}
+                              <Check className="w-3 h-3 text-emerald-600 shrink-0" />
+                              <span>{l.jenisItem} ({l.jumlah}x) {l.catatan ? `— ${l.catatan}` : ''}</span>
                             </span>
                           ))}
                         </div>

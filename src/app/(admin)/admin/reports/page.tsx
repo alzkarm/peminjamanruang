@@ -18,7 +18,6 @@ import {
   TrendingUp,
   PieChart,
   Layers,
-  Sparkles,
 } from 'lucide-react';
 
 export default function ReportsAnalyticsPage() {
@@ -102,7 +101,7 @@ export default function ReportsAnalyticsPage() {
   return (
     <div className="space-y-6">
       {/* Header Banner */}
-      <div className="bg-white rounded-3xl border border-slate-200/80 shadow-sm p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-yarsi-primary text-xs font-bold mb-2 border border-emerald-200">
             <BarChart3 className="w-4 h-4 text-yarsi-primary" />
@@ -252,7 +251,7 @@ export default function ReportsAnalyticsPage() {
       {/* Analytics Visual Charts Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Most Utilized Rooms */}
-        <div className="bg-white rounded-3xl border border-slate-200/80 shadow-sm p-6 space-y-4">
+        <div className="bg-white rounded-xl border border-slate-200/80 shadow-sm p-6 space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
               <Building2 className="w-4 h-4 text-yarsi-primary" />
@@ -286,7 +285,7 @@ export default function ReportsAnalyticsPage() {
         </div>
 
         {/* Categories Breakdown */}
-        <div className="bg-white rounded-3xl border border-slate-200/80 shadow-sm p-6 space-y-4">
+        <div className="bg-white rounded-xl border border-slate-200/80 shadow-sm p-6 space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
               <PieChart className="w-4 h-4 text-yarsi-primary" />
@@ -323,7 +322,7 @@ export default function ReportsAnalyticsPage() {
       </div>
 
       {/* Data Table */}
-      <div className="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
         <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between">
           <h3 className="font-bold text-slate-900 text-sm">
             Tabel Rekapitulasi Peminjaman ({filteredBookings.length} Data)

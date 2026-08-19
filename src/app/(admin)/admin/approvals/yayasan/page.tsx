@@ -20,6 +20,7 @@ import {
   Phone,
   Download,
   PackageCheck,
+  Check,
 } from 'lucide-react';
 
 export default function YayasanApprovalsPage() {
@@ -77,8 +78,7 @@ export default function YayasanApprovalsPage() {
   return (
     <div className="space-y-6">
       {/* Yayasan Header */}
-      <div className="bg-gradient-to-r from-amber-700 via-amber-800 to-amber-950 text-white rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden space-y-3">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-amber-400/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="bg-gradient-to-r from-amber-700 via-amber-800 to-amber-950 text-white rounded-2xl p-6 sm:p-8 shadow-lg border border-amber-600/30 relative overflow-hidden space-y-3">
 
         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 text-amber-200 text-xs font-bold border border-white/20">
           <Building2 className="w-4 h-4 text-amber-300" />
@@ -138,7 +138,7 @@ export default function YayasanApprovalsPage() {
         </h2>
 
         {yayasanQueue.length === 0 ? (
-          <div className="bg-white rounded-3xl border border-slate-200 p-12 text-center space-y-3">
+          <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center space-y-3">
             <CheckCircle2 className="w-12 h-12 text-emerald-500 mx-auto" />
             <h3 className="text-base font-bold text-slate-800">
               Tidak ada permohonan tertunda di antrean Yayasan
@@ -152,7 +152,7 @@ export default function YayasanApprovalsPage() {
             {yayasanQueue.map((booking) => (
               <div
                 key={booking.id}
-                className="bg-white rounded-3xl border-2 border-amber-300 shadow-md p-6 space-y-5"
+                className="bg-white rounded-xl border-2 border-amber-300 shadow-sm p-6 space-y-5"
               >
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100">
@@ -219,9 +219,10 @@ export default function YayasanApprovalsPage() {
                           {booking.logistik.map((l, i) => (
                             <span
                               key={i}
-                              className="text-[11px] bg-amber-50 text-amber-900 border border-amber-200 px-2 py-0.5 rounded-lg font-medium"
+                              className="inline-flex items-center gap-1 text-[11px] bg-amber-50 text-amber-900 border border-amber-200 px-2 py-0.5 rounded-lg font-medium"
                             >
-                              ✓ {l.jenisItem} ({l.jumlah}x)
+                              <Check className="w-3 h-3 text-amber-700 shrink-0" />
+                              <span>{l.jenisItem} ({l.jumlah}x)</span>
                             </span>
                           ))}
                         </div>

@@ -23,6 +23,7 @@ import {
   RotateCcw,
   ShieldCheck,
   PackageCheck,
+  Check,
 } from 'lucide-react';
 
 export default function UserDashboardPage() {
@@ -178,7 +179,7 @@ export default function UserDashboardPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       {/* Top Profile & Stats Banner */}
-      <div className="bg-white rounded-3xl border border-slate-200/80 shadow-card p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="flex items-start sm:items-center gap-4">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -301,7 +302,7 @@ export default function UserDashboardPage() {
 
         {/* Bookings Card List */}
         {filteredBookings.length === 0 ? (
-          <div className="bg-white rounded-3xl border border-slate-200 p-12 text-center space-y-4">
+          <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center space-y-4">
             <Calendar className="w-12 h-12 text-slate-300 mx-auto" />
             <h3 className="text-base font-bold text-slate-700">Belum ada data peminjaman</h3>
             <p className="text-xs text-slate-400 max-w-sm mx-auto">
@@ -384,9 +385,10 @@ export default function UserDashboardPage() {
                         {booking.logistik.map((l, i) => (
                           <span
                             key={i}
-                            className="text-[10px] bg-slate-100 text-slate-700 border border-slate-200 px-2 py-0.5 rounded font-medium"
+                            className="inline-flex items-center gap-1 text-[10px] bg-slate-100 text-slate-700 border border-slate-200 px-2 py-0.5 rounded font-medium"
                           >
-                            ✓ {l.jenisItem} ({l.jumlah}x)
+                            <Check className="w-2.5 h-2.5 text-emerald-600 shrink-0" />
+                            <span>{l.jenisItem} ({l.jumlah}x)</span>
                           </span>
                         ))}
                       </div>
@@ -484,8 +486,7 @@ export default function UserDashboardPage() {
         >
           <div className="space-y-6">
             {/* Ticket Card Container */}
-            <div className="bg-gradient-to-br from-yarsi-dark via-yarsi-primary to-emerald-950 text-white rounded-3xl p-6 shadow-2xl relative overflow-hidden space-y-6">
-              <div className="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full blur-2xl pointer-events-none" />
+            <div className="bg-gradient-to-br from-yarsi-dark via-yarsi-primary to-emerald-950 text-white rounded-2xl p-6 shadow-xl border border-emerald-800/30 relative overflow-hidden space-y-6">
 
               {/* Header */}
               <div className="flex items-center justify-between border-b border-white/20 pb-4">

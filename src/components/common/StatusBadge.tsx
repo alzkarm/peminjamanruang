@@ -9,7 +9,7 @@ import {
   CheckCircle2,
   XCircle,
   Ban,
-  Sparkles,
+  CheckCheck,
   GraduationCap,
 } from 'lucide-react';
 
@@ -54,7 +54,7 @@ export function StatusBadge({
       case 'CANCELLED':
         return <Ban className={iconClass} />;
       case 'COMPLETED':
-        return <Sparkles className={iconClass} />;
+        return <CheckCheck className={iconClass} />;
       case 'ACADEMIC_BLOCKED':
         return <GraduationCap className={iconClass} />;
     }

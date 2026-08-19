@@ -104,6 +104,19 @@ export class AcademicBulkService {
     return result;
   }
 
+  async findAll() {
+    return this.prisma.booking.findMany({
+      where: {
+        isAcademicBulk: true,
+      },
+      include: {
+        room: { include: { floor: true } },
+        user: { select: { fullName: true } },
+      },
+      orderBy: { startTime: 'asc' },
+    });
+  }
+
   async findAllGroups() {
     return this.prisma.booking.groupBy({
       by: ['bulkGroupId', 'title', 'roomId'],

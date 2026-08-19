@@ -14,7 +14,7 @@ import {
   ChevronDown,
   User,
   LogOut,
-  Sparkles,
+  Activity,
   Menu,
   X,
   FileCheck2,
@@ -23,14 +23,15 @@ import {
 
 export function Navbar() {
   const pathname = usePathname();
-  const { currentUser, loginAsRole, bookings } = useAppStore();
+  const { currentUser, loginAsRole, bookings, fetchInitialData } = useAppStore();
   const [mounted, setMounted] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+    fetchInitialData();
+  }, [fetchInitialData]);
 
   // Compute pending counts
   const pendingLPFCount = bookings.filter((b) => b.status === 'PENDING_LPF').length;
@@ -96,7 +97,7 @@ export function Navbar() {
             <span>Menara YARSI • Gedung FK/FKG • Gedung C</span>
             <span className="text-emerald-400">|</span>
             <span className="flex items-center gap-1 font-semibold text-white">
-              <Sparkles className="w-3 h-3 text-amber-400" /> Real-time Conflict Engine
+              <Activity className="w-3 h-3 text-emerald-400" /> Real-time Conflict Engine
             </span>
           </div>
         </div>
@@ -121,7 +122,12 @@ export function Navbar() {
           {/* Desktop Nav Links */}
           <nav className="hidden md:flex items-center gap-1">
             {navLinks.map((item) => {
-              const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
+              const isActive =
+                item.href === '/'
+                  ? pathname === '/'
+                  : item.href === '/admin/approvals'
+                  ? pathname.startsWith('/admin')
+                  : pathname === item.href;
               const Icon = item.icon;
               return (
                 <Link
@@ -129,9 +135,11 @@ export function Navbar() {
                   href={item.href}
                   className={`relative flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-medium transition-all ${
                     item.highlight
-                      ? 'bg-yarsi-primary text-white hover:bg-yarsi-dark shadow-sm shadow-emerald-900/20 hover:shadow-md'
+                      ? isActive
+                        ? 'bg-yarsi-dark text-white ring-2 ring-emerald-300/40 shadow-sm'
+                        : 'bg-yarsi-primary text-white hover:bg-yarsi-dark shadow-sm shadow-emerald-900/20 hover:shadow-md'
                       : isActive
-                      ? 'text-yarsi-primary bg-emerald-50 font-semibold'
+                      ? 'text-yarsi-primary bg-emerald-50 font-semibold border border-emerald-200/80'
                       : 'text-slate-600 hover:text-yarsi-primary hover:bg-slate-50'
                   }`}
                 >
@@ -189,7 +197,7 @@ export function Navbar() {
 
                       <div className="py-1">
                         <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-3 py-1">
-                          Simulasi Ganti Role (LDAP SSO)
+                          Simulasi Akun Pengguna
                         </p>
                         {Object.entries(DEMO_ACCOUNTS)
                           .filter(([role]) => role !== 'guest')
@@ -222,7 +230,7 @@ export function Navbar() {
                           className="w-full flex items-center gap-2 px-3 py-2 text-xs text-slate-600 hover:text-yarsi-primary hover:bg-slate-50 rounded-lg"
                         >
                           <Lock className="w-3.5 h-3.5" />
-                          <span>Halaman SSO LDAP</span>
+                          <span>Halaman Masuk Akun</span>
                         </Link>
                       </div>
                     </div>
@@ -235,7 +243,7 @@ export function Navbar() {
                 className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-yarsi-primary hover:bg-yarsi-dark rounded-xl shadow-sm transition-all"
               >
                 <User className="w-4 h-4" />
-                <span>Masuk SSO</span>
+                <span>Masuk Akun</span>
               </Link>
             )}
 

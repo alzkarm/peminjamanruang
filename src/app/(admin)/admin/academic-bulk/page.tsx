@@ -18,9 +18,9 @@ import {
   Calendar,
   Clock,
   Building2,
-  Sparkles,
   Download,
   Upload,
+  MapPin,
 } from 'lucide-react';
 
 export default function AcademicBulkPage() {
@@ -153,17 +153,17 @@ export default function AcademicBulkPage() {
   return (
     <div className="space-y-6">
       {/* Top Banner */}
-      <div className="bg-gradient-to-r from-purple-800 via-purple-900 to-indigo-950 text-white rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden space-y-4">
+      <div className="bg-gradient-to-r from-yarsi-dark via-emerald-900 to-slate-900 text-white rounded-2xl p-6 sm:p-8 shadow-lg border border-emerald-800/30 relative overflow-hidden space-y-4">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-2">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 text-purple-200 text-xs font-bold border border-white/20">
-              <GraduationCap className="w-4 h-4 text-purple-300" />
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 text-emerald-200 text-xs font-bold border border-white/20">
+              <GraduationCap className="w-4 h-4 text-emerald-300" />
               <span>Academic Timetable Integration Engine</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-black">
               Semester Academic Schedule Bulk Blocker
             </h1>
-            <p className="text-xs sm:text-sm text-purple-200/90 max-w-2xl">
+            <p className="text-xs sm:text-sm text-emerald-100/90 max-w-2xl">
               Kunci ruangan kelas dan lab secara massal untuk jadwal kuliah reguler 1 semester. Sistem akan otomatis mencegah permohonan umum agar tidak terjadi bentrok.
             </p>
           </div>
@@ -234,7 +234,7 @@ export default function AcademicBulkPage() {
       </div>
 
       {/* Academic Blocks Grid Table */}
-      <div className="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden">
+      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
         <div className="p-4 border-b border-slate-100 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <h3 className="font-bold text-slate-900 text-sm">
@@ -284,8 +284,9 @@ export default function AcademicBulkPage() {
                         {daysName[block.dayOfWeek - 1]}, {block.startTime} - {block.endTime} WIB
                       </span>
                       <span>•</span>
-                      <span className="text-slate-600">
-                        📍 {block.roomName} ({block.building})
+                      <span className="text-slate-600 flex items-center gap-1">
+                        <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
+                        <span>{block.roomName} ({block.building})</span>
                       </span>
                       <span>•</span>
                       <span className="text-purple-700 font-medium">

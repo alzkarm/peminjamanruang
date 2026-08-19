@@ -12,7 +12,6 @@ import {
   Users,
   Info,
   Calendar,
-  Sparkles,
   CheckCircle2,
   GraduationCap,
 } from 'lucide-react';

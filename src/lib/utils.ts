@@ -174,7 +174,7 @@ export function getStatusBadgeConfig(status: BookingStatus) {
         label: "Selesai",
         bg: "bg-teal-50 text-teal-800 border-teal-300 ring-teal-500/20",
         dot: "bg-teal-600",
-        iconName: "Sparkles",
+        iconName: "CheckCheck",
       };
     case "ACADEMIC_BLOCKED":
       return {

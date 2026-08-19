@@ -7,7 +7,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Calendar as CalendarIcon,
-  Sparkles,
   GraduationCap,
 } from 'lucide-react';
 

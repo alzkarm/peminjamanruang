@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useAppStore } from '@/lib/store';
 import { BookingCategory, BookingEquipment, BookingLogistikItem } from '@/lib/types';
 import { checkRoomConflict, formatDateIndo } from '@/lib/utils';
-import confetti from 'canvas-confetti';
 import {
   Calendar,
   Clock,
@@ -16,12 +15,12 @@ import {
   ShieldAlert,
   FileText,
   UploadCloud,
-  Sparkles,
   ArrowRight,
   PackageCheck,
   Plus,
   Trash2,
   CheckSquare,
+  MapPin,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -253,21 +252,9 @@ function NewBookingForm() {
       setIsSubmitting(false);
       setSubmitSuccess(true);
 
-      // Trigger Celebration Confetti
-      try {
-        confetti({
-          particleCount: 120,
-          spread: 80,
-          origin: { y: 0.6 },
-          colors: ['#0D7A5F', '#10B981', '#F59E0B', '#3B82F6'],
-        });
-      } catch (err) {
-        // ignore
-      }
-
       setTimeout(() => {
         router.push('/dashboard');
-      }, 1600);
+      }, 1200);
     } catch (err: any) {
       setIsSubmitting(false);
       setErrorMessage(err.message || 'Gagal mengirimkan permohonan peminjaman ruangan.');
@@ -306,7 +293,7 @@ function NewBookingForm() {
       )}
 
       {submitSuccess && (
-        <div className="p-6 bg-emerald-50 border-2 border-emerald-400 rounded-3xl text-center space-y-2 animate-fade-in shadow-xl">
+        <div className="p-6 bg-emerald-50 border-2 border-emerald-400 rounded-2xl text-center space-y-2 animate-fade-in shadow-lg">
           <div className="w-12 h-12 rounded-full bg-emerald-600 text-white mx-auto flex items-center justify-center">
             <CheckCircle2 className="w-8 h-8" />
           </div>
@@ -321,7 +308,7 @@ function NewBookingForm() {
 
       <form onSubmit={handleSubmit} className="space-y-8">
         {/* STEP 1: ROOM & TIME SELECTION */}
-        <div className="bg-white rounded-3xl border border-slate-200/80 shadow-card p-6 sm:p-8 space-y-6">
+        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 sm:p-8 space-y-6">
           <div className="flex items-center gap-2.5 pb-4 border-b border-slate-100">
             <div className="p-2 rounded-xl bg-emerald-50 text-yarsi-primary">
               <Building2 className="w-5 h-5" />
@@ -366,8 +353,9 @@ function NewBookingForm() {
                   <p className="text-slate-500 text-[11px] leading-relaxed">
                     {selectedRoom.description}
                   </p>
-                  <p className="text-[11px] text-slate-600 font-medium">
-                    📍 {selectedRoom.locationDetails} • PIC: {selectedRoom.picName}
+                  <p className="text-[11px] text-slate-600 font-medium flex items-center gap-1.5">
+                    <MapPin className="w-3.5 h-3.5 text-yarsi-primary shrink-0" />
+                    <span>{selectedRoom.locationDetails} • PIC: {selectedRoom.picName}</span>
                   </p>
 
                   {/* Yayasan Level Warning */}
@@ -460,7 +448,7 @@ function NewBookingForm() {
         </div>
 
         {/* STEP 2: EVENT DETAILS & JENIS KEGIATAN */}
-        <div className="bg-white rounded-3xl border border-slate-200/80 shadow-card p-6 sm:p-8 space-y-6">
+        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 sm:p-8 space-y-6">
           <div className="flex items-center gap-2.5 pb-4 border-b border-slate-100">
             <div className="p-2 rounded-xl bg-amber-50 text-amber-700">
               <FileText className="w-5 h-5" />
@@ -469,8 +457,8 @@ function NewBookingForm() {
               <h2 className="text-base font-bold text-slate-900">
                 2. Detail Kegiatan & Klasifikasi Acara
               </h2>
-              <p className="text-xs text-slate-400">
-                Pilih jenis kegiatan sesuai enum terstandarisasi universitas
+              <p className="text-xs text-slate-500">
+                Pilih jenis kegiatan resmi yang sesuai dengan agenda acara
               </p>
             </div>
           </div>
@@ -493,7 +481,7 @@ function NewBookingForm() {
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Jenis Kegiatan (Enum Prisma) *
+                  Pilihan Kategori Kegiatan *
                 </label>
                 <select
                   value={category}
@@ -532,8 +520,9 @@ function NewBookingForm() {
                   }`}
                 />
                 {isCapacityExceeded && (
-                  <p className="text-[11px] text-rose-600 mt-1 font-semibold">
-                    ⚠️ Jumlah peserta ({estimatedAttendees}) melebihi kapasitas ruang ({selectedRoom?.capacity} orang).
+                  <p className="text-[11px] text-rose-600 mt-1 font-semibold flex items-center gap-1">
+                    <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                    <span>Jumlah peserta ({estimatedAttendees}) melebihi kapasitas ruang ({selectedRoom?.capacity} orang).</span>
                   </p>
                 )}
               </div>
@@ -570,16 +559,16 @@ function NewBookingForm() {
         </div>
 
         {/* STEP 3: LOGISTICS & FASILITAS TAMBAHAN (BookingLogistik Model) */}
-        <div className="bg-white rounded-3xl border border-slate-200/80 shadow-card p-6 sm:p-8 space-y-6">
+        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 sm:p-8 space-y-6">
           <div className="flex items-center gap-2.5 pb-4 border-b border-slate-100">
             <div className="p-2 rounded-xl bg-teal-50 text-teal-700">
               <PackageCheck className="w-5 h-5" />
             </div>
             <div>
               <h2 className="text-base font-bold text-slate-900">
-                3. Fasilitas & Logistik Tambahan (BookingLogistik)
+                3. Kebutuhan Peralatan & Fasilitas Tambahan
               </h2>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-500">
                 Permintaan item meja, kursi, colokan listrik, dan sound system yang akan disiapkan petugas LPF
               </p>
             </div>
@@ -710,7 +699,7 @@ function NewBookingForm() {
         </div>
 
         {/* STEP 4: DOCUMENT UPLOAD (dokumenUrl / attachment) */}
-        <div className="bg-white rounded-3xl border border-slate-200/80 shadow-card p-6 sm:p-8 space-y-6">
+        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 sm:p-8 space-y-6">
           <div className="flex items-center gap-2.5 pb-4 border-b border-slate-100">
             <div className="p-2 rounded-xl bg-purple-50 text-purple-700">
               <UploadCloud className="w-5 h-5" />
@@ -727,16 +716,16 @@ function NewBookingForm() {
 
           <div className="border-2 border-dashed border-slate-200 rounded-2xl p-6 text-center space-y-3 bg-slate-50 hover:bg-slate-100/60 transition-colors">
             <FileText className="w-10 h-10 text-slate-400 mx-auto" />
-            <div>
+            <div className="space-y-1">
               <p className="text-xs font-bold text-slate-700">
-                Berkas Terpilih: <span className="text-yarsi-primary">{uploadedFileName}</span>
+                Berkas Terpilih: <span className="text-yarsi-primary font-semibold">{uploadedFileName}</span>
               </p>
-              <p className="text-[11px] text-slate-400 mt-0.5">
-                File akan disimpan ke penyimpanan static backend (/uploads) dan URL disimpan ke database.
+              <p className="text-[11px] text-slate-500">
+                Dokumen akan diunggah dan diverifikasi oleh tim LPF & Yayasan sebagai lampiran resmi.
               </p>
             </div>
 
-            <label className="inline-block cursor-pointer px-4 py-2 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 shadow-xs">
+            <label className="inline-block cursor-pointer px-4 py-2 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 shadow-xs transition-colors">
               <span>Pilih Dokumen (PDF / Gambar)</span>
               <input
                 type="file"
@@ -749,21 +738,21 @@ function NewBookingForm() {
         </div>
 
         {/* STEP 5: VERIFIKASI INTERNAL HIMA / BEM (PRIORITAS 5) */}
-        <div className="bg-emerald-50/80 rounded-3xl border-2 border-emerald-300 p-6 sm:p-8 space-y-4">
+        <div className="bg-emerald-50/80 rounded-2xl border-2 border-emerald-300 p-6 sm:p-8 space-y-4">
           <div className="flex items-start gap-3">
             <input
               type="checkbox"
               id="internalApprovalCheck"
               checked={isInternalApproved}
               onChange={(e) => setIsInternalApproved(e.target.checked)}
-              className="mt-1 w-5 h-5 rounded text-yarsi-primary focus:ring-yarsi-primary border-emerald-400"
+              className="mt-1 w-5 h-5 rounded text-yarsi-primary focus:ring-yarsi-primary border-emerald-400 cursor-pointer"
             />
-            <label htmlFor="internalApprovalCheck" className="cursor-pointer space-y-1">
+            <label htmlFor="internalApprovalCheck" className="cursor-pointer space-y-1.5 select-none">
               <p className="text-sm font-bold text-emerald-950 leading-snug">
-                Konfirmasi Verifikasi Internal Fakultas / Kemahasiswaan (Wajib Dicontang) *
+                Konfirmasi Persetujuan Internal Fakultas / Kemahasiswaan (Wajib Dicentang) *
               </p>
               <p className="text-xs text-emerald-800 leading-relaxed">
-                Saya menyatakan bahwa kegiatan ini telah diverifikasi dan disetujui secara internal oleh Pimpinan Fakultas, Dekanat, BEM/DPM, atau Pembina Kemahasiswaan terkait sebelum diajukan ke sistem SIPERU. Bukti konfirmasi ini dicatat sebagai audit digital resmi (<code className="font-mono text-emerald-950 font-bold">isLeaderApproved = true</code>).
+                Saya menyatakan dengan sungguh-sungguh bahwa kegiatan ini telah diverifikasi dan disetujui secara internal oleh Pimpinan Fakultas, Dekanat, BEM/DPM, atau Pembina Kemahasiswaan terkait sebelum diajukan ke sistem SIPERU. Pernyataan ini dicatat secara resmi sebagai rekam jejak audit digital.
               </p>
             </label>
           </div>
