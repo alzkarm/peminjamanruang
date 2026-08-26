@@ -10,8 +10,6 @@ import {
   LayoutGrid,
   Clock,
   PlusCircle,
-  Building,
-  Info,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -21,45 +19,49 @@ function ScheduleContent() {
 
   const { rooms, bookings, academicBlocks } = useAppStore();
   const [calendarMode, setCalendarMode] = useState<'timeline' | 'month'>('timeline');
-  const [selectedDate, setSelectedDate] = useState('2026-08-16');
+  const [selectedDate, setSelectedDate] = useState(() =>
+    new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta' }).format(new Date())
+  );
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+    <main className="max-w-[1440px] mx-auto px-3 sm:px-6 lg:px-8 py-5">
       {/* Top Banner */}
-      <div className="bg-gradient-to-r from-yarsi-dark to-yarsi-primary text-white rounded-2xl p-6 sm:p-8 shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <section className="bg-yarsi-dark text-white rounded-xl p-5 sm:p-7 border border-emerald-950/40 flex flex-col md:flex-row md:items-center justify-between gap-5">
         <div>
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/10 text-emerald-200 text-xs font-semibold mb-2">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-900/60 text-emerald-200 text-xs font-semibold mb-2">
             <CalendarDays className="w-3.5 h-3.5 text-emerald-300" />
-            <span>Interactive Room Schedule Engine</span>
+            <span>Jadwal Ruangan Terpadu</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black">
-            Kalender Ruangan Digital Kampus YARSI
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
+            Kalender Ruangan Kampus YARSI
           </h1>
           <p className="text-xs sm:text-sm text-emerald-100/90 mt-1 max-w-2xl">
-            Tampilan kalender interaktif ala Google Calendar. Klik pada slot atau event untuk melihat detail permohonan, nama kegiatan, dan jadwal kuliah semester.
+            Pantau ketersediaan slot ruangan, agenda kegiatan terkonfirmasi, dan jadwal perkuliahan secara real-time.
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2.5">
           {/* Toggle View Mode */}
-          <div className="bg-white/10 backdrop-blur p-1 rounded-xl border border-white/20 flex text-xs font-bold text-white">
+          <div className="bg-emerald-950/50 p-1 rounded-lg border border-emerald-800/40 flex text-xs font-bold text-white">
             <button
               type="button"
               onClick={() => setCalendarMode('timeline')}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition-all ${
+              aria-pressed={calendarMode === 'timeline'}
+              className={`min-h-10 flex items-center gap-1.5 px-3 py-2 rounded-md transition-all ${
                 calendarMode === 'timeline'
                   ? 'bg-white text-yarsi-dark shadow-sm'
                   : 'hover:bg-white/10 text-emerald-100'
               }`}
             >
               <Clock className="w-3.5 h-3.5" />
-              <span>Timeline Google Calendar</span>
+              <span>Timeline Harian</span>
             </button>
 
             <button
               type="button"
               onClick={() => setCalendarMode('month')}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition-all ${
+              aria-pressed={calendarMode === 'month'}
+              className={`min-h-10 flex items-center gap-1.5 px-3 py-2 rounded-md transition-all ${
                 calendarMode === 'month'
                   ? 'bg-white text-yarsi-dark shadow-sm'
                   : 'hover:bg-white/10 text-emerald-100'
@@ -72,13 +74,13 @@ function ScheduleContent() {
 
           <Link
             href="/dashboard/booking/new"
-            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl font-bold text-xs bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-md transition-all"
+            className="min-h-10 inline-flex items-center gap-1.5 px-4 py-2 rounded-lg font-bold text-xs bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-sm transition-all"
           >
             <PlusCircle className="w-4 h-4" />
             <span>Pinjam Ruang</span>
           </Link>
         </div>
-      </div>
+      </section>
 
       {/* Main Calendar Render */}
       {calendarMode === 'timeline' ? (
@@ -87,6 +89,8 @@ function ScheduleContent() {
           bookings={bookings}
           academicBlocks={academicBlocks}
           selectedRoomId={initialRoomId}
+          initialDate={selectedDate}
+          usePublicSchedule
         />
       ) : (
         <CalendarGrid
@@ -99,13 +103,13 @@ function ScheduleContent() {
           }}
         />
       )}
-    </div>
+    </main>
   );
 }
 
 export default function SchedulePage() {
   return (
-    <Suspense fallback={<div className="p-12 text-center text-slate-400">Memuat Kalender...</div>}>
+    <Suspense fallback={<div role="status" className="p-12 text-center text-slate-600">Memuat kalender ruangan...</div>}>
       <ScheduleContent />
     </Suspense>
   );

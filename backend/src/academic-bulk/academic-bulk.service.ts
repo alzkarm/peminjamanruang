@@ -1,19 +1,28 @@
 import {
   Injectable,
   BadRequestException,
-  ConflictException,
   Logger,
 } from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
 import { CreateAcademicBulkDto } from './dto/create-academic-bulk.dto';
 import { ActivityType, BookingStatus } from '@/common/types';
+import { BookingStatus as PrismaBookingStatus, Prisma } from '@prisma/client';
 import { randomUUID } from 'crypto';
+import { SchedulingService } from '../scheduling/scheduling.service';
+
+type AcademicBookingInput = Prisma.BookingCreateManyInput & {
+  startTime: Date;
+  endTime: Date;
+};
 
 @Injectable()
 export class AcademicBulkService {
   private readonly logger = new Logger(AcademicBulkService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly scheduling: SchedulingService,
+  ) {}
 
   /**
    * Generates recurring academic timetable bookings for an entire semester
@@ -34,18 +43,7 @@ export class AcademicBulkService {
     }
 
     const bulkGroupId = `bulk-acad-${Date.now()}-${randomUUID().slice(0, 8)}`;
-    const instancesToCreate: {
-      userId: string;
-      roomId: string;
-      title: string;
-      activityType: string;
-      startTime: Date;
-      endTime: Date;
-      status: string;
-      notes: string;
-      isAcademicBulk: boolean;
-      bulkGroupId: string;
-    }[] = [];
+    const instancesToCreate: AcademicBookingInput[] = [];
 
     // Iterate through all days in the semester range
     const cursor = new Date(startSemester);
@@ -65,10 +63,10 @@ export class AcademicBulkService {
             userId,
             roomId,
             title: `[Jadwal Kuliah] ${dto.courseName} - ${dto.lecturerName}`,
-            activityType: ActivityType.KULIAH.toString(),
+            activityType: ActivityType.KULIAH,
             startTime: sessionStart,
             endTime: sessionEnd,
-            status: BookingStatus.APPROVED.toString(),
+            status: PrismaBookingStatus.APPROVED,
             notes: `Perkuliahan Semester Terjadwal: ${dto.studentGroup || ''} (${dto.faculty || ''})`,
             isAcademicBulk: true,
             bulkGroupId,
@@ -83,9 +81,17 @@ export class AcademicBulkService {
       throw new BadRequestException('Tidak ada jadwal yang sesuai dengan rentang semester dan hari yang dipilih.');
     }
 
-    // Execute in transaction
-    const result = await this.prisma.$transaction(async (tx) => {
-      // 1. Batch insert bookings
+    const result = await this.scheduling.inSerializableTransaction(async (tx) => {
+      for (const instance of instancesToCreate) {
+        await this.scheduling.assertAvailable(
+          instance.roomId,
+          instance.startTime,
+          instance.endTime,
+          undefined,
+          tx,
+        );
+      }
+
       await tx.booking.createMany({
         data: instancesToCreate,
       });

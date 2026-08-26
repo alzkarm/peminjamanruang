@@ -10,7 +10,7 @@ const config: Config = {
     extend: {
       colors: {
         yarsi: {
-          primary: "#0D7A5F",
+          primary: "#006A4E",
           dark: "#075240",
           darker: "#043026",
           light: "#E8F8F5",
@@ -27,7 +27,7 @@ const config: Config = {
         sans: ["var(--font-inter)", "Plus Jakarta Sans", "Inter", "sans-serif"],
       },
       boxShadow: {
-        card: "0 4px 20px -2px rgba(13, 122, 95, 0.08), 0 2px 6px -1px rgba(0, 0, 0, 0.04)",
+        card: "0 2px 10px -2px rgba(0, 106, 78, 0.08)",
         glass: "0 8px 32px 0 rgba(13, 122, 95, 0.12)",
         glow: "0 0 20px rgba(13, 122, 95, 0.25)",
       },

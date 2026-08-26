@@ -13,12 +13,17 @@ import {
   QueryBookingDto,
 } from './dto/create-booking.dto';
 import { BookingStatus, Role } from '@/common/types';
+import { BookingStatus as PrismaBookingStatus } from '@prisma/client';
+import { SchedulingService } from '../scheduling/scheduling.service';
 
 @Injectable()
 export class BookingsService {
   private readonly logger = new Logger(BookingsService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly scheduling: SchedulingService,
+  ) {}
 
   /**
    * Collision-Proof Atomic Booking Creator
@@ -34,65 +39,25 @@ export class BookingsService {
     const finalAttachmentUrl = dto.dokumenUrl || uploadedAttachmentUrl;
     const finalNotes = dto.notes || dto.catatan;
 
-    // Atomic interactive Prisma transaction
-    return this.prisma.$transaction(async (tx) => {
-      // 1. Verify room exists and is active
-      const room = await tx.room.findUnique({
-        where: { id: dto.roomId },
-        include: { floor: true },
-      });
-
-      if (!room || !room.isActive) {
-        throw new NotFoundException('Ruangan tidak ditemukan atau sedang tidak aktif.');
-      }
-
-      // 2. Collision Check: Overlapping active bookings
-      const conflictingBooking = await tx.booking.findFirst({
-        where: {
-          roomId: dto.roomId,
-          status: {
-            in: [
-              BookingStatus.PENDING,
-              BookingStatus.RECOMMENDED,
-              BookingStatus.APPROVED,
-            ],
-          },
-          AND: [
-            { startTime: { lt: end } },
-            { endTime: { gt: start } },
-          ],
-        },
-        include: {
-          user: { select: { fullName: true, unitName: true } },
-        },
-      });
-
-      if (conflictingBooking) {
-        const conflictStatus =
-          conflictingBooking.status === BookingStatus.APPROVED
-            ? 'Telah Disetujui'
-            : 'Sedang Dalam Review';
-
-        throw new ConflictException({
-          message: `Jadwal bentrok dengan peminjaman lain (${conflictStatus}): "${conflictingBooking.title}" oleh ${conflictingBooking.user.fullName} (${conflictingBooking.startTime.toISOString()} - ${conflictingBooking.endTime.toISOString()})`,
-          conflictingBookingId: conflictingBooking.id,
-          conflictingTitle: conflictingBooking.title,
-        });
-      }
-
-      // 3. Create Booking & Logistics
-      const facilitiesStr = JSON.stringify(dto.additionalFacilities || []);
+    return this.scheduling.inSerializableTransaction(async (tx) => {
+      const { room } = await this.scheduling.assertAvailable(
+        dto.roomId,
+        start,
+        end,
+        undefined,
+        tx,
+      );
 
       const newBooking = await tx.booking.create({
         data: {
           userId,
           roomId: dto.roomId,
           title: dto.title,
-          activityType: dto.activityType.toString(),
+          activityType: dto.activityType,
           startTime: start,
           endTime: end,
           status: BookingStatus.PENDING,
-          additionalFacilities: facilitiesStr,
+          additionalFacilities: dto.additionalFacilities ?? [],
           notes: finalNotes,
           attachmentUrl: finalAttachmentUrl,
           dokumenUrl: finalAttachmentUrl,
@@ -112,13 +77,12 @@ export class BookingsService {
         },
       });
 
-      // 4. Create Initial Audit Trail Log
       await tx.approvalLog.create({
         data: {
           bookingId: newBooking.id,
           approverId: userId,
-          fromStatus: BookingStatus.PENDING,
-          toStatus: BookingStatus.PENDING,
+          fromStatus: PrismaBookingStatus.PENDING,
+          toStatus: PrismaBookingStatus.PENDING,
           notes: 'Permohonan peminjaman berhasil diajukan oleh pemohon.',
         },
       });
@@ -136,7 +100,7 @@ export class BookingsService {
     currentUser: { id: string; role: string; fullName: string },
     dto: UpdateBookingStatusDto,
   ) {
-    return this.prisma.$transaction(async (tx) => {
+    return this.scheduling.inSerializableTransaction(async (tx) => {
       const booking = await tx.booking.findUnique({
         where: { id: bookingId },
         include: { room: true, user: true },
@@ -195,31 +159,26 @@ export class BookingsService {
           throw new ForbiddenException('Hanya Admin Universitas yang berwenang menyetujui ruangan reguler.');
         }
 
-        if (targetStatus === BookingStatus.APPROVED) {
-          // Final atomic check for collision before approval
-          const conflict = await tx.booking.findFirst({
-            where: {
-              roomId: booking.roomId,
-              id: { not: booking.id },
-              status: BookingStatus.APPROVED,
-              AND: [
-                { startTime: { lt: booking.endTime } },
-                { endTime: { gt: booking.startTime } },
-              ],
-            },
-          });
+      }
 
-          if (conflict) {
-            throw new ConflictException(`Tidak dapat menyetujui: ruangan telah disetujui untuk kegiatan lain ("${conflict.title}").`);
-          }
-        }
+      if (
+        ![BookingStatus.PENDING, BookingStatus.RECOMMENDED, BookingStatus.APPROVED].includes(currentStatus) &&
+        [BookingStatus.PENDING, BookingStatus.RECOMMENDED, BookingStatus.APPROVED].includes(targetStatus)
+      ) {
+        await this.scheduling.assertAvailable(
+          booking.roomId,
+          booking.startTime,
+          booking.endTime,
+          booking.id,
+          tx,
+        );
       }
 
       // Update Booking Status
       const updatedBooking = await tx.booking.update({
         where: { id: bookingId },
         data: {
-          status: targetStatus.toString(),
+          status: targetStatus as PrismaBookingStatus,
         },
         include: {
           room: { include: { floor: true } },
@@ -248,8 +207,8 @@ export class BookingsService {
         data: {
           bookingId: booking.id,
           approverId: currentUser.id,
-          fromStatus: currentStatus.toString(),
-          toStatus: targetStatus.toString(),
+          fromStatus: currentStatus as PrismaBookingStatus,
+          toStatus: targetStatus as PrismaBookingStatus,
           notes: finalLogNote,
         },
       });
@@ -278,7 +237,7 @@ export class BookingsService {
 
     return this.prisma.booking.findMany({
       where: {
-        ...(status ? { status: status.toString() } : {}),
+        ...(status ? { status: status as PrismaBookingStatus } : {}),
         ...(roomId ? { roomId } : {}),
         ...(userId ? { userId } : {}),
         ...(startDate || endDate
@@ -327,5 +286,26 @@ export class BookingsService {
     }
 
     return booking;
+  }
+
+  async getAttachmentForUser(
+    bookingId: string,
+    currentUser: { id: string; role: string },
+  ) {
+    const booking = await this.prisma.booking.findUnique({
+      where: { id: bookingId },
+      select: { userId: true, attachmentUrl: true, dokumenUrl: true },
+    });
+    if (!booking) throw new NotFoundException('Peminjaman tidak ditemukan.');
+    if (
+      booking.userId !== currentUser.id &&
+      currentUser.role !== Role.ADMIN_UNIV &&
+      currentUser.role !== Role.ADMIN_YAYASAN
+    ) {
+      throw new ForbiddenException('Anda tidak berhak mengakses lampiran ini.');
+    }
+    const storedPath = booking.attachmentUrl || booking.dokumenUrl;
+    if (!storedPath) throw new NotFoundException('Lampiran tidak tersedia.');
+    return storedPath;
   }
 }

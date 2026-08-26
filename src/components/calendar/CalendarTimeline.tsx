@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Room, Booking, AcademicBlock } from '@/lib/types';
 import { formatDateIndo, formatShortDateIndo, checkTimeOverlap, getDayOfWeekNumber } from '@/lib/utils';
+import { mapBackendStatusToFrontend, roomsApi } from '@/lib/api';
 import { EventDetailModal } from './EventDetailModal';
 import {
   ChevronLeft,
@@ -22,6 +23,39 @@ interface CalendarTimelineProps {
   academicBlocks: AcademicBlock[];
   initialDate?: string;
   selectedRoomId?: string;
+  usePublicSchedule?: boolean;
+}
+
+function addDays(dateStr: string, days: number) {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  return new Date(Date.UTC(year, month - 1, day + days)).toISOString().slice(0, 10);
+}
+
+function jakartaDateString(date: Date) {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Jakarta', year: 'numeric', month: '2-digit', day: '2-digit',
+  }).formatToParts(date);
+  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return `${values.year}-${values.month}-${values.day}`;
+}
+
+function toPrivacySafeBooking(event: {
+  id: string; roomId: string; roomName: string; startTime: string; endTime: string; status: string;
+}): Booking {
+  const start = new Date(event.startTime);
+  const end = new Date(event.endTime);
+  const formatTime = (value: Date) => new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Asia/Jakarta', hour: '2-digit', minute: '2-digit', hour12: false,
+  }).format(value);
+  return {
+    id: event.id, bookingCode: event.id, roomId: event.roomId, roomName: event.roomName,
+    building: '', floor: 0, userId: '', userName: '', userEmail: '', userNimNidn: '',
+    userRole: 'guest', userPhone: '', userOrganization: '', department: '',
+    title: 'Tidak tersedia', category: 'lainnya', jenisKegiatan: '', description: '',
+    estimatedAttendees: 0, date: jakartaDateString(start), startTime: formatTime(start), endTime: formatTime(end),
+    status: mapBackendStatusToFrontend(event.status), requiresYayasanApproval: false,
+    isLeaderApproved: false, equipments: [], logistik: [], approvalLogs: [], qrCodeToken: '', createdAt: '', feedbackSubmitted: false,
+  };
 }
 
 const TIME_SLOTS = [
@@ -47,10 +81,11 @@ export function CalendarTimeline({
   academicBlocks,
   initialDate,
   selectedRoomId,
+  usePublicSchedule = false,
 }: CalendarTimelineProps) {
   // Current selected date (default to 2026-08-16 or today)
   const [currentDateStr, setCurrentDateStr] = useState<string>(
-    initialDate || '2026-08-16'
+    initialDate || jakartaDateString(new Date())
   );
   const [viewMode, setViewMode] = useState<'day_rooms' | 'week_room'>('day_rooms');
   const [filterBuilding, setFilterBuilding] = useState<string>('all');
@@ -63,22 +98,45 @@ export function CalendarTimeline({
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [selectedAcademic, setSelectedAcademic] = useState<AcademicBlock | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+  const [publicBookings, setPublicBookings] = useState<Booking[]>([]);
+  const [scheduleLoading, setScheduleLoading] = useState(usePublicSchedule);
+  const [scheduleError, setScheduleError] = useState<string | null>(null);
+  const activeBookings = usePublicSchedule ? publicBookings : bookings;
+
+  useEffect(() => {
+    if (!usePublicSchedule) return;
+    let cancelled = false;
+    setScheduleLoading(true);
+    setScheduleError(null);
+    roomsApi
+      .getPublicSchedule(
+        `${currentDateStr}T00:00:00+07:00`,
+        `${addDays(currentDateStr, viewMode === 'week_room' ? 7 : 1)}T00:00:00+07:00`,
+        viewMode === 'week_room' ? activeRoomId || undefined : undefined,
+      )
+      .then(({ events }) => {
+        if (!cancelled) setPublicBookings(events.map(toPrivacySafeBooking));
+      })
+      .catch(() => {
+        if (!cancelled) setScheduleError('Jadwal tidak dapat dimuat. Silakan coba lagi.');
+      })
+      .finally(() => {
+        if (!cancelled) setScheduleLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [activeRoomId, currentDateStr, usePublicSchedule, viewMode]);
 
   // Navigate Date
   const handlePrevDay = () => {
-    const d = new Date(currentDateStr + 'T00:00:00');
-    d.setDate(d.getDate() - 1);
-    setCurrentDateStr(d.toISOString().slice(0, 10));
+    setCurrentDateStr(addDays(currentDateStr, -1));
   };
 
   const handleNextDay = () => {
-    const d = new Date(currentDateStr + 'T00:00:00');
-    d.setDate(d.getDate() + 1);
-    setCurrentDateStr(d.toISOString().slice(0, 10));
+    setCurrentDateStr(addDays(currentDateStr, 1));
   };
 
   const handleToday = () => {
-    setCurrentDateStr('2026-08-16');
+    setCurrentDateStr(jakartaDateString(new Date()));
   };
 
   // Filtered rooms
@@ -124,18 +182,23 @@ export function CalendarTimeline({
   };
 
   const weekDates = getWeekDates(currentDateStr);
+  const mobileDates = viewMode === 'week_room' ? weekDates : [currentDateStr];
+  const mobileRooms = viewMode === 'week_room'
+    ? rooms.filter((room) => room.id === activeRoomId)
+    : filteredRooms;
 
   return (
     <div className="space-y-4">
       {/* Top Header & Controls */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      <div className="bg-white p-4 rounded-xl border border-slate-200 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         {/* Date Navigator */}
-        <div className="flex items-center gap-3">
-          <div className="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="grid grid-cols-[44px_1fr_44px] items-center bg-slate-100 p-1 rounded-lg border border-slate-200 w-full sm:w-auto">
             <button
               type="button"
               onClick={handlePrevDay}
-              className="p-1.5 hover:bg-white rounded-lg text-slate-700 transition-colors"
+              aria-label="Hari sebelumnya"
+              className="min-h-11 flex items-center justify-center hover:bg-white rounded-md text-slate-700"
               title="Hari Sebelumnya"
             >
               <ChevronLeft className="w-5 h-5" />
@@ -143,14 +206,15 @@ export function CalendarTimeline({
             <button
               type="button"
               onClick={handleToday}
-              className="px-3 py-1 text-xs font-bold text-yarsi-primary hover:bg-white rounded-lg transition-colors"
+              className="min-h-11 px-3 text-sm font-bold text-yarsi-primary hover:bg-white rounded-md"
             >
               Hari Ini
             </button>
             <button
               type="button"
               onClick={handleNextDay}
-              className="p-1.5 hover:bg-white rounded-lg text-slate-700 transition-colors"
+              aria-label="Hari berikutnya"
+              className="min-h-11 flex items-center justify-center hover:bg-white rounded-md text-slate-700"
               title="Hari Berikutnya"
             >
               <ChevronRight className="w-5 h-5" />
@@ -171,12 +235,13 @@ export function CalendarTimeline({
         </div>
 
         {/* Filters & View Mode */}
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-wrap items-center gap-2">
           {/* Building Filter */}
           <select
             value={filterBuilding}
             onChange={(e) => setFilterBuilding(e.target.value)}
-            className="text-xs font-medium bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-yarsi-primary"
+            aria-label="Filter gedung"
+            className="min-h-11 text-sm font-medium bg-white border border-slate-300 rounded-lg px-3 text-slate-800 focus:ring-2 focus:ring-yarsi-primary"
           >
             <option value="all">Semua Gedung</option>
             {buildings.map((b) => (
@@ -190,7 +255,8 @@ export function CalendarTimeline({
           <select
             value={filterRoomType}
             onChange={(e) => setFilterRoomType(e.target.value)}
-            className="text-xs font-medium bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-yarsi-primary"
+            aria-label="Filter tipe ruang"
+            className="min-h-11 text-sm font-medium bg-white border border-slate-300 rounded-lg px-3 text-slate-800 focus:ring-2 focus:ring-yarsi-primary"
           >
             <option value="all">Semua Tipe Ruang</option>
             <option value="auditorium">Auditorium</option>
@@ -202,11 +268,12 @@ export function CalendarTimeline({
           </select>
 
           {/* View Mode Toggle */}
-          <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs font-semibold">
+          <div className="sm:col-span-2 grid grid-cols-2 bg-slate-100 p-1 rounded-lg border border-slate-200 text-xs font-semibold">
             <button
               type="button"
               onClick={() => setViewMode('day_rooms')}
-              className={`px-3 py-1.5 rounded-lg transition-all ${
+              aria-pressed={viewMode === 'day_rooms'}
+              className={`min-h-11 px-3 rounded-md ${
                 viewMode === 'day_rooms'
                   ? 'bg-yarsi-primary text-white shadow-sm'
                   : 'text-slate-600 hover:text-slate-900'
@@ -217,7 +284,8 @@ export function CalendarTimeline({
             <button
               type="button"
               onClick={() => setViewMode('week_room')}
-              className={`px-3 py-1.5 rounded-lg transition-all ${
+              aria-pressed={viewMode === 'week_room'}
+              className={`min-h-11 px-3 rounded-md ${
                 viewMode === 'week_room'
                   ? 'bg-yarsi-primary text-white shadow-sm'
                   : 'text-slate-600 hover:text-slate-900'
@@ -230,33 +298,101 @@ export function CalendarTimeline({
       </div>
 
       {/* Legend */}
-      <div className="flex flex-wrap items-center gap-3 px-2 text-xs text-slate-600">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 px-1 text-xs text-slate-700" aria-label="Keterangan status jadwal">
         <span className="font-bold text-slate-700">Keterangan:</span>
         <span className="flex items-center gap-1.5">
           <span className="w-3 h-3 rounded bg-emerald-500 inline-block"></span>
-          <span>Disetujui (Confirmed)</span>
+          <span>Disetujui</span>
         </span>
         <span className="flex items-center gap-1.5">
           <span className="w-3 h-3 rounded bg-amber-500 inline-block"></span>
-          <span>Antrean LPF (Review)</span>
+          <span>Menunggu LPF, slot tidak tersedia</span>
         </span>
         <span className="flex items-center gap-1.5">
           <span className="w-3 h-3 rounded bg-sky-500 inline-block"></span>
-          <span>Antrean Yayasan</span>
+          <span>Menunggu Yayasan, slot tidak tersedia</span>
         </span>
         <span className="flex items-center gap-1.5">
           <span className="w-3 h-3 rounded bg-purple-600 inline-block"></span>
-          <span>Kuliah Semester (Locked)</span>
+          <span>Jadwal kuliah</span>
         </span>
         <span className="flex items-center gap-1.5">
           <span className="w-3 h-3 rounded border border-dashed border-emerald-400 bg-emerald-50/50 inline-block"></span>
-          <span>Slot Kosong / Bebas Pinjam</span>
+          <span>Tersedia untuk dipinjam</span>
         </span>
+      </div>
+
+      {scheduleLoading && <p role="status" className="px-2 text-sm text-slate-600">Memuat jadwal ruangan...</p>}
+      {scheduleError && <p role="alert" className="px-3 py-3 text-sm text-red-800 bg-red-50 border border-red-200 rounded-lg">{scheduleError}</p>}
+
+      <div className="md:hidden bg-white border border-slate-200 rounded-xl overflow-hidden">
+        {mobileRooms.length === 0 ? (
+          <div className="p-6 text-center">
+            <p className="font-semibold text-slate-800">Tidak ada ruang yang sesuai filter.</p>
+            <p className="text-sm text-slate-600 mt-1">Ubah filter gedung atau tipe ruang untuk melihat jadwal lain.</p>
+          </div>
+        ) : (
+          <div className="divide-y divide-slate-200">
+            {mobileDates.map((date) => (
+              <section key={date} aria-labelledby={`agenda-${date}`}>
+                {viewMode === 'week_room' && (
+                  <h3 id={`agenda-${date}`} className="px-4 py-3 bg-slate-50 text-sm font-bold text-slate-800 border-b border-slate-200">
+                    {formatShortDateIndo(date)}
+                  </h3>
+                )}
+                <div className="divide-y divide-slate-100">
+                  {mobileRooms.map((room) => {
+                    const events = activeBookings
+                      .filter((booking) => booking.roomId === room.id && booking.date === date)
+                      .sort((a, b) => a.startTime.localeCompare(b.startTime));
+                    return (
+                      <div key={`${date}-${room.id}`} className="p-4 space-y-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <h3 className="font-bold text-slate-900 truncate">{room.name}</h3>
+                            <p className="text-xs text-slate-600 mt-0.5">{room.building} · kapasitas {room.capacity}</p>
+                          </div>
+                          {events.length === 0 && (
+                            <span className="shrink-0 text-xs font-semibold text-yarsi-primary">Tersedia</span>
+                          )}
+                        </div>
+                        {events.length > 0 ? (
+                          <div className="space-y-2">
+                            {events.map((event) => (
+                              <button
+                                key={event.id}
+                                type="button"
+                                onClick={() => handleOpenBooking(event)}
+                                className="w-full min-h-12 flex items-center justify-between gap-3 px-3 py-2.5 text-left bg-slate-50 border border-slate-200 rounded-lg focus-visible:ring-2 focus-visible:ring-yarsi-primary"
+                              >
+                                <span className="font-semibold text-sm text-slate-900">{event.startTime} - {event.endTime}</span>
+                                <span className={`text-xs font-semibold ${event.status === 'APPROVED' ? 'text-emerald-800' : event.status === 'RECOMMENDED_YAYASAN' ? 'text-sky-800' : 'text-amber-800'}`}>
+                                  {event.status === 'APPROVED' ? 'Disetujui' : event.status === 'RECOMMENDED_YAYASAN' ? 'Menunggu Yayasan' : 'Menunggu LPF'}
+                                </span>
+                              </button>
+                            ))}
+                          </div>
+                        ) : (
+                          <a
+                            href={`/dashboard/booking/new?roomId=${room.id}&date=${date}`}
+                            className="min-h-11 inline-flex items-center justify-center px-4 rounded-lg bg-yarsi-primary text-white text-sm font-bold hover:bg-yarsi-dark"
+                          >
+                            Pinjam ruang ini
+                          </a>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* VIEW 1: DAY VIEW - ALL ROOMS MATRIX */}
       {viewMode === 'day_rooms' && (
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="hidden md:block bg-white rounded-xl border border-slate-200 overflow-hidden">
           <div className="overflow-x-auto">
             <div className="min-w-[900px]">
               {/* Header Row: Rooms */}
@@ -314,7 +450,7 @@ export function CalendarTimeline({
                         );
 
                         // Check if a booking overlaps
-                        const booking = bookings.find(
+                        const booking = activeBookings.find(
                           (b) =>
                             b.roomId === room.id &&
                             b.date === currentDateStr &&
@@ -374,11 +510,11 @@ export function CalendarTimeline({
                                     </span>
                                   </div>
                                   <p className="text-[11px] font-bold line-clamp-1 leading-tight mt-0.5">
-                                    {booking.title}
+                                  Tidak tersedia
                                   </p>
                                 </div>
                                 <p className="text-[9px] font-medium opacity-80 truncate mt-1">
-                                  {booking.startTime} - {booking.endTime} • {booking.userName.split(' ')[0]}
+                                  {booking.startTime} - {booking.endTime}
                                 </p>
                               </button>
                             ) : (
@@ -403,7 +539,7 @@ export function CalendarTimeline({
 
       {/* VIEW 2: WEEKLY VIEW FOR SINGLE ROOM */}
       {viewMode === 'week_room' && (
-        <div className="space-y-4">
+        <div className="hidden md:block space-y-4">
           {/* Room Selector Tab */}
           <div className="flex items-center gap-2 overflow-x-auto pb-1">
             {rooms.map((r) => (
@@ -478,7 +614,7 @@ export function CalendarTimeline({
                               checkTimeOverlap(slot, nextH, ab.startTime, ab.endTime)
                           );
 
-                          const booking = bookings.find(
+                          const booking = activeBookings.find(
                             (b) =>
                               b.roomId === activeRoomId &&
                               b.date === dayDateStr &&
@@ -515,7 +651,7 @@ export function CalendarTimeline({
                                   }`}
                                 >
                                   <p className="text-[10px] font-bold line-clamp-1">
-                                    {booking.title}
+                                    Tidak tersedia
                                   </p>
                                   <p className="text-[9px] opacity-80">
                                     {booking.startTime} - {booking.endTime}

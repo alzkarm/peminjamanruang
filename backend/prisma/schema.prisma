@@ -1,5 +1,5 @@
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -7,20 +7,48 @@ generator client {
   provider = "prisma-client-js"
 }
 
+enum Role {
+  GUEST
+  USER
+  ADMIN_UNIV
+  ADMIN_YAYASAN
+}
+
+enum BookingStatus {
+  PENDING
+  RECOMMENDED
+  APPROVED
+  REJECTED
+  RETURNED
+  CANCELED
+}
+
+enum ActivityType {
+  SEMINAR
+  WORKSHOP
+  PELATIHAN
+  RAPAT
+  KUNJUNGAN
+  KULIAH_TAMU
+  KULIAH
+  AKREDITASI
+  LAINNYA
+}
+
 model User {
-  id           String        @id @default(uuid())
-  username     String        @unique
+  id           String   @id @default(uuid()) @db.Uuid
+  username     String   @unique
   passwordHash String?
   fullName     String
   email        String?
   unitName     String
-  role         String        @default("USER") // GUEST, USER, ADMIN_UNIV, ADMIN_YAYASAN
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
+  role         Role     @default(USER)
+  createdAt    DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt    DateTime @updatedAt @db.Timestamptz(3)
 
-  bookings     Booking[]
-  approvals    ApprovalLog[]
-  feedbacks    Feedback[]
+  bookings  Booking[]
+  approvals ApprovalLog[]
+  feedbacks Feedback[]
 
   @@map("users")
 }
@@ -35,91 +63,95 @@ model Floor {
 }
 
 model Room {
-  id            String    @id @default(uuid())
+  id            String   @id @default(uuid()) @db.Uuid
   floorId       Int
   name          String
   capacity      Int
-  isSpecialRoom Boolean   @default(false)
-  isActive      Boolean   @default(true)
-  createdAt     DateTime  @default(now())
+  isSpecialRoom Boolean  @default(false)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now()) @db.Timestamptz(3)
 
-  floor         Floor     @relation(fields: [floorId], references: [id])
-  bookings      Booking[]
+  floor    Floor     @relation(fields: [floorId], references: [id])
+  bookings Booking[]
 
+  @@index([name])
   @@map("rooms")
 }
 
 model Booking {
-  id                   String            @id @default(uuid())
-  userId               String
-  roomId               String
+  id                   String        @id @default(uuid()) @db.Uuid
+  userId               String        @db.Uuid
+  roomId               String        @db.Uuid
   title                String
-  activityType         String            @default("SEMINAR") // SEMINAR, WORKSHOP, PELATIHAN, RAPAT, KUNJUNGAN, KULIAH_TAMU, AKREDITASI, LAINNYA
-  startTime            DateTime
-  endTime              DateTime
-  status               String            @default("PENDING") // PENDING, RECOMMENDED, APPROVED, REJECTED, RETURNED, CANCELED
-  additionalFacilities String?           // Stored as JSON or comma separated string
+  activityType         ActivityType  @default(SEMINAR)
+  startTime            DateTime      @db.Timestamptz(3)
+  endTime              DateTime      @db.Timestamptz(3)
+  status               BookingStatus @default(PENDING)
+  estimatedAttendees   Int?
+  additionalFacilities String[]      @default([])
   notes                String?
   attachmentUrl        String?
   dokumenUrl           String?
-  isLeaderApproved     Boolean           @default(false)
-  isAcademicBulk       Boolean           @default(false)
+  isLeaderApproved     Boolean       @default(false)
+  isAcademicBulk       Boolean       @default(false)
   bulkGroupId          String?
-  createdAt            DateTime          @default(now())
-  updatedAt            DateTime          @updatedAt
+  createdAt            DateTime      @default(now()) @db.Timestamptz(3)
+  updatedAt            DateTime      @updatedAt @db.Timestamptz(3)
 
-  user                 User              @relation(fields: [userId], references: [id])
-  room                 Room              @relation(fields: [roomId], references: [id])
-  logistik             BookingLogistik[]
-  approvalLogs         ApprovalLog[]
-  feedback             Feedback?
+  user         User              @relation(fields: [userId], references: [id])
+  room         Room              @relation(fields: [roomId], references: [id])
+  logistik     BookingLogistik[]
+  approvalLogs ApprovalLog[]
+  feedback     Feedback?
 
   @@index([roomId, startTime, endTime])
+  @@index([status, startTime, endTime])
   @@map("bookings")
 }
 
 model BookingLogistik {
-  id        String   @id @default(uuid())
-  bookingId String
-  jenisItem String   // "meja", "kursi", "colokan_listrik", "sound_system", dll
+  id        String   @id @default(uuid()) @db.Uuid
+  bookingId String   @db.Uuid
+  jenisItem String
   jumlah    Int
   catatan   String?
-  createdAt DateTime @default(now())
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
 
-  booking   Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
 
   @@map("booking_logistik")
 }
 
 model ApprovalLog {
-  id         String   @id @default(uuid())
-  bookingId  String
-  approverId String
-  fromStatus String
-  toStatus   String   // DIREKOMENDASIKAN, DISETUJUI, DIKEMBALIKAN, DITOLAK, DIBATALKAN, PENDING
-  notes      String?  // WAJIB diisi jika toStatus = DIKEMBALIKAN atau DITOLAK
-  createdAt  DateTime @default(now())
+  id         String        @id @default(uuid()) @db.Uuid
+  bookingId  String        @db.Uuid
+  approverId String        @db.Uuid
+  fromStatus BookingStatus
+  toStatus   BookingStatus
+  notes      String?
+  createdAt  DateTime      @default(now()) @db.Timestamptz(3)
 
-  booking    Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  approver   User     @relation(fields: [approverId], references: [id])
+  booking  Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  approver User    @relation(fields: [approverId], references: [id])
 
+  @@index([bookingId, createdAt])
   @@map("approval_logs")
 }
 
 model Feedback {
-  id                String   @id @default(uuid())
-  bookingId         String   @unique
-  userId            String
+  id                String   @id @default(uuid()) @db.Uuid
+  bookingId         String   @unique @db.Uuid
+  userId            String   @db.Uuid
   cleanlinessRating Int
   facilityRating    Int
   staffRating       Int
   overallRating     Float
   comments          String?
   reportedIssues    String?
-  createdAt         DateTime @default(now())
+  createdAt         DateTime @default(now()) @db.Timestamptz(3)
 
-  booking           Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
-  user              User     @relation(fields: [userId], references: [id])
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id])
 
   @@map("feedbacks")
 }

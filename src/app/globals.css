@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    --yarsi-primary: #0D7A5F;
+    --yarsi-primary: #006A4E;
     --yarsi-dark: #075240;
     --yarsi-light: #E8F8F5;
     --background: 0 0% 100%;
@@ -14,6 +14,30 @@
   body {
     @apply bg-slate-50 text-slate-900 antialiased selection:bg-emerald-100 selection:text-emerald-900;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+
+  :focus-visible {
+    outline: 3px solid rgba(0, 106, 78, 0.38);
+    outline-offset: 2px;
+  }
+
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    @apply transition-colors duration-150;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      scroll-behavior: auto !important;
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }
 
@@ -33,7 +57,7 @@
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #0d7a5f;
+  background: #006a4e;
 }
 
 /* Custom utility styles */

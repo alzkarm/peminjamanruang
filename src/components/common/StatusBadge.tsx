@@ -62,7 +62,7 @@ export function StatusBadge({
 
   return (
     <span
-      className={`inline-flex items-center rounded-full border shadow-sm ${config.bg} ${sizeClasses[size]} ${className}`}
+      className={`inline-flex items-center rounded-md border ${config.bg} ${sizeClasses[size]} ${className}`}
     >
       {showIcon && renderIcon()}
       <span>{config.label}</span>

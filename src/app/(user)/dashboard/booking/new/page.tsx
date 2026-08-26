@@ -61,11 +61,11 @@ function NewBookingForm() {
   // Applicant info
   const [userName, setUserName] = useState(currentUser.name || '');
   const [userNimNidn, setUserNimNidn] = useState(currentUser.identifier || '');
-  const [userPhone, setUserPhone] = useState(currentUser.phone || '0812-9876-5432');
+  const [userPhone, setUserPhone] = useState(currentUser.phone || '');
   const [userOrganization, setUserOrganization] = useState(
-    currentUser.organization || 'BEM FTI Universitas YARSI'
+    currentUser.organization || ''
   );
-  const [department, setDepartment] = useState(currentUser.department || 'Fakultas Teknologi Informasi');
+  const [department, setDepartment] = useState(currentUser.department || '');
 
   // Facilities Checklist
   const [selectedEquipments, setSelectedEquipments] = useState<
@@ -77,18 +77,14 @@ function NewBookingForm() {
   });
 
   // Dynamic Custom Logistics List
-  const [customLogistics, setCustomLogistics] = useState<BookingLogistikItem[]>([
-    { jenisItem: 'Meja Registrasi', jumlah: 2, catatan: 'Diletakkan di depan pintu masuk' },
-    { jenisItem: 'Kursi Tambahan', jumlah: 20, catatan: 'Disusun di baris belakang' },
-    { jenisItem: 'Colokan Listrik', jumlah: 4, catatan: 'Untuk meja narasumber & panitia' },
-  ]);
+  const [customLogistics, setCustomLogistics] = useState<BookingLogistikItem[]>([]);
   const [newLogistikItem, setNewLogistikItem] = useState('');
   const [newLogistikQty, setNewLogistikQty] = useState(1);
   const [newLogistikNotes, setNewLogistikNotes] = useState('');
 
   // Document Upload
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [uploadedFileName, setUploadedFileName] = useState<string>('Proposal_Resmi_Kegiatan_2026.pdf');
+  const [uploadedFileName, setUploadedFileName] = useState<string>('Belum ada berkas');
 
   // Prioritas 5: Internal Approval Confirmation Checkbox
   const [isInternalApproved, setIsInternalApproved] = useState<boolean>(true);
@@ -243,8 +239,6 @@ function NewBookingForm() {
           equipments: equipmentsList,
           logistik: combinedLogistik,
           documentName: uploadedFileName,
-          dokumenUrl: selectedFile ? `/uploads/${uploadedFileName}` : undefined,
-          documentUrl: selectedFile ? `/uploads/${uploadedFileName}` : undefined,
         },
         selectedFile || undefined
       );
@@ -262,7 +256,7 @@ function NewBookingForm() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-8 space-y-6">
       {/* Header */}
       <div className="space-y-1">
         <div className="flex items-center gap-2">
@@ -270,20 +264,20 @@ function NewBookingForm() {
             href="/dashboard"
             className="text-xs font-semibold text-slate-500 hover:text-yarsi-primary"
           >
-            ← Kembali ke Dashboard
+            Kembali ke dashboard
           </Link>
         </div>
         <h1 className="text-2xl sm:text-3xl font-black text-slate-900">
-          Formulir Digital Terpadu Peminjaman Ruangan
+          Ajukan Peminjaman Ruangan
         </h1>
         <p className="text-xs sm:text-sm text-slate-500">
-          Menggabungkan Surat Pernyataan, Form Pemakaian Fasilitas, dan Form Kelengkapan ke dalam satu alur digital.
+          Pilih ruangan dan jadwal, lalu lengkapi informasi kegiatan yang dibutuhkan.
         </p>
       </div>
 
       {/* Error Alert */}
       {errorMessage && (
-        <div className="p-4 bg-rose-50 border-2 border-rose-400 rounded-2xl text-xs text-rose-900 flex items-start gap-3 animate-shake">
+        <div role="alert" className="p-4 bg-rose-50 border border-rose-300 rounded-lg text-sm text-rose-900 flex items-start gap-3">
           <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
           <div>
             <p className="font-bold text-rose-950">Validasi Pengajuan</p>
@@ -293,31 +287,31 @@ function NewBookingForm() {
       )}
 
       {submitSuccess && (
-        <div className="p-6 bg-emerald-50 border-2 border-emerald-400 rounded-2xl text-center space-y-2 animate-fade-in shadow-lg">
+        <div role="status" className="p-6 bg-emerald-50 border border-emerald-300 rounded-xl text-center space-y-2">
           <div className="w-12 h-12 rounded-full bg-emerald-600 text-white mx-auto flex items-center justify-center">
             <CheckCircle2 className="w-8 h-8" />
           </div>
           <h2 className="text-lg font-black text-emerald-950">
-            Permohonan Peminjaman Berhasil Dikirimkan!
+            Permohonan berhasil dikirim
           </h2>
           <p className="text-xs text-emerald-800">
-            Permohonan Anda telah masuk ke sistem database PostgreSQL dan antrean LPF. Mengalihkan ke dashboard...
+            Permohonan masuk ke antrean LPF. Anda akan kembali ke dashboard.
           </p>
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-8">
+      <form onSubmit={handleSubmit} className="space-y-6">
         {/* STEP 1: ROOM & TIME SELECTION */}
-        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 sm:p-8 space-y-6">
+        <div className="bg-white rounded-xl border border-slate-200 p-5 sm:p-6 space-y-6">
           <div className="flex items-center gap-2.5 pb-4 border-b border-slate-100">
-            <div className="p-2 rounded-xl bg-emerald-50 text-yarsi-primary">
+            <div className="p-2 rounded-lg bg-emerald-50 text-yarsi-primary">
               <Building2 className="w-5 h-5" />
             </div>
             <div>
               <h2 className="text-base font-bold text-slate-900">
                 1. Ruangan & Jadwal Pelaksanaan
               </h2>
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-500">
                 Pilih ruangan kampus YARSI dan tentukan tanggal serta rentang jam kegiatan
               </p>
             </div>
@@ -326,13 +320,14 @@ function NewBookingForm() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Room Selector */}
             <div className="space-y-2">
-              <label className="block text-xs font-bold text-slate-700">
+              <label htmlFor="roomSelect" className="block text-xs font-bold text-slate-700">
                 Pilihan Ruangan Kampus *
               </label>
               <select
+                id="roomSelect"
                 value={roomId}
                 onChange={(e) => setRoomId(e.target.value)}
-                className="w-full px-3.5 py-3 text-xs sm:text-sm font-medium bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yarsi-primary text-slate-900"
+                className="w-full min-h-11 px-3.5 py-2.5 text-xs sm:text-sm font-medium bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yarsi-primary text-slate-900"
               >
                 {rooms.map((room) => (
                   <option key={room.id} value={room.id}>
@@ -343,14 +338,14 @@ function NewBookingForm() {
 
               {/* Selected Room Details Card */}
               {selectedRoom && (
-                <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 text-xs space-y-2">
+                <div className="p-3.5 bg-slate-50 rounded-lg border border-slate-200 text-xs space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="font-bold text-slate-800">{selectedRoom.name}</span>
-                    <span className="font-semibold text-yarsi-primary bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                    <span className="font-semibold text-yarsi-primary bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
                       Maks. {selectedRoom.capacity} Kursi
                     </span>
                   </div>
-                  <p className="text-slate-500 text-[11px] leading-relaxed">
+                  <p className="text-slate-600 text-[11px] leading-relaxed">
                     {selectedRoom.description}
                   </p>
                   <p className="text-[11px] text-slate-600 font-medium flex items-center gap-1.5">
@@ -360,7 +355,7 @@ function NewBookingForm() {
 
                   {/* Yayasan Level Warning */}
                   {selectedRoom.requiresYayasanApproval && (
-                    <div className="p-2.5 bg-amber-50 border border-amber-300 rounded-xl text-amber-900 flex items-start gap-2">
+                    <div className="p-2.5 bg-amber-50 border border-amber-300 rounded-lg text-amber-900 flex items-start gap-2">
                       <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                       <div className="text-[11px] leading-relaxed">
                         <strong className="font-bold">Persetujuan Multi-Tier Yayasan:</strong> Ruangan auditorium & senat memerlukan verifikasi teknis LPF lalu direkomendasikan untuk persetujuan final Sekretariat Yayasan YARSI.
@@ -374,69 +369,72 @@ function NewBookingForm() {
             {/* Date & Time Selectors */}
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label htmlFor="dateInput" className="block text-xs font-bold text-slate-700 mb-1">
                   Tanggal Pelaksanaan *
                 </label>
                 <div className="relative">
-                  <Calendar className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+                  <Calendar className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5 pointer-events-none" />
                   <input
+                    id="dateInput"
                     type="date"
                     required
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 text-xs sm:text-sm font-medium bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yarsi-primary text-slate-800"
+                    className="w-full min-h-11 pl-10 pr-4 py-2.5 text-xs sm:text-sm font-medium bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yarsi-primary text-slate-800"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                  <label htmlFor="startTimeInput" className="block text-xs font-bold text-slate-700 mb-1">
                     Jam Mulai (WIB) *
                   </label>
                   <input
+                    id="startTimeInput"
                     type="time"
                     required
                     value={startTime}
                     onChange={(e) => setStartTime(e.target.value)}
-                    className="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yarsi-primary text-slate-800"
+                    className="w-full min-h-11 px-3.5 py-2.5 text-xs sm:text-sm font-medium bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yarsi-primary text-slate-800"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                  <label htmlFor="endTimeInput" className="block text-xs font-bold text-slate-700 mb-1">
                     Jam Selesai (WIB) *
                   </label>
                   <input
+                    id="endTimeInput"
                     type="time"
                     required
                     value={endTime}
                     onChange={(e) => setEndTime(e.target.value)}
-                    className="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yarsi-primary text-slate-800"
+                    className="w-full min-h-11 px-3.5 py-2.5 text-xs sm:text-sm font-medium bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yarsi-primary text-slate-800"
                   />
                 </div>
               </div>
 
               {/* REAL-TIME CONFLICT STATUS BOX */}
               {conflictResult.hasConflict ? (
-                <div className="p-3 bg-rose-50 border-2 border-rose-300 rounded-2xl text-xs text-rose-900 flex items-start gap-2.5 animate-shake">
+                <div role="alert" className="p-3 bg-rose-50 border border-rose-300 rounded-lg text-sm text-rose-900 flex items-start gap-2.5">
                   <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
                   <div className="space-y-1">
                     <p className="font-black text-rose-950">
-                      JADWAL BENTROK TERDETEKSI!
+                      Jadwal tidak tersedia
                     </p>
                     <p className="text-[11px] leading-relaxed text-rose-800">
                       {conflictResult.reason}
                     </p>
                     <p className="text-[10px] text-rose-600 font-semibold">
-                      Silakan pilih ruangan lain atau ganti jam kegiatan agar permohonan dapat disubmit.
+                      Pilih ruangan lain atau ubah waktu kegiatan sebelum mengirim permohonan.
                     </p>
                   </div>
                 </div>
               ) : (
-                <div className="p-3 bg-emerald-50 border border-emerald-300 rounded-2xl text-xs text-emerald-900 flex items-center gap-2">
+                <div role="status" className="p-3 bg-emerald-50 border border-emerald-300 rounded-lg text-sm text-emerald-900 flex items-center gap-2">
                   <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
                   <div>
-                    <p className="font-bold text-emerald-950">Slot Waktu Tersedia</p>
+                    <p className="font-bold text-emerald-950">Waktu tersedia</p>
                     <p className="text-[11px] text-emerald-700">
                       Ruangan tidak terpakai oleh perkuliahan atau agenda resmi lain pada slot ini.
                     </p>
@@ -447,10 +445,10 @@ function NewBookingForm() {
           </div>
         </div>
 
-        {/* STEP 2: EVENT DETAILS & JENIS KEGIATAN */}
-        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 sm:p-8 space-y-6">
+        {/* STEP 2: DETAILS */}
+        <div className="bg-white rounded-xl border border-slate-200 p-5 sm:p-6 space-y-6">
           <div className="flex items-center gap-2.5 pb-4 border-b border-slate-100">
-            <div className="p-2 rounded-xl bg-amber-50 text-amber-700">
+            <div className="p-2 rounded-lg bg-amber-50 text-amber-700">
               <FileText className="w-5 h-5" />
             </div>
             <div>
@@ -466,27 +464,29 @@ function NewBookingForm() {
           <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="sm:col-span-2">
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label htmlFor="eventTitleInput" className="block text-xs font-bold text-slate-700 mb-1">
                   Nama / Judul Kegiatan *
                 </label>
                 <input
+                  id="eventTitleInput"
                   type="text"
                   required
                   placeholder="Contoh: Seminar Nasional AI Healthcare & Workshop Python FTI"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yarsi-primary text-slate-900"
+                  className="w-full min-h-11 px-3.5 py-2.5 text-xs sm:text-sm font-medium bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yarsi-primary text-slate-900"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label htmlFor="categorySelect" className="block text-xs font-bold text-slate-700 mb-1">
                   Pilihan Kategori Kegiatan *
                 </label>
                 <select
+                  id="categorySelect"
                   value={category}
                   onChange={(e) => setCategory(e.target.value as BookingCategory)}
-                  className="w-full px-3.5 py-2.5 text-xs sm:text-sm font-bold bg-emerald-50/70 border border-emerald-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-yarsi-primary text-emerald-950"
+                  className="w-full min-h-11 px-3.5 py-2.5 text-xs sm:text-sm font-bold bg-emerald-50 border border-emerald-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yarsi-primary text-emerald-950"
                 >
                   <option value="seminar">Seminar</option>
                   <option value="workshop">Workshop</option>
@@ -504,19 +504,20 @@ function NewBookingForm() {
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label htmlFor="attendeesInput" className="block text-xs font-bold text-slate-700 mb-1">
                   Estimasi Jumlah Peserta *
                 </label>
                 <input
+                  id="attendeesInput"
                   type="number"
                   required
                   min={1}
                   value={estimatedAttendees}
                   onChange={(e) => setEstimatedAttendees(parseInt(e.target.value) || 0)}
-                  className={`w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium bg-slate-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-yarsi-primary ${
+                  className={`w-full min-h-11 px-3.5 py-2.5 text-xs sm:text-sm font-medium bg-white border rounded-lg focus:outline-none focus:ring-2 focus:ring-yarsi-primary ${
                     isCapacityExceeded
                       ? 'border-rose-400 text-rose-900 bg-rose-50'
-                      : 'border-slate-200 text-slate-900'
+                      : 'border-slate-300 text-slate-900'
                   }`}
                 />
                 {isCapacityExceeded && (
@@ -528,40 +529,42 @@ function NewBookingForm() {
               </div>
 
               <div className="sm:col-span-2">
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label htmlFor="orgInput" className="block text-xs font-bold text-slate-700 mb-1">
                   Organisasi / Unit Pengusul *
                 </label>
                 <input
+                  id="orgInput"
                   type="text"
                   required
                   value={userOrganization}
                   onChange={(e) => setUserOrganization(e.target.value)}
                   placeholder="Contoh: BEM Fakultas Teknologi Informasi"
-                  className="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yarsi-primary text-slate-900"
+                  className="w-full min-h-11 px-3.5 py-2.5 text-xs sm:text-sm font-medium bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yarsi-primary text-slate-900"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
+              <label htmlFor="descInput" className="block text-xs font-bold text-slate-700 mb-1">
                 Deskripsi Singkat Acara & Kebutuhan Ruangan *
               </label>
               <textarea
+                id="descInput"
                 rows={3}
                 required
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Tuliskan tujuan acara, susunan pembicara, dan catatan teknis pendukung..."
-                className="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yarsi-primary text-slate-900"
+                className="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yarsi-primary text-slate-900"
               />
             </div>
           </div>
         </div>
 
         {/* STEP 3: LOGISTICS & FASILITAS TAMBAHAN (BookingLogistik Model) */}
-        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 sm:p-8 space-y-6">
+        <div className="bg-white rounded-xl border border-slate-200 p-5 sm:p-6 space-y-6">
           <div className="flex items-center gap-2.5 pb-4 border-b border-slate-100">
-            <div className="p-2 rounded-xl bg-teal-50 text-teal-700">
+            <div className="p-2 rounded-lg bg-teal-50 text-teal-700">
               <PackageCheck className="w-5 h-5" />
             </div>
             <div>
@@ -589,10 +592,10 @@ function NewBookingForm() {
                   <div
                     key={eq.id}
                     onClick={() => handleEquipmentToggle(eq.id)}
-                    className={`p-3 rounded-xl border transition-all cursor-pointer flex items-start gap-3 ${
+                    className={`p-3 rounded-lg border transition-all cursor-pointer flex items-start gap-3 ${
                       state.selected
                         ? 'bg-emerald-50/70 border-emerald-300 ring-1 ring-emerald-500/30'
-                        : 'bg-slate-50/60 border-slate-200/80 hover:bg-slate-100'
+                        : 'bg-slate-50/60 border-slate-200 hover:bg-slate-100'
                     }`}
                   >
                     <input
@@ -618,7 +621,7 @@ function NewBookingForm() {
                             onChange={(e) =>
                               handleEquipmentQty(eq.id, parseInt(e.target.value) || 1)
                             }
-                            className="w-16 px-2 py-0.5 text-xs border rounded bg-white text-slate-800 font-bold"
+                            className="w-16 px-2 py-0.5 text-xs border border-slate-300 rounded bg-white text-slate-800 font-bold"
                           />
                         </div>
                       )}
@@ -638,11 +641,11 @@ function NewBookingForm() {
                 {customLogistics.map((item, idx) => (
                   <div
                     key={idx}
-                    className="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs"
+                    className="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-lg text-xs"
                   >
                     <div className="flex items-center gap-3">
                       <span className="font-bold text-slate-900">{item.jenisItem}</span>
-                      <span className="px-2 py-0.5 bg-emerald-100 text-yarsi-primary font-bold rounded">
+                      <span className="px-2 py-0.5 bg-emerald-100 text-yarsi-primary font-bold rounded-md">
                         {item.jumlah} Unit
                       </span>
                       {item.catatan && (
@@ -652,7 +655,8 @@ function NewBookingForm() {
                     <button
                       type="button"
                       onClick={() => handleRemoveCustomLogistik(idx)}
-                      className="text-rose-500 hover:text-rose-700 p-1"
+                      aria-label={`Hapus ${item.jenisItem}`}
+                      className="min-w-9 min-h-9 flex items-center justify-center text-rose-500 hover:text-rose-700 rounded-md hover:bg-rose-50"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -662,13 +666,13 @@ function NewBookingForm() {
             )}
 
             {/* Add Custom Logistics Input Bar */}
-            <div className="p-3 bg-slate-100/70 rounded-2xl border border-slate-200/80 flex flex-col sm:flex-row items-center gap-2">
+            <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 flex flex-col sm:flex-row items-center gap-2">
               <input
                 type="text"
                 placeholder="Jenis Item (misal: Kabel Colokan Listrik 10m)"
                 value={newLogistikItem}
                 onChange={(e) => setNewLogistikItem(e.target.value)}
-                className="flex-1 px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yarsi-primary"
+                className="flex-1 w-full min-h-10 px-3 py-2 text-xs bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yarsi-primary"
               />
               <input
                 type="number"
@@ -677,19 +681,19 @@ function NewBookingForm() {
                 placeholder="Jumlah"
                 value={newLogistikQty}
                 onChange={(e) => setNewLogistikQty(parseInt(e.target.value) || 1)}
-                className="w-20 px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl font-bold"
+                className="w-full sm:w-20 min-h-10 px-3 py-2 text-xs bg-white border border-slate-300 rounded-lg font-bold"
               />
               <input
                 type="text"
                 placeholder="Catatan penempatan (opsional)"
                 value={newLogistikNotes}
                 onChange={(e) => setNewLogistikNotes(e.target.value)}
-                className="flex-1 px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl"
+                className="flex-1 w-full min-h-10 px-3 py-2 text-xs bg-white border border-slate-300 rounded-lg"
               />
               <button
                 type="button"
                 onClick={handleAddCustomLogistik}
-                className="w-full sm:w-auto px-4 py-2 bg-yarsi-primary hover:bg-yarsi-dark text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1 shrink-0"
+                className="w-full sm:w-auto min-h-10 px-4 py-2 bg-yarsi-primary hover:bg-yarsi-dark text-white rounded-lg text-xs font-bold flex items-center justify-center gap-1 shrink-0"
               >
                 <Plus className="w-4 h-4" />
                 <span>Tambah Item</span>
@@ -699,22 +703,22 @@ function NewBookingForm() {
         </div>
 
         {/* STEP 4: DOCUMENT UPLOAD (dokumenUrl / attachment) */}
-        <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 sm:p-8 space-y-6">
+        <div className="bg-white rounded-xl border border-slate-200 p-5 sm:p-6 space-y-6">
           <div className="flex items-center gap-2.5 pb-4 border-b border-slate-100">
-            <div className="p-2 rounded-xl bg-purple-50 text-purple-700">
+            <div className="p-2 rounded-lg bg-purple-50 text-purple-700">
               <UploadCloud className="w-5 h-5" />
             </div>
             <div>
               <h2 className="text-base font-bold text-slate-900">
-                4. Dokumen Pendukung (Proposal / Poster Kegiatan)
+                4. Dokumen Pendukung
               </h2>
               <p className="text-xs text-slate-400">
-                Opsional — Lampirkan proposal atau poster dalam format PDF / Gambar (Maks. 15MB)
+                Opsional. Lampirkan proposal dalam format PDF, Word, atau Excel (maks. 15 MB).
               </p>
             </div>
           </div>
 
-          <div className="border-2 border-dashed border-slate-200 rounded-2xl p-6 text-center space-y-3 bg-slate-50 hover:bg-slate-100/60 transition-colors">
+          <div className="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center space-y-3 bg-slate-50 hover:bg-slate-100/60 transition-colors">
             <FileText className="w-10 h-10 text-slate-400 mx-auto" />
             <div className="space-y-1">
               <p className="text-xs font-bold text-slate-700">
@@ -725,11 +729,11 @@ function NewBookingForm() {
               </p>
             </div>
 
-            <label className="inline-block cursor-pointer px-4 py-2 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 shadow-xs transition-colors">
-              <span>Pilih Dokumen (PDF / Gambar)</span>
+            <label className="min-h-11 inline-flex items-center cursor-pointer px-4 bg-white hover:bg-slate-100 border border-slate-300 rounded-lg text-sm font-bold text-slate-800 focus-within:ring-2 focus-within:ring-yarsi-primary">
+              <span>Pilih dokumen</span>
               <input
                 type="file"
-                accept=".pdf,.png,.jpg,.jpeg,.doc,.docx"
+                accept=".pdf,.doc,.docx,.xls,.xlsx"
                 onChange={handleFileChange}
                 className="hidden"
               />
@@ -738,7 +742,7 @@ function NewBookingForm() {
         </div>
 
         {/* STEP 5: VERIFIKASI INTERNAL HIMA / BEM (PRIORITAS 5) */}
-        <div className="bg-emerald-50/80 rounded-2xl border-2 border-emerald-300 p-6 sm:p-8 space-y-4">
+        <div className="bg-emerald-50 rounded-xl border border-emerald-300 p-5 sm:p-6 space-y-4">
           <div className="flex items-start gap-3">
             <input
               type="checkbox"
@@ -762,7 +766,7 @@ function NewBookingForm() {
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-slate-200">
           <Link
             href="/dashboard"
-            className="px-6 py-3 rounded-2xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition-colors"
+            className="min-h-11 inline-flex items-center px-5 rounded-lg text-sm font-bold text-slate-700 hover:bg-slate-100"
           >
             Batal
           </Link>
@@ -770,10 +774,10 @@ function NewBookingForm() {
           <button
             type="submit"
             disabled={isSubmitting || conflictResult.hasConflict || !isInternalApproved}
-            className="w-full sm:w-auto px-8 py-3.5 rounded-2xl font-bold text-sm text-white bg-yarsi-primary hover:bg-yarsi-dark shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full sm:w-auto min-h-12 px-7 rounded-lg font-bold text-sm text-white bg-yarsi-primary hover:bg-yarsi-dark flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSubmitting ? (
-              <span>Mengirimkan Permohonan ke PostgreSQL...</span>
+              <span>Mengirim permohonan...</span>
             ) : (
               <>
                 <span>Kirim Permohonan Peminjaman</span>

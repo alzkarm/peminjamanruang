@@ -41,6 +41,19 @@ export class RoomsController {
     );
   }
 
+  @Get('schedule')
+  async getPublicSchedule(
+    @Query('startTime') startTime: string,
+    @Query('endTime') endTime: string,
+    @Query('roomId') roomId?: string,
+  ) {
+    return this.roomsService.findPublicSchedule(
+      new Date(startTime),
+      new Date(endTime),
+      roomId,
+    );
+  }
+
   @Get(':id')
   async findOne(@Param('id') id: string) {
     return this.roomsService.findOne(id);

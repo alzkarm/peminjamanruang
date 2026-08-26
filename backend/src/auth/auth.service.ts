@@ -8,6 +8,7 @@ import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '@/prisma/prisma.service';
 import { LoginDto, SyncLdapUserDto } from './dto/login.dto';
 import { Role } from '@/common/types';
+import { Role as PrismaRole } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 
 @Injectable()
@@ -107,7 +108,7 @@ export class AuthService {
         fullName,
         email,
         unitName,
-        role: role.toString(),
+        role: role as PrismaRole,
       },
     });
 
@@ -140,7 +141,7 @@ export class AuthService {
         fullName: syncDto.fullName,
         email: syncDto.email,
         unitName: syncDto.unitName,
-        role: Role.USER.toString(),
+        role: Role.USER as PrismaRole,
       },
     });
   }

@@ -2,20 +2,18 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe, Logger } from '@nestjs/common';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter';
-import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
 import * as fs from 'fs';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const app = await NestFactory.create(AppModule);
 
   // Ensure uploads directory exists
   const uploadDir = join(process.cwd(), 'uploads');
   if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
   }
-  app.useStaticAssets(uploadDir, { prefix: '/uploads/' });
 
   // Global Prefix
   app.setGlobalPrefix('api');

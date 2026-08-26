@@ -23,9 +23,9 @@ export function CalendarGrid({
   academicBlocks,
   onSelectDate,
 }: CalendarGridProps) {
-  // Current month state (Default August 2026)
-  const [currentYear, setCurrentYear] = useState(2026);
-  const [currentMonth, setCurrentMonth] = useState(7); // 0-indexed: 7 is August
+  const today = new Date();
+  const [currentYear, setCurrentYear] = useState(today.getFullYear());
+  const [currentMonth, setCurrentMonth] = useState(today.getMonth());
 
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -82,9 +82,9 @@ export function CalendarGrid({
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 space-y-4">
+    <div className="bg-white rounded-xl border border-slate-200 p-3 sm:p-4 space-y-4">
       {/* Month Navigation */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           <CalendarIcon className="w-5 h-5 text-yarsi-primary" />
           <h2 className="text-lg font-black text-slate-900">
@@ -92,28 +92,30 @@ export function CalendarGrid({
           </h2>
         </div>
 
-        <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200">
+        <div className="grid grid-cols-[44px_1fr_44px] items-center gap-1 bg-slate-100 p-1 rounded-lg border border-slate-200">
           <button
             type="button"
             onClick={handlePrevMonth}
-            className="p-1.5 hover:bg-white rounded-lg text-slate-700 transition-colors"
+            aria-label="Bulan sebelumnya"
+            className="min-h-11 flex items-center justify-center hover:bg-white rounded-md text-slate-700"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
           <button
             type="button"
             onClick={() => {
-              setCurrentYear(2026);
-              setCurrentMonth(7);
+              setCurrentYear(today.getFullYear());
+              setCurrentMonth(today.getMonth());
             }}
-            className="px-2.5 py-1 text-xs font-bold text-yarsi-primary hover:bg-white rounded-lg"
+            className="min-h-11 px-3 text-sm font-bold text-yarsi-primary hover:bg-white rounded-md"
           >
             Bulan Ini
           </button>
           <button
             type="button"
             onClick={handleNextMonth}
-            className="p-1.5 hover:bg-white rounded-lg text-slate-700 transition-colors"
+            aria-label="Bulan berikutnya"
+            className="min-h-11 flex items-center justify-center hover:bg-white rounded-md text-slate-700"
           >
             <ChevronRight className="w-4 h-4" />
           </button>
@@ -122,13 +124,7 @@ export function CalendarGrid({
 
       {/* Week Header */}
       <div className="grid grid-cols-7 gap-1 text-center font-bold text-xs text-slate-500 pb-2 border-b border-slate-100">
-        <div>Senin</div>
-        <div>Selasa</div>
-        <div>Rabu</div>
-        <div>Kamis</div>
-        <div>Jumat</div>
-        <div className="text-emerald-700">Sabtu</div>
-        <div className="text-rose-600">Minggu</div>
+        {['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'].map((day) => <div key={day}>{day}</div>)}
       </div>
 
       {/* Calendar Month Grid */}
@@ -138,7 +134,7 @@ export function CalendarGrid({
             return (
               <div
                 key={`empty-${idx}`}
-                className="min-h-[100px] bg-slate-50/50 rounded-xl border border-transparent"
+                className="min-h-14 sm:min-h-[100px] bg-slate-50/50 rounded-md border border-transparent"
               />
             );
           }
@@ -147,7 +143,7 @@ export function CalendarGrid({
             .toString()
             .padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
 
-          const isToday = dateStr === '2026-08-16';
+          const isToday = dateStr === `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
           const dayBookings = bookings.filter(
             (b) =>
@@ -159,7 +155,13 @@ export function CalendarGrid({
             <div
               key={dateStr}
               onClick={() => onSelectDate && onSelectDate(dateStr)}
-              className={`min-h-[110px] p-2 rounded-xl border transition-all flex flex-col justify-between cursor-pointer ${
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') onSelectDate?.(dateStr);
+              }}
+              role="button"
+              tabIndex={0}
+              aria-label={`Lihat jadwal ${dateStr}, ${dayBookings.length} kegiatan`}
+              className={`min-h-16 sm:min-h-[110px] p-1.5 sm:p-2 rounded-md sm:rounded-lg border flex flex-col justify-between text-left ${
                 isToday
                   ? 'bg-emerald-50/40 border-emerald-300 ring-2 ring-emerald-500/20'
                   : 'bg-white border-slate-200/80 hover:border-emerald-300 hover:shadow-xs'
@@ -177,14 +179,14 @@ export function CalendarGrid({
                 </span>
 
                 {dayBookings.length > 0 && (
-                  <span className="text-[10px] font-bold text-yarsi-primary bg-emerald-100 px-1.5 py-0.2 rounded-full">
+                  <span className="text-[10px] font-bold text-yarsi-primary bg-emerald-100 px-1.5 py-0.5 rounded-md">
                     {dayBookings.length}
                   </span>
                 )}
               </div>
 
               {/* Event Snippets */}
-              <div className="space-y-1 my-1 overflow-hidden">
+              <div className="hidden sm:block space-y-1 my-1 overflow-hidden">
                 {dayBookings.slice(0, 2).map((b) => (
                   <button
                     key={b.id}

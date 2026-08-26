@@ -420,7 +420,7 @@ export const roomsApi = {
   },
 
   async checkAvailability(roomId: string, startTime: string, endTime: string): Promise<{
-    available: boolean;
+    isAvailable: boolean;
     conflicts: any[];
   }> {
     return request<any>(
@@ -430,6 +430,22 @@ export const roomsApi = {
     );
   },
 
+  async getPublicSchedule(startTime: string, endTime: string, roomId?: string): Promise<{
+    events: Array<{
+      id: string;
+      roomId: string;
+      roomName: string;
+      floorName: string;
+      startTime: string;
+      endTime: string;
+      status: string;
+    }>;
+  }> {
+    const params = new URLSearchParams({ startTime, endTime });
+    if (roomId) params.set('roomId', roomId);
+    return request(`/rooms/schedule?${params.toString()}`);
+  },
+
   async getById(id: string): Promise<Room> {
     const data = await request<any>(`/rooms/${id}`);
     return mapBackendRoomToFrontend(data);
@@ -437,6 +453,17 @@ export const roomsApi = {
 };
 
 export const bookingsApi = {
+  async downloadAttachment(id: string): Promise<void> {
+    const token = getAuthToken();
+    const response = await fetch(`${API_BASE_URL}/bookings/${id}/attachment`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    if (!response.ok) throw new ApiError('Lampiran tidak dapat diunduh.', response.status);
+    const url = URL.createObjectURL(await response.blob());
+    window.open(url, '_blank', 'noopener,noreferrer');
+    window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  },
+
   async getAll(query?: {
     status?: string;
     roomId?: string;

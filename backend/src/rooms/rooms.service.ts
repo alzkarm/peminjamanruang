@@ -1,11 +1,15 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
 import { CreateRoomDto, QueryRoomDto } from './dto/create-room.dto';
-import { BookingStatus } from '@/common/types';
+import { BLOCKING_BOOKING_STATUSES } from '../scheduling/scheduling.constants';
+import { SchedulingService } from '../scheduling/scheduling.service';
 
 @Injectable()
 export class RoomsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly scheduling: SchedulingService,
+  ) {}
 
   async findAll(query: QueryRoomDto) {
     const { floorId, isSpecialRoom, search } = query;
@@ -43,7 +47,7 @@ export class RoomsService {
         floor: true,
         bookings: {
           where: {
-            status: { in: [BookingStatus.APPROVED, BookingStatus.PENDING, BookingStatus.RECOMMENDED] },
+            status: { in: BLOCKING_BOOKING_STATUSES },
             endTime: { gte: new Date() },
           },
           orderBy: { startTime: 'asc' },
@@ -84,28 +88,56 @@ export class RoomsService {
     });
   }
 
-  /**
-   * Check slot availability for a room
-   */
   async checkAvailability(roomId: string, startTime: Date, endTime: Date, excludeBookingId?: string) {
-    const conflictingBookings = await this.prisma.booking.findMany({
+    const availability = await this.scheduling.checkAvailability(
+      roomId,
+      startTime,
+      endTime,
+      excludeBookingId,
+    );
+
+    return {
+      isAvailable: availability.isAvailable,
+      conflicts: availability.conflict
+        ? [{
+            startTime: availability.conflict.startTime,
+            endTime: availability.conflict.endTime,
+            status: availability.conflict.status,
+          }]
+        : [],
+    };
+  }
+
+  async findPublicSchedule(startTime: Date, endTime: Date, roomId?: string) {
+    if (Number.isNaN(startTime.getTime()) || Number.isNaN(endTime.getTime()) || startTime >= endTime) {
+      throw new BadRequestException('Rentang waktu jadwal tidak valid.');
+    }
+
+    const bookings = await this.prisma.booking.findMany({
       where: {
-        roomId,
-        id: excludeBookingId ? { not: excludeBookingId } : undefined,
-        status: { in: [BookingStatus.APPROVED, BookingStatus.PENDING, BookingStatus.RECOMMENDED] },
+        ...(roomId ? { roomId } : {}),
+        status: { in: BLOCKING_BOOKING_STATUSES },
         AND: [
           { startTime: { lt: endTime } },
           { endTime: { gt: startTime } },
         ],
       },
       include: {
-        user: { select: { fullName: true, unitName: true } },
+        room: { include: { floor: true } },
       },
+      orderBy: { startTime: 'asc' },
     });
 
     return {
-      isAvailable: conflictingBookings.length === 0,
-      conflicts: conflictingBookings,
+      events: bookings.map((booking) => ({
+        id: booking.id,
+        roomId: booking.roomId,
+        roomName: booking.room.name,
+        floorName: booking.room.floor.name,
+        startTime: booking.startTime,
+        endTime: booking.endTime,
+        status: booking.status,
+      })),
     };
   }
 }
