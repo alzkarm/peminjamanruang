@@ -161,10 +161,7 @@ export class BookingsService {
 
       }
 
-      if (
-        ![BookingStatus.PENDING, BookingStatus.RECOMMENDED, BookingStatus.APPROVED].includes(currentStatus) &&
-        [BookingStatus.PENDING, BookingStatus.RECOMMENDED, BookingStatus.APPROVED].includes(targetStatus)
-      ) {
+      if (targetStatus === BookingStatus.APPROVED || targetStatus === BookingStatus.RECOMMENDED) {
         await this.scheduling.assertAvailable(
           booking.roomId,
           booking.startTime,

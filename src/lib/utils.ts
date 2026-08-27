@@ -60,6 +60,7 @@ export function checkTimeOverlap(
 export interface ConflictCheckResult {
   hasConflict: boolean;
   reason?: string;
+  pendingNotice?: string;
   conflictingBooking?: Booking;
   conflictingAcademic?: AcademicBlock;
 }
@@ -74,7 +75,7 @@ export function checkRoomConflict(
   excludeBookingId?: string,
   currentUserId?: string
 ): ConflictCheckResult {
-  // 1. Check academic blocks
+  // 1. Check academic blocks (HARD CONFLICT)
   const dayNum = getDayOfWeekNumber(dateStr);
   const academicConflict = academicBlocks.find(
     (ab) =>
@@ -92,40 +93,53 @@ export function checkRoomConflict(
     };
   }
 
-  // 2. Check existing bookings (Approved or In Review)
-  const activeStatuses: BookingStatus[] = [
-    "APPROVED",
-    "PENDING_LPF",
-    "RECOMMENDED_YAYASAN",
-  ];
-
-  const bookingConflict = bookings.find(
+  // 2. Check APPROVED bookings (HARD CONFLICT)
+  const approvedConflict = bookings.find(
     (b) =>
       b.id !== excludeBookingId &&
       b.roomId === roomId &&
       b.date === dateStr &&
-      activeStatuses.includes(b.status) &&
+      b.status === "APPROVED" &&
       checkTimeOverlap(startTime, endTime, b.startTime, b.endTime)
   );
 
-  if (bookingConflict) {
+  if (approvedConflict) {
     const isSelf = Boolean(
       currentUserId &&
-        (b => b.userId === currentUserId || b.userNimNidn === currentUserId)(bookingConflict)
+        (approvedConflict.userId === currentUserId || approvedConflict.userNimNidn === currentUserId)
     );
-    const statusLabel =
-      bookingConflict.status === "APPROVED"
-        ? "Telah Disetujui"
-        : "Sedang Dalam Antrean Review";
-
-    const reason = isSelf
-      ? `Anda sudah memiliki permohonan (${statusLabel}): "${bookingConflict.title}" pada slot (${bookingConflict.startTime} - ${bookingConflict.endTime}). Silakan batalkan permohonan sebelumnya di Dashboard atau ubah slot/ruangan.`
-      : `Terbentur Peminjaman (${statusLabel}): "${bookingConflict.title}" oleh ${bookingConflict.userName || 'Pengguna'} (${bookingConflict.startTime} - ${bookingConflict.endTime})`;
-
     return {
       hasConflict: true,
-      reason,
-      conflictingBooking: bookingConflict,
+      reason: isSelf
+        ? `Ruangan telah resmi Anda pinjam ("${approvedConflict.title}" - ${approvedConflict.startTime} s/d ${approvedConflict.endTime}).`
+        : `Ruangan telah resmi disetujui untuk peminjaman lain: "${approvedConflict.title}" oleh ${approvedConflict.userName || 'Pengguna'} (${approvedConflict.startTime} - ${approvedConflict.endTime}).`,
+      conflictingBooking: approvedConflict,
+    };
+  }
+
+  // 3. Check PENDING / IN-REVIEW bookings (INFORMATIONAL NOTICE ONLY - DOES NOT BLOCK SUBMISSION)
+  const pendingBooking = bookings.find(
+    (b) =>
+      b.id !== excludeBookingId &&
+      b.roomId === roomId &&
+      b.date === dateStr &&
+      (b.status === "PENDING_LPF" || b.status === "RECOMMENDED_YAYASAN") &&
+      checkTimeOverlap(startTime, endTime, b.startTime, b.endTime)
+  );
+
+  if (pendingBooking) {
+    const isSelf = Boolean(
+      currentUserId &&
+        (pendingBooking.userId === currentUserId || pendingBooking.userNimNidn === currentUserId)
+    );
+    const notice = isSelf
+      ? `Informasi: Anda sudah memiliki permohonan yang sedang diajukan ("${pendingBooking.title}", ${pendingBooking.startTime} - ${pendingBooking.endTime}). Anda tetap dapat mengirimkan permohonan ini.`
+      : `Informasi Antrean: Slot waktu ini memiliki permohonan lain yang sedang dalam review Admin ("${pendingBooking.title}", ${pendingBooking.startTime} - ${pendingBooking.endTime}). Anda tetap dapat mengirimkan permohonan ini untuk dipertimbangkan.`;
+
+    return {
+      hasConflict: false,
+      pendingNotice: notice,
+      conflictingBooking: pendingBooking,
     };
   }
 

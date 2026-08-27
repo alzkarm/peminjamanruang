@@ -528,13 +528,25 @@ function NewBookingForm() {
                   <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
                   <div className="space-y-1">
                     <p className="font-black text-rose-950">
-                      Jadwal tidak tersedia
+                      Jadwal tidak tersedia (Telah Resmi Disetujui / Kuliah)
                     </p>
                     <p className="text-[11px] leading-relaxed text-rose-800">
                       {isTimeRangeInvalid ? 'Jam selesai harus lebih akhir daripada jam mulai.' : conflictResult.reason}
                     </p>
                     <p className="text-[10px] text-rose-600 font-semibold">
                       Pilih ruangan lain atau ubah waktu kegiatan sebelum mengirim permohonan.
+                    </p>
+                  </div>
+                </div>
+              ) : conflictResult.pendingNotice ? (
+                <div role="status" aria-live="polite" className="flex items-start gap-3 rounded-xl border border-amber-300 bg-gradient-to-br from-amber-50 to-white p-4 text-sm text-amber-900 shadow-sm animate-fade-in">
+                  <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                  <div className="space-y-1">
+                    <p className="font-bold text-amber-950">
+                      Permohonan Dapat Diajukan (Ada Antrean Review)
+                    </p>
+                    <p className="text-[11px] leading-relaxed text-amber-800">
+                      {conflictResult.pendingNotice}
                     </p>
                   </div>
                 </div>
