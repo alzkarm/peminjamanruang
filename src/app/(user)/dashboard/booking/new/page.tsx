@@ -336,22 +336,45 @@ function NewBookingForm() {
         </div>
       )}
 
-      {submitSuccess ? (
-        <div role="status" className="my-8 space-y-4 rounded-3xl border border-emerald-300 bg-emerald-50/90 p-8 text-center shadow-lg animate-fade-in sm:p-12">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-600 text-white shadow-md">
-            <CheckCircle2 className="h-10 w-10 animate-bounce" />
-          </div>
-          <div className="space-y-1.5">
-            <h2 className="text-xl font-black text-emerald-950 sm:text-2xl">
-              Permohonan Berhasil Dikirim!
-            </h2>
-            <p className="text-xs text-emerald-800 font-semibold sm:text-sm">
-              Permohonan peminjaman ruangan Anda telah terdaftar dan masuk antrean LPF. Mengalihkan ke dashboard...
-            </p>
+      {/* Centered Success Modal Dialog */}
+      {submitSuccess && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/65 backdrop-blur-sm animate-fade-in"
+        >
+          <div className="w-full max-w-md space-y-6 rounded-3xl bg-white p-7 sm:p-8 text-center shadow-2xl border border-slate-100 transform transition-all">
+            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-200 shadow-inner">
+              <CheckCircle2 className="h-12 w-12 animate-pulse" />
+            </div>
+
+            <div className="space-y-2">
+              <h2 className="text-2xl font-black tracking-tight text-slate-950">
+                Permohonan Berhasil Dikirim!
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                Permohonan peminjaman ruangan Anda telah terdaftar dan masuk antrean review LPF & Yayasan YARSI.
+              </p>
+            </div>
+
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => router.push('/dashboard')}
+                className="w-full min-h-12 px-6 py-3 bg-yarsi-primary hover:bg-yarsi-dark text-white rounded-xl text-sm font-bold shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2"
+              >
+                <span>Lihat Riwayat Peminjaman (Dashboard)</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+              <p className="text-[11px] text-slate-400 mt-3 font-medium">
+                Mengalihkan secara otomatis ke dashboard...
+              </p>
+            </div>
           </div>
         </div>
-      ) : (
-        <form onSubmit={handleSubmit} className="space-y-6">
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-6">
         {/* STEP 1: ROOM & TIME SELECTION */}
         <section id="schedule-section" className="scroll-mt-24 space-y-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_16px_35px_-32px_rgba(0,106,78,0.7)] sm:p-6">
           <div className="flex items-center gap-2.5 pb-4 border-b border-slate-100">
@@ -913,7 +936,6 @@ function NewBookingForm() {
           </button>
         </div>
       </form>
-      )}
     </div>
   );
 }
