@@ -352,7 +352,7 @@ export default function AcademicBulkPage() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Kode Mata Kuliah *
+                  Kode Mata Kuliah
                 </label>
                 <input
                   type="text"
@@ -366,7 +366,7 @@ export default function AcademicBulkPage() {
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Fakultas *
+                  Fakultas
                 </label>
                 <select
                   value={faculty}
@@ -384,7 +384,7 @@ export default function AcademicBulkPage() {
 
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">
-                Nama Mata Kuliah *
+                Nama Mata Kuliah
               </label>
               <input
                 type="text"
@@ -399,7 +399,7 @@ export default function AcademicBulkPage() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Nama Dosen Pengampu *
+                  Nama Dosen Pengampu
                 </label>
                 <input
                   type="text"
@@ -413,7 +413,7 @@ export default function AcademicBulkPage() {
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Kelompok Kelas Mahasiswa *
+                  Kelompok Kelas Mahasiswa
                 </label>
                 <input
                   type="text"
@@ -429,7 +429,7 @@ export default function AcademicBulkPage() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Ruangan Kelas / Lab *
+                  Ruangan Kelas / Lab
                 </label>
                 <select
                   value={selectedRoomId}
@@ -446,7 +446,7 @@ export default function AcademicBulkPage() {
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Hari Perkuliahan *
+                  Hari Perkuliahan
                 </label>
                 <select
                   value={dayOfWeek}

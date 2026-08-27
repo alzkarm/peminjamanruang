@@ -369,7 +369,7 @@ function NewBookingForm() {
             {/* Room Selector */}
             <div className="space-y-2">
               <label htmlFor="roomSelect" className="block text-xs font-bold text-slate-700">
-                Pilihan Ruangan Kampus *
+                Pilihan Ruangan Kampus
               </label>
               <select
                 id="roomSelect"
@@ -427,7 +427,7 @@ function NewBookingForm() {
                     }
                   }}
                 >
-                  Tanggal Pelaksanaan *
+                  Tanggal Pelaksanaan
                 </label>
                 <div
                   className="relative cursor-pointer group"
@@ -571,7 +571,7 @@ function NewBookingForm() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="sm:col-span-2">
                 <label htmlFor="eventTitleInput" className="block text-xs font-bold text-slate-700 mb-1">
-                  Nama / Judul Kegiatan *
+                  Nama / Judul Kegiatan
                 </label>
                 <input
                   id="eventTitleInput"
@@ -586,7 +586,7 @@ function NewBookingForm() {
 
               <div>
                 <label htmlFor="categorySelect" className="block text-xs font-bold text-slate-700 mb-1">
-                  Pilihan Kategori Kegiatan *
+                  Pilihan Kategori Kegiatan
                 </label>
                 <select
                   id="categorySelect"
@@ -611,7 +611,7 @@ function NewBookingForm() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
                 <label htmlFor="attendeesInput" className="block text-xs font-bold text-slate-700 mb-1">
-                  Estimasi Jumlah Peserta *
+                  Estimasi Jumlah Peserta
                 </label>
                 <input
                   id="attendeesInput"
@@ -636,7 +636,7 @@ function NewBookingForm() {
 
               <div className="sm:col-span-2">
                 <label htmlFor="orgInput" className="block text-xs font-bold text-slate-700 mb-1">
-                  Organisasi / Unit Pengusul *
+                  Organisasi / Unit Pengusul
                 </label>
                 <input
                   id="orgInput"
@@ -652,7 +652,7 @@ function NewBookingForm() {
 
             <div>
               <label htmlFor="descInput" className="block text-xs font-bold text-slate-700 mb-1">
-                Deskripsi Singkat Acara & Kebutuhan Ruangan *
+                Deskripsi Singkat Acara & Kebutuhan Ruangan
               </label>
               <textarea
                 id="descInput"
@@ -864,7 +864,7 @@ function NewBookingForm() {
             />
             <label htmlFor="internalApprovalCheck" className="cursor-pointer space-y-1.5 select-none">
               <p className="text-sm font-bold text-emerald-950 leading-snug">
-                Konfirmasi Persetujuan Internal Fakultas / Kemahasiswaan (Wajib Dicentang) *
+                Konfirmasi Persetujuan Internal Fakultas / Kemahasiswaan (Wajib Dicentang)
               </p>
               <p className="text-xs text-emerald-800 leading-relaxed">
                 Saya menyatakan dengan sungguh-sungguh bahwa kegiatan ini telah diverifikasi dan disetujui secara internal oleh Pimpinan Fakultas, Dekanat, BEM/DPM, atau Pembina Kemahasiswaan terkait sebelum diajukan ke sistem SIPERU. Pernyataan ini dicatat secara resmi sebagai rekam jejak audit digital.
