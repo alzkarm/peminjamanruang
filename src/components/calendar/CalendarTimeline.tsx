@@ -322,9 +322,6 @@ export function CalendarTimeline({
                   </span>
                 </div>
               </button>
-              <p className="mt-0.5 text-xs leading-relaxed text-slate-500 sm:text-sm pl-1">
-                {viewMode === 'day_rooms' ? `${filteredRooms.length} ruang · tiap baris mewakili 30 menit` : `Jadwal mingguan ${activeRoom?.name || 'ruangan terpilih'} · WIB`}
-              </p>
             </div>
           </div>
 
@@ -351,6 +348,24 @@ export function CalendarTimeline({
                 <option value="hall">Aula</option>
               </select>
             </label>
+
+            {viewMode === 'week_room' && (
+              <label className="relative">
+                <span className="sr-only">Pilih Ruangan</span>
+                <Building2 className="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-yarsi-primary" aria-hidden="true" />
+                <select
+                  value={resolvedActiveRoomId}
+                  onChange={(e) => setActiveRoomId(e.target.value)}
+                  className="min-h-11 w-full appearance-none rounded-xl border border-emerald-300 bg-emerald-50/80 py-2.5 pl-9 pr-9 text-sm font-bold text-yarsi-dark shadow-sm outline-none hover:border-yarsi-primary focus:border-yarsi-primary focus:ring-4 focus:ring-emerald-100 xl:w-60 cursor-pointer"
+                >
+                  {filteredRooms.map((room) => (
+                    <option key={room.id} value={room.id}>
+                      {room.name} ({room.code})
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
 
             <div className="grid grid-cols-2 rounded-xl border border-slate-200 bg-slate-100/80 p-1 text-xs font-bold sm:col-span-2 xl:min-w-[292px]">
               <button type="button" onClick={() => setViewMode('day_rooms')} aria-pressed={viewMode === 'day_rooms'} className={`min-h-10 rounded-lg px-3 ${viewMode === 'day_rooms' ? 'bg-white text-yarsi-primary shadow-sm ring-1 ring-black/5' : 'text-slate-600 hover:bg-white/70 hover:text-slate-900'}`}>Semua ruang</button>
@@ -552,16 +567,6 @@ export function CalendarTimeline({
 
       {viewMode === 'week_room' && (
         <div className="hidden space-y-3 md:block">
-          {filteredRooms.length > 0 && (
-            <div className="flex items-center gap-2 overflow-x-auto pb-1" aria-label="Pilih ruangan">
-              {filteredRooms.map((room) => (
-                <button key={room.id} type="button" onClick={() => setActiveRoomId(room.id)} aria-pressed={resolvedActiveRoomId === room.id} className={`min-h-10 whitespace-nowrap rounded-xl border px-3.5 text-xs font-bold ${resolvedActiveRoomId === room.id ? 'border-yarsi-primary bg-yarsi-primary text-white shadow-sm' : 'border-slate-200 bg-white text-slate-700 hover:border-emerald-300 hover:text-yarsi-primary'}`}>
-                  {room.name} <span className={resolvedActiveRoomId === room.id ? 'text-emerald-100' : 'text-slate-400'}>· {room.code}</span>
-                </button>
-              ))}
-            </div>
-          )}
-
           {!activeRoom ? (
             <div className="rounded-2xl border border-slate-200 bg-white px-6 py-14 text-center"><p className="font-bold text-slate-900">Tidak ada ruang yang sesuai filter.</p><button type="button" onClick={() => { setFilterBuilding('all'); setFilterRoomType('all'); }} className="mt-3 min-h-10 rounded-lg border border-slate-300 px-4 text-sm font-bold text-slate-700 hover:text-yarsi-primary">Hapus filter</button></div>
           ) : (
