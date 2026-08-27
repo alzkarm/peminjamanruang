@@ -118,7 +118,9 @@ function NewBookingForm() {
     startTime,
     endTime,
     bookings,
-    academicBlocks
+    academicBlocks,
+    undefined,
+    currentUser?.id || currentUser?.identifier
   );
 
   const isCapacityExceeded = estimatedAttendees > (selectedRoom?.capacity || 0);

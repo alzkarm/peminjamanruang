@@ -617,6 +617,11 @@ export const useAppStore = create<AppState>()(
       onRehydrateStorage: () => (state) => {
         if (state) {
           state.hasHydrated = true;
+          if (state.bookings) {
+            state.bookings = state.bookings.filter(
+              (b) => b.title !== 'q' && b.title !== 'test' && b.title !== 't'
+            );
+          }
           // Trigger background fetch
           state.fetchInitialData();
         }

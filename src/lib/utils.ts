@@ -71,7 +71,8 @@ export function checkRoomConflict(
   endTime: string,
   bookings: Booking[],
   academicBlocks: AcademicBlock[],
-  excludeBookingId?: string
+  excludeBookingId?: string,
+  currentUserId?: string
 ): ConflictCheckResult {
   // 1. Check academic blocks
   const dayNum = getDayOfWeekNumber(dateStr);
@@ -108,13 +109,22 @@ export function checkRoomConflict(
   );
 
   if (bookingConflict) {
+    const isSelf = Boolean(
+      currentUserId &&
+        (b => b.userId === currentUserId || b.userNimNidn === currentUserId)(bookingConflict)
+    );
     const statusLabel =
       bookingConflict.status === "APPROVED"
         ? "Telah Disetujui"
         : "Sedang Dalam Antrean Review";
+
+    const reason = isSelf
+      ? `Anda sudah memiliki permohonan (${statusLabel}): "${bookingConflict.title}" pada slot (${bookingConflict.startTime} - ${bookingConflict.endTime}). Silakan batalkan permohonan sebelumnya di Dashboard atau ubah slot/ruangan.`
+      : `Terbentur Peminjaman (${statusLabel}): "${bookingConflict.title}" oleh ${bookingConflict.userName || 'Pengguna'} (${bookingConflict.startTime} - ${bookingConflict.endTime})`;
+
     return {
       hasConflict: true,
-      reason: `Terbentur Peminjaman (${statusLabel}): ${bookingConflict.title} oleh ${bookingConflict.userName} (${bookingConflict.startTime} - ${bookingConflict.endTime})`,
+      reason,
       conflictingBooking: bookingConflict,
     };
   }
