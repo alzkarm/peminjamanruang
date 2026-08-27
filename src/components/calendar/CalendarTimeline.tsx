@@ -416,7 +416,7 @@ export function CalendarTimeline({
                               return (
                                 <button key={`booking-${item.booking.id}`} type="button" onClick={() => openBooking(item.booking)} className={`flex min-h-14 w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-left ${tone.surface}`}>
                                   <span className={`h-9 w-1 shrink-0 rounded-full ${tone.marker}`} aria-hidden="true" />
-                                  <span className="min-w-0 flex-1"><span className="block text-sm font-bold">{item.booking.startTime}–{item.booking.endTime}</span><span className="block truncate text-xs opacity-75">Tidak tersedia · {tone.label}</span></span>
+                                  <span className="min-w-0 flex-1"><span className="block text-sm font-bold">{item.booking.startTime}–{item.booking.endTime}</span><span className="block truncate text-xs opacity-75">{item.booking.roomName || room.name} · {tone.label}</span></span>
                                   <ChevronRight className="h-4 w-4 shrink-0 opacity-50" aria-hidden="true" />
                                 </button>
                               );
@@ -508,7 +508,7 @@ export function CalendarTimeline({
                         const tone = bookingTone(booking.status);
                         return (
                           <button key={`booking-${room.id}-${booking.id}`} type="button" onClick={() => openBooking(booking)} className={`z-10 m-1 overflow-hidden rounded-lg border p-2 text-left shadow-sm hover:shadow-md ${tone.surface}`} style={{ gridColumn: roomIndex + 2, gridRow: `${placement.row} / span ${placement.span}` }}>
-                            <span className="flex items-center justify-between gap-2 text-[9px] font-extrabold uppercase tracking-wide"><span className="truncate">Tidak tersedia</span><span className={`h-2 w-2 shrink-0 rounded-full ${tone.marker}`} aria-hidden="true" /></span>
+                            <span className="flex items-center justify-between gap-2 text-[9px] font-extrabold uppercase tracking-wide"><span className="truncate">{booking.roomName || room.name}</span><span className={`h-2 w-2 shrink-0 rounded-full ${tone.marker}`} aria-hidden="true" /></span>
                             <span className="mt-1 block truncate text-[11px] font-bold">{booking.startTime}–{booking.endTime}</span>{placement.span > 1 && <span className="mt-0.5 block truncate text-[10px] opacity-75">{tone.label}</span>}
                           </button>
                         );
@@ -574,7 +574,7 @@ export function CalendarTimeline({
                       ...roomBookings.map((booking) => {
                         const placement = getSlotPlacement(booking.startTime, booking.endTime);
                         const tone = bookingTone(booking.status);
-                        return <button key={`booking-${date}-${booking.id}`} type="button" onClick={() => openBooking(booking)} className={`z-10 m-1 overflow-hidden rounded-lg border p-2 text-left shadow-sm ${tone.surface}`} style={{ gridColumn: dateIndex + 2, gridRow: `${placement.row} / span ${placement.span}` }}><span className="block truncate text-[10px] font-extrabold">Tidak tersedia</span><span className="mt-0.5 block truncate text-[10px] opacity-75">{booking.startTime}–{booking.endTime}</span></button>;
+                        return <button key={`booking-${date}-${booking.id}`} type="button" onClick={() => openBooking(booking)} className={`z-10 m-1 overflow-hidden rounded-lg border p-2 text-left shadow-sm ${tone.surface}`} style={{ gridColumn: dateIndex + 2, gridRow: `${placement.row} / span ${placement.span}` }}><span className="block truncate text-[10px] font-extrabold">{booking.roomName || activeRoom.name}</span><span className="mt-0.5 block truncate text-[10px] opacity-75">{booking.startTime}–{booking.endTime}</span></button>;
                       }),
                     ];
                   })}
