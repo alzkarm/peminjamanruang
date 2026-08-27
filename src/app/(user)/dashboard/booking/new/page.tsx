@@ -7,6 +7,7 @@ import { BookingCategory, BookingEquipment, BookingLogistikItem } from '@/lib/ty
 import { checkRoomConflict } from '@/lib/utils';
 import {
   Calendar,
+  Clock,
   Building2,
   Users,
   AlertCircle,
@@ -416,52 +417,106 @@ function NewBookingForm() {
             {/* Date & Time Selectors */}
             <div className="space-y-4">
               <div>
-                <label htmlFor="dateInput" className="block text-xs font-bold text-slate-700 mb-1">
+                <label
+                  htmlFor="dateInput"
+                  className="block text-xs font-bold text-slate-700 mb-1.5 cursor-pointer"
+                  onClick={() => {
+                    const el = document.getElementById('dateInput') as HTMLInputElement | null;
+                    if (el) {
+                      try { (el as any).showPicker(); } catch (err) {}
+                    }
+                  }}
+                >
                   Tanggal Pelaksanaan *
                 </label>
-                <div className="relative">
-                  <Calendar className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5 pointer-events-none" />
+                <div
+                  className="relative cursor-pointer group"
+                  onClick={() => {
+                    const el = document.getElementById('dateInput') as HTMLInputElement | null;
+                    if (el) {
+                      try { (el as any).showPicker(); } catch (err) {}
+                    }
+                  }}
+                >
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center justify-center p-1.5 rounded-lg bg-emerald-50 text-yarsi-primary group-hover:bg-emerald-100 transition-colors pointer-events-none z-10">
+                    <Calendar className="w-4 h-4 shrink-0" />
+                  </div>
                   <input
                     id="dateInput"
                     type="date"
                     required
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
-                    className="w-full min-h-11 pl-10 pr-4 py-2.5 text-xs sm:text-sm font-medium bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yarsi-primary text-slate-800"
+                    onClick={(e) => {
+                      try { (e.currentTarget as any).showPicker(); } catch (err) {}
+                    }}
+                    className="w-full min-h-12 pl-12 pr-4 py-2.5 text-xs sm:text-sm font-semibold bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-yarsi-primary text-slate-900 cursor-pointer shadow-sm group-hover:border-emerald-400 group-hover:shadow transition-all"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label htmlFor="startTimeInput" className="block text-xs font-bold text-slate-700 mb-1">
+                <div
+                  className="cursor-pointer space-y-1.5 group"
+                  onClick={() => {
+                    const el = document.getElementById('startTimeInput') as HTMLInputElement | null;
+                    if (el) {
+                      try { (el as any).showPicker(); } catch (err) {}
+                    }
+                  }}
+                >
+                  <label htmlFor="startTimeInput" className="block text-xs font-bold text-slate-700 cursor-pointer">
                     Jam Mulai (WIB) *
                   </label>
-                  <input
-                    id="startTimeInput"
-                    type="time"
-                    required
-                    value={startTime}
-                    onChange={(e) => setStartTime(e.target.value)}
-                    step={1800}
-                    aria-invalid={isTimeRangeInvalid}
-                    className="w-full min-h-11 px-3.5 py-2.5 text-xs sm:text-sm font-medium bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yarsi-primary text-slate-800"
-                  />
+                  <div className="relative">
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center justify-center p-1.5 rounded-lg bg-emerald-50 text-yarsi-primary group-hover:bg-emerald-100 transition-colors pointer-events-none z-10">
+                      <Clock className="w-4 h-4 shrink-0" />
+                    </div>
+                    <input
+                      id="startTimeInput"
+                      type="time"
+                      required
+                      value={startTime}
+                      onChange={(e) => setStartTime(e.target.value)}
+                      onClick={(e) => {
+                        try { (e.currentTarget as any).showPicker(); } catch (err) {}
+                      }}
+                      step={1800}
+                      aria-invalid={isTimeRangeInvalid}
+                      className="w-full min-h-12 pl-12 pr-3 py-2.5 text-xs sm:text-sm font-bold bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-yarsi-primary text-slate-900 cursor-pointer shadow-sm group-hover:border-emerald-400 group-hover:shadow transition-all"
+                    />
+                  </div>
                 </div>
-                <div>
-                  <label htmlFor="endTimeInput" className="block text-xs font-bold text-slate-700 mb-1">
+                <div
+                  className="cursor-pointer space-y-1.5 group"
+                  onClick={() => {
+                    const el = document.getElementById('endTimeInput') as HTMLInputElement | null;
+                    if (el) {
+                      try { (el as any).showPicker(); } catch (err) {}
+                    }
+                  }}
+                >
+                  <label htmlFor="endTimeInput" className="block text-xs font-bold text-slate-700 cursor-pointer">
                     Jam Selesai (WIB) *
                   </label>
-                  <input
-                    id="endTimeInput"
-                    type="time"
-                    required
-                    value={endTime}
-                    onChange={(e) => setEndTime(e.target.value)}
-                    step={1800}
-                    aria-invalid={isTimeRangeInvalid}
-                    className="w-full min-h-11 px-3.5 py-2.5 text-xs sm:text-sm font-medium bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yarsi-primary text-slate-800"
-                  />
+                  <div className="relative">
+                    <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center justify-center p-1.5 rounded-lg bg-emerald-50 text-yarsi-primary group-hover:bg-emerald-100 transition-colors pointer-events-none z-10">
+                      <Clock className="w-4 h-4 shrink-0" />
+                    </div>
+                    <input
+                      id="endTimeInput"
+                      type="time"
+                      required
+                      value={endTime}
+                      onChange={(e) => setEndTime(e.target.value)}
+                      onClick={(e) => {
+                        try { (e.currentTarget as any).showPicker(); } catch (err) {}
+                      }}
+                      step={1800}
+                      aria-invalid={isTimeRangeInvalid}
+                      className="w-full min-h-12 pl-12 pr-3 py-2.5 text-xs sm:text-sm font-bold bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-yarsi-primary text-slate-900 cursor-pointer shadow-sm group-hover:border-emerald-400 group-hover:shadow transition-all"
+                    />
+                  </div>
                 </div>
               </div>
 

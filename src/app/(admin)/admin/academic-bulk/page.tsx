@@ -463,29 +463,53 @@ export default function AcademicBulkPage() {
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+              <div
+                className="cursor-pointer space-y-1"
+                onClick={() => {
+                  const el = document.getElementById('academicStartTimeInput') as HTMLInputElement | null;
+                  if (el) {
+                    try { (el as any).showPicker(); } catch (err) {}
+                  }
+                }}
+              >
+                <label htmlFor="academicStartTimeInput" className="block text-xs font-bold text-slate-700 mb-1 cursor-pointer">
                   Jam Mulai (WIB) *
                 </label>
                 <input
+                  id="academicStartTimeInput"
                   type="time"
                   required
                   value={startTime}
                   onChange={(e) => setStartTime(e.target.value)}
-                  className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-600"
+                  onClick={(e) => {
+                    try { (e.currentTarget as any).showPicker(); } catch (err) {}
+                  }}
+                  className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-600 cursor-pointer"
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+              <div
+                className="cursor-pointer space-y-1"
+                onClick={() => {
+                  const el = document.getElementById('academicEndTimeInput') as HTMLInputElement | null;
+                  if (el) {
+                    try { (el as any).showPicker(); } catch (err) {}
+                  }
+                }}
+              >
+                <label htmlFor="academicEndTimeInput" className="block text-xs font-bold text-slate-700 mb-1 cursor-pointer">
                   Jam Selesai (WIB) *
                 </label>
                 <input
+                  id="academicEndTimeInput"
                   type="time"
                   required
                   value={endTime}
                   onChange={(e) => setEndTime(e.target.value)}
-                  className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-600"
+                  onClick={(e) => {
+                    try { (e.currentTarget as any).showPicker(); } catch (err) {}
+                  }}
+                  className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-600 cursor-pointer"
                 />
               </div>
             </div>
