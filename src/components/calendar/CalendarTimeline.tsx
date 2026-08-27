@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Room, Booking, AcademicBlock, BookingStatus } from '@/lib/types';
 import {
@@ -178,6 +178,7 @@ export function CalendarTimeline({
 }: CalendarTimelineProps) {
   const todayDate = jakartaDateString(new Date());
   const [currentDateStr, setCurrentDateStr] = useState(initialDate || todayDate);
+  const dateInputRef = useRef<HTMLInputElement>(null);
   const [viewMode, setViewMode] = useState<'day_rooms' | 'week_room'>('day_rooms');
   const [filterBuilding, setFilterBuilding] = useState('all');
   const [filterRoomType, setFilterRoomType] = useState('all');
@@ -287,14 +288,41 @@ export function CalendarTimeline({
               </button>
             </div>
 
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
-                <Calendar className="h-5 w-5 shrink-0 text-yarsi-primary" aria-hidden="true" />
-                <h2 className="text-lg font-extrabold tracking-tight text-slate-950 sm:text-xl">
-                  {viewMode === 'day_rooms' ? formatDateIndo(currentDateStr) : `${formatShortDateIndo(weekDates[0])} – ${formatShortDateIndo(weekDates[6])}`}
-                </h2>
-              </div>
-              <p className="mt-1 text-xs leading-relaxed text-slate-500 sm:text-sm">
+            <div className="min-w-0 relative">
+              <input
+                ref={dateInputRef}
+                type="date"
+                value={currentDateStr}
+                onChange={(e) => {
+                  if (e.target.value) {
+                    setCurrentDateStr(e.target.value);
+                  }
+                }}
+                className="sr-only opacity-0 absolute pointer-events-none"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  try {
+                    dateInputRef.current?.showPicker();
+                  } catch (err) {
+                    dateInputRef.current?.focus();
+                  }
+                }}
+                title="Klik untuk memilih tanggal"
+                className="group flex items-center gap-2 rounded-xl p-1 -ml-1 hover:bg-emerald-50/80 hover:ring-1 hover:ring-emerald-300 transition-all text-left cursor-pointer"
+              >
+                <Calendar className="h-5 w-5 shrink-0 text-yarsi-primary group-hover:scale-110 transition-transform" aria-hidden="true" />
+                <div className="flex items-center gap-2">
+                  <h2 className="text-lg font-extrabold tracking-tight text-slate-950 sm:text-xl group-hover:text-yarsi-primary transition-colors">
+                    {viewMode === 'day_rooms' ? formatDateIndo(currentDateStr) : `${formatShortDateIndo(weekDates[0])} – ${formatShortDateIndo(weekDates[6])}`}
+                  </h2>
+                  <span className="rounded-md bg-emerald-100/80 px-2 py-0.5 text-[10px] font-bold text-yarsi-primary opacity-0 group-hover:opacity-100 transition-opacity shadow-sm">
+                    Pilih Tanggal ▾
+                  </span>
+                </div>
+              </button>
+              <p className="mt-0.5 text-xs leading-relaxed text-slate-500 sm:text-sm pl-1">
                 {viewMode === 'day_rooms' ? `${filteredRooms.length} ruang · tiap baris mewakili 30 menit` : `Jadwal mingguan ${activeRoom?.name || 'ruangan terpilih'} · WIB`}
               </p>
             </div>
