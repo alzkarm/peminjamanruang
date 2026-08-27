@@ -466,7 +466,7 @@ function NewBookingForm() {
                   }}
                 >
                   <label htmlFor="startTimeInput" className="block text-xs font-bold text-slate-700 cursor-pointer">
-                    Jam Mulai (WIB) *
+                    Jam Mulai (WIB)
                   </label>
                   <div className="relative">
                     <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center justify-center p-1.5 rounded-lg bg-emerald-50 text-yarsi-primary group-hover:bg-emerald-100 transition-colors pointer-events-none z-10">
@@ -497,7 +497,7 @@ function NewBookingForm() {
                   }}
                 >
                   <label htmlFor="endTimeInput" className="block text-xs font-bold text-slate-700 cursor-pointer">
-                    Jam Selesai (WIB) *
+                    Jam Selesai (WIB)
                   </label>
                   <div className="relative">
                     <div className="absolute left-3 top-1/2 -translate-y-1/2 flex items-center justify-center p-1.5 rounded-lg bg-emerald-50 text-yarsi-primary group-hover:bg-emerald-100 transition-colors pointer-events-none z-10">

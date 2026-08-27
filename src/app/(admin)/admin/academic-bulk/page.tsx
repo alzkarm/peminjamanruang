@@ -473,7 +473,7 @@ export default function AcademicBulkPage() {
                 }}
               >
                 <label htmlFor="academicStartTimeInput" className="block text-xs font-bold text-slate-700 mb-1 cursor-pointer">
-                  Jam Mulai (WIB) *
+                  Jam Mulai (WIB)
                 </label>
                 <input
                   id="academicStartTimeInput"
@@ -498,7 +498,7 @@ export default function AcademicBulkPage() {
                 }}
               >
                 <label htmlFor="academicEndTimeInput" className="block text-xs font-bold text-slate-700 mb-1 cursor-pointer">
-                  Jam Selesai (WIB) *
+                  Jam Selesai (WIB)
                 </label>
                 <input
                   id="academicEndTimeInput"

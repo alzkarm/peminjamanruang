@@ -126,22 +126,10 @@
   box-shadow: 0 12px 28px -4px rgba(13, 122, 95, 0.12), 0 4px 12px -2px rgba(0, 0, 0, 0.04);
 }
 
-/* Time & Date Picker Full-Column Clickable Styles */
-input[type="time"],
-input[type="date"] {
-  cursor: pointer;
-}
-
+/* Hide default browser calendar/clock picker indicator icon */
 input[type="time"]::-webkit-calendar-picker-indicator,
 input[type="date"]::-webkit-calendar-picker-indicator {
-  cursor: pointer;
-  padding: 4px;
-  border-radius: 6px;
-  transition: background-color 150ms ease;
-}
-
-input[type="time"]::-webkit-calendar-picker-indicator:hover,
-input[type="date"]::-webkit-calendar-picker-indicator:hover {
-  background-color: rgba(0, 106, 78, 0.12);
+  display: none !important;
+  -webkit-appearance: none;
 }
 
