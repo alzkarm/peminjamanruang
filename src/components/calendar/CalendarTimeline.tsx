@@ -179,7 +179,7 @@ export function CalendarTimeline({
   const todayDate = jakartaDateString(new Date());
   const [currentDateStr, setCurrentDateStr] = useState(initialDate || todayDate);
   const dateInputRef = useRef<HTMLInputElement>(null);
-  const [viewMode, setViewMode] = useState<'day_rooms' | 'week_room'>('day_rooms');
+  const [viewMode, setViewMode] = useState<'day_rooms' | 'week_room'>('week_room');
   const [filterBuilding, setFilterBuilding] = useState('all');
   const [filterRoomType, setFilterRoomType] = useState('all');
   const [activeRoomId, setActiveRoomId] = useState(selectedRoomId || rooms[0]?.id || '');

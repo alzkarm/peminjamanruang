@@ -55,7 +55,7 @@ function ScheduleContent() {
               }`}
             >
               <Clock className="h-3.5 w-3.5" aria-hidden="true" />
-              <span>Timeline</span>
+              <span>Mingguan</span>
             </button>
 
             <button
