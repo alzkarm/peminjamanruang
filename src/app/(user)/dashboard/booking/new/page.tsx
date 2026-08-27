@@ -111,13 +111,13 @@ function NewBookingForm() {
     locationDetails: 'Menara YARSI Lt. 12',
   };
 
-  // Run Real-Time Conflict Detection
+  // Run Real-Time Conflict Detection (Ignore if submitting or succeeded)
   const conflictResult = checkRoomConflict(
     roomId || selectedRoom.id,
     date,
     startTime,
     endTime,
-    bookings,
+    isSubmitting || submitSuccess ? [] : bookings,
     academicBlocks,
     undefined,
     currentUser?.id || currentUser?.identifier
@@ -336,21 +336,22 @@ function NewBookingForm() {
         </div>
       )}
 
-      {submitSuccess && (
-        <div role="status" className="space-y-2 rounded-2xl border border-emerald-300 bg-emerald-50 p-7 text-center shadow-sm">
-          <div className="w-12 h-12 rounded-full bg-emerald-600 text-white mx-auto flex items-center justify-center">
-            <CheckCircle2 className="w-8 h-8" />
+      {submitSuccess ? (
+        <div role="status" className="my-8 space-y-4 rounded-3xl border border-emerald-300 bg-emerald-50/90 p-8 text-center shadow-lg animate-fade-in sm:p-12">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-emerald-600 text-white shadow-md">
+            <CheckCircle2 className="h-10 w-10 animate-bounce" />
           </div>
-          <h2 className="text-lg font-black text-emerald-950">
-            Permohonan berhasil dikirim
-          </h2>
-          <p className="text-xs text-emerald-800">
-            Permohonan masuk ke antrean LPF. Anda akan kembali ke dashboard.
-          </p>
+          <div className="space-y-1.5">
+            <h2 className="text-xl font-black text-emerald-950 sm:text-2xl">
+              Permohonan Berhasil Dikirim!
+            </h2>
+            <p className="text-xs text-emerald-800 font-semibold sm:text-sm">
+              Permohonan peminjaman ruangan Anda telah terdaftar dan masuk antrean LPF. Mengalihkan ke dashboard...
+            </p>
+          </div>
         </div>
-      )}
-
-      <form onSubmit={handleSubmit} className="space-y-6">
+      ) : (
+        <form onSubmit={handleSubmit} className="space-y-6">
         {/* STEP 1: ROOM & TIME SELECTION */}
         <section id="schedule-section" className="scroll-mt-24 space-y-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_16px_35px_-32px_rgba(0,106,78,0.7)] sm:p-6">
           <div className="flex items-center gap-2.5 pb-4 border-b border-slate-100">
@@ -912,6 +913,7 @@ function NewBookingForm() {
           </button>
         </div>
       </form>
+      )}
     </div>
   );
 }
