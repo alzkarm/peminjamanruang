@@ -336,7 +336,7 @@ function NewBookingForm() {
         </div>
       )}
 
-      {/* Centered Success Modal Dialog Popup */}
+      {/* Centered Success Modal Dialog Popup without button */}
       {submitSuccess && (
         <div
           role="dialog"
@@ -344,7 +344,7 @@ function NewBookingForm() {
           aria-labelledby="modal-success-title"
           className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-md animate-fade-in"
         >
-          <div className="w-full max-w-md space-y-6 rounded-3xl bg-white p-7 sm:p-9 text-center shadow-2xl border border-slate-100 transform transition-all">
+          <div className="w-full max-w-sm space-y-5 rounded-3xl bg-white p-7 sm:p-8 text-center shadow-2xl border border-slate-100 transform transition-all">
             {/* Animated Icon Badge */}
             <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100/80 text-emerald-600 ring-8 ring-emerald-50 shadow-inner">
               <CheckCircle2 className="h-12 w-12 text-yarsi-primary animate-bounce" />
@@ -352,7 +352,7 @@ function NewBookingForm() {
 
             {/* Modal Text Content */}
             <div className="space-y-2">
-              <h2 id="modal-success-title" className="text-2xl font-black tracking-tight text-slate-950">
+              <h2 id="modal-success-title" className="text-xl font-black tracking-tight text-slate-950 sm:text-2xl">
                 Permohonan Berhasil Dikirim!
               </h2>
               <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium">
@@ -360,19 +360,9 @@ function NewBookingForm() {
               </p>
             </div>
 
-            {/* Primary Action Button */}
-            <div className="pt-3 space-y-3">
-              <button
-                type="button"
-                onClick={() => router.push('/dashboard')}
-                className="w-full min-h-12 px-6 py-3 bg-yarsi-primary hover:bg-yarsi-dark active:bg-yarsi-darker text-white rounded-xl text-sm font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
-              >
-                <span>Lihat Riwayat Peminjaman Ruangan</span>
-                <ArrowRight className="w-4 h-4 shrink-0" />
-              </button>
-              <p className="text-[11px] text-slate-400 font-semibold">
-                Mengalihkan secara otomatis ke riwayat peminjaman...
-              </p>
+            <div className="pt-2 border-t border-slate-100 flex items-center justify-center gap-2 text-xs font-bold text-yarsi-primary">
+              <LoaderCircle className="w-4 h-4 animate-spin shrink-0" />
+              <span>Mengalihkan ke riwayat peminjaman...</span>
             </div>
           </div>
         </div>
