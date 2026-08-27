@@ -1,6 +1,8 @@
 import { BookingStatus } from '@prisma/client';
 
 export const BLOCKING_BOOKING_STATUSES: BookingStatus[] = [
+  BookingStatus.PENDING,
+  BookingStatus.RECOMMENDED,
   BookingStatus.APPROVED,
 ];
 

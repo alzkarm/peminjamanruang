@@ -546,7 +546,7 @@ function NewBookingForm() {
                   <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
                   <div className="space-y-1">
                     <p className="font-black text-rose-950">
-                      Jadwal tidak tersedia (Telah Resmi Disetujui / Kuliah)
+                      Jadwal tidak tersedia (Bentrok Ruangan & Waktu)
                     </p>
                     <p className="text-[11px] leading-relaxed text-rose-800">
                       {isTimeRangeInvalid ? 'Jam selesai harus lebih akhir daripada jam mulai.' : conflictResult.reason}
@@ -556,25 +556,13 @@ function NewBookingForm() {
                     </p>
                   </div>
                 </div>
-              ) : conflictResult.pendingNotice ? (
-                <div role="status" aria-live="polite" className="flex items-start gap-3 rounded-xl border border-amber-300 bg-gradient-to-br from-amber-50 to-white p-4 text-sm text-amber-900 shadow-sm animate-fade-in">
-                  <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
-                  <div className="space-y-1">
-                    <p className="font-bold text-amber-950">
-                      Permohonan Dapat Diajukan (Ada Antrean Review)
-                    </p>
-                    <p className="text-[11px] leading-relaxed text-amber-800">
-                      {conflictResult.pendingNotice}
-                    </p>
-                  </div>
-                </div>
               ) : (
                 <div role="status" aria-live="polite" className="flex items-center gap-3 rounded-xl border border-emerald-300 bg-gradient-to-br from-emerald-50 to-white p-4 text-sm text-emerald-900 shadow-sm animate-fade-in">
                   <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white shadow-sm"><CheckCircle2 className="h-5 w-5" aria-hidden="true" /></span>
                   <div>
                     <p className="font-bold text-emerald-950">Waktu tersedia</p>
                     <p className="text-[11px] text-emerald-700">
-                      Ruangan tidak terpakai oleh perkuliahan atau agenda resmi lain pada slot ini.
+                      Ruangan tidak terpakai oleh perkuliahan atau peminjaman lain pada slot ini.
                     </p>
                   </div>
                 </div>

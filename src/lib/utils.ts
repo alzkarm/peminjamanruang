@@ -93,53 +93,40 @@ export function checkRoomConflict(
     };
   }
 
-  // 2. Check APPROVED bookings (HARD CONFLICT)
-  const approvedConflict = bookings.find(
+  // 2. Check active bookings (APPROVED, PENDING_LPF, RECOMMENDED_YAYASAN - STRICT HARD CONFLICT)
+  const activeStatuses: BookingStatus[] = [
+    "APPROVED",
+    "PENDING_LPF",
+    "RECOMMENDED_YAYASAN",
+  ];
+
+  const bookingConflict = bookings.find(
     (b) =>
       b.id !== excludeBookingId &&
       b.roomId === roomId &&
       b.date === dateStr &&
-      b.status === "APPROVED" &&
+      activeStatuses.includes(b.status) &&
       checkTimeOverlap(startTime, endTime, b.startTime, b.endTime)
   );
 
-  if (approvedConflict) {
+  if (bookingConflict) {
     const isSelf = Boolean(
       currentUserId &&
-        (approvedConflict.userId === currentUserId || approvedConflict.userNimNidn === currentUserId)
+        (bookingConflict.userId === currentUserId || bookingConflict.userNimNidn === currentUserId)
     );
+    const statusLabel =
+      bookingConflict.status === "APPROVED"
+        ? "Telah Resmi Disetujui"
+        : "Sedang Dalam Antrean Review";
+
+    const reason = isSelf
+      ? `Anda sudah memiliki permohonan (${statusLabel}): "${bookingConflict.title}" pada slot waktu (${bookingConflict.startTime} - ${bookingConflict.endTime}). Silakan batalkan permohonan tersebut di Dashboard jika ingin mengajukan ulang.`
+      : `Terbentur Peminjaman (${statusLabel}): "${bookingConflict.title}" oleh ${bookingConflict.userName || 'Pengguna'} (${bookingConflict.startTime} - ${bookingConflict.endTime}). Pilih jam atau ruangan lain.`;
+
     return {
       hasConflict: true,
-      reason: isSelf
-        ? `Ruangan telah resmi Anda pinjam ("${approvedConflict.title}" - ${approvedConflict.startTime} s/d ${approvedConflict.endTime}).`
-        : `Ruangan telah resmi disetujui untuk peminjaman lain: "${approvedConflict.title}" oleh ${approvedConflict.userName || 'Pengguna'} (${approvedConflict.startTime} - ${approvedConflict.endTime}).`,
-      conflictingBooking: approvedConflict,
-    };
-  }
-
-  // 3. Check PENDING / IN-REVIEW bookings (INFORMATIONAL NOTICE ONLY - DOES NOT BLOCK SUBMISSION)
-  const pendingBooking = bookings.find(
-    (b) =>
-      b.id !== excludeBookingId &&
-      b.roomId === roomId &&
-      b.date === dateStr &&
-      (b.status === "PENDING_LPF" || b.status === "RECOMMENDED_YAYASAN") &&
-      checkTimeOverlap(startTime, endTime, b.startTime, b.endTime)
-  );
-
-  if (pendingBooking) {
-    const isSelf = Boolean(
-      currentUserId &&
-        (pendingBooking.userId === currentUserId || pendingBooking.userNimNidn === currentUserId)
-    );
-    const notice = isSelf
-      ? `Informasi: Anda sudah memiliki permohonan yang sedang diajukan ("${pendingBooking.title}", ${pendingBooking.startTime} - ${pendingBooking.endTime}). Anda tetap dapat mengirimkan permohonan ini.`
-      : `Informasi Antrean: Slot waktu ini memiliki permohonan lain yang sedang dalam review Admin ("${pendingBooking.title}", ${pendingBooking.startTime} - ${pendingBooking.endTime}). Anda tetap dapat mengirimkan permohonan ini untuk dipertimbangkan.`;
-
-    return {
-      hasConflict: false,
-      pendingNotice: notice,
-      conflictingBooking: pendingBooking,
+      reason,
+      conflictingBooking: bookingConflict,
     };
   }
 
