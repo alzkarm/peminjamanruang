@@ -171,9 +171,19 @@ export const useAppStore = create<AppState>()(
             academicBulkApi.getAll(),
           ]);
 
+          const currentBookings = get().bookings || [];
+          let mergedBookings = currentBookings;
+
+          if (bookingsData.status === 'fulfilled') {
+            const apiBookings = bookingsData.value;
+            const apiIds = new Set(apiBookings.map((b) => b.id));
+            const localOnly = currentBookings.filter((b) => !apiIds.has(b.id));
+            mergedBookings = [...apiBookings, ...localOnly];
+          }
+
           set({
             rooms: roomsData.status === 'fulfilled' ? roomsData.value : get().rooms,
-            bookings: bookingsData.status === 'fulfilled' ? bookingsData.value : get().bookings,
+            bookings: mergedBookings,
             academicBlocks:
               academicData.status === 'fulfilled'
                 ? academicData.value
@@ -617,11 +627,6 @@ export const useAppStore = create<AppState>()(
       onRehydrateStorage: () => (state) => {
         if (state) {
           state.hasHydrated = true;
-          if (state.bookings) {
-            state.bookings = state.bookings.filter(
-              (b) => b.title !== 'q' && b.title !== 'test' && b.title !== 't'
-            );
-          }
           // Trigger background fetch
           state.fetchInitialData();
         }
