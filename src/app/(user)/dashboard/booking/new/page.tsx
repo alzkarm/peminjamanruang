@@ -336,38 +336,42 @@ function NewBookingForm() {
         </div>
       )}
 
-      {/* Centered Success Modal Dialog */}
+      {/* Centered Success Modal Dialog Popup */}
       {submitSuccess && (
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/65 backdrop-blur-sm animate-fade-in"
+          aria-labelledby="modal-success-title"
+          className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-md animate-fade-in"
         >
-          <div className="w-full max-w-md space-y-6 rounded-3xl bg-white p-7 sm:p-8 text-center shadow-2xl border border-slate-100 transform transition-all">
-            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-200 shadow-inner">
-              <CheckCircle2 className="h-12 w-12 animate-pulse" />
+          <div className="w-full max-w-md space-y-6 rounded-3xl bg-white p-7 sm:p-9 text-center shadow-2xl border border-slate-100 transform transition-all">
+            {/* Animated Icon Badge */}
+            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100/80 text-emerald-600 ring-8 ring-emerald-50 shadow-inner">
+              <CheckCircle2 className="h-12 w-12 text-yarsi-primary animate-bounce" />
             </div>
 
+            {/* Modal Text Content */}
             <div className="space-y-2">
-              <h2 className="text-2xl font-black tracking-tight text-slate-950">
+              <h2 id="modal-success-title" className="text-2xl font-black tracking-tight text-slate-950">
                 Permohonan Berhasil Dikirim!
               </h2>
-              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+              <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium">
                 Permohonan peminjaman ruangan Anda telah terdaftar dan masuk antrean review LPF & Yayasan YARSI.
               </p>
             </div>
 
-            <div className="pt-2">
+            {/* Primary Action Button */}
+            <div className="pt-3 space-y-3">
               <button
                 type="button"
                 onClick={() => router.push('/dashboard')}
-                className="w-full min-h-12 px-6 py-3 bg-yarsi-primary hover:bg-yarsi-dark text-white rounded-xl text-sm font-bold shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2"
+                className="w-full min-h-12 px-6 py-3 bg-yarsi-primary hover:bg-yarsi-dark active:bg-yarsi-darker text-white rounded-xl text-sm font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 cursor-pointer"
               >
-                <span>Lihat Riwayat Peminjaman (Dashboard)</span>
-                <ArrowRight className="w-4 h-4" />
+                <span>Lihat Riwayat Peminjaman Ruangan</span>
+                <ArrowRight className="w-4 h-4 shrink-0" />
               </button>
-              <p className="text-[11px] text-slate-400 mt-3 font-medium">
-                Mengalihkan secara otomatis ke dashboard...
+              <p className="text-[11px] text-slate-400 font-semibold">
+                Mengalihkan secara otomatis ke riwayat peminjaman...
               </p>
             </div>
           </div>
