@@ -274,9 +274,9 @@ export function CalendarTimeline({
     <div className="space-y-4">
       <section className="overflow-hidden rounded-2xl border border-slate-200/90 bg-white shadow-[0_12px_35px_-28px_rgba(0,106,78,0.7)]">
         <div className="h-1 bg-gradient-to-r from-yarsi-primary via-emerald-500 to-amber-400" />
-        <div className="flex flex-col gap-5 p-4 sm:p-5 xl:flex-row xl:items-center xl:justify-between">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <div className="grid w-full grid-cols-[44px_1fr_44px] items-center rounded-xl border border-slate-200 bg-slate-100/80 p-1 sm:w-auto">
+        <div className="flex flex-col gap-4 p-4 sm:p-5 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex flex-wrap items-center gap-3 sm:flex-nowrap min-w-0">
+            <div className="grid grid-cols-[44px_1fr_44px] items-center rounded-xl border border-slate-200 bg-slate-100/80 p-1 shrink-0">
               <button type="button" onClick={() => navigate(-1)} aria-label={viewMode === 'week_room' ? 'Minggu sebelumnya' : 'Hari sebelumnya'} className="flex min-h-11 items-center justify-center rounded-lg text-slate-600 hover:bg-white hover:text-yarsi-primary hover:shadow-sm active:bg-slate-50">
                 <ChevronLeft className="h-5 w-5" aria-hidden="true" />
               </button>
@@ -313,32 +313,37 @@ export function CalendarTimeline({
                 className="group flex items-center gap-2 rounded-xl p-1 -ml-1 hover:bg-emerald-50/80 hover:ring-1 hover:ring-emerald-300 transition-all text-left cursor-pointer"
               >
                 <Calendar className="h-5 w-5 shrink-0 text-yarsi-primary group-hover:scale-110 transition-transform" aria-hidden="true" />
-                <div className="flex items-center gap-2">
-                  <h2 className="text-lg font-extrabold tracking-tight text-slate-950 sm:text-xl group-hover:text-yarsi-primary transition-colors">
-                    {viewMode === 'day_rooms' ? formatDateIndo(currentDateStr) : `${formatShortDateIndo(weekDates[0])} – ${formatShortDateIndo(weekDates[6])}`}
+                <div className="flex items-center gap-2 min-w-0">
+                  <h2 className="text-lg font-extrabold tracking-tight text-slate-950 sm:text-xl whitespace-nowrap group-hover:text-yarsi-primary transition-colors">
+                    {formatDateIndo(currentDateStr)}
                   </h2>
-                  <span className="rounded-md bg-emerald-100/80 px-2 py-0.5 text-[10px] font-bold text-yarsi-primary opacity-0 group-hover:opacity-100 transition-opacity shadow-sm">
+                  <span className="rounded-md bg-emerald-100/80 px-2 py-0.5 text-[10px] font-bold text-yarsi-primary opacity-0 group-hover:opacity-100 transition-opacity shadow-sm whitespace-nowrap">
                     Pilih Tanggal ▾
                   </span>
                 </div>
               </button>
+              <p className="mt-0.5 text-xs font-semibold text-slate-500 truncate max-w-xs sm:max-w-sm md:max-w-md pl-1">
+                {viewMode === 'day_rooms'
+                  ? `${filteredRooms.length} ruang · tiap baris mewakili 30 menit`
+                  : `Jadwal mingguan · ${activeRoom?.name || 'ruangan terpilih'}`}
+              </p>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:flex xl:flex-wrap xl:justify-end">
-            <label className="relative">
+          <div className="flex items-center gap-1.5 sm:gap-2 justify-start lg:justify-end overflow-x-auto no-scrollbar shrink-0">
+            <label className="relative shrink-0">
               <span className="sr-only">Filter gedung</span>
-              <Building2 className="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-slate-400" aria-hidden="true" />
-              <select value={filterBuilding} onChange={(event) => setFilterBuilding(event.target.value)} className="min-h-11 w-full appearance-none rounded-xl border border-slate-300 bg-white py-2.5 pl-9 pr-9 text-sm font-semibold text-slate-700 shadow-sm outline-none hover:border-slate-400 focus:border-yarsi-primary focus:ring-4 focus:ring-emerald-100 xl:w-44">
+              <Building2 className="pointer-events-none absolute left-2.5 top-3.5 h-3.5 w-3.5 text-slate-400" aria-hidden="true" />
+              <select value={filterBuilding} onChange={(event) => setFilterBuilding(event.target.value)} className="min-h-11 appearance-none rounded-xl border border-slate-300 bg-white py-2.5 pl-8 pr-7 text-xs font-semibold text-slate-700 shadow-sm outline-none hover:border-slate-400 focus:border-yarsi-primary focus:ring-4 focus:ring-emerald-100 max-w-[130px] sm:max-w-[150px] truncate">
                 <option value="all">Semua gedung</option>
                 {buildings.map((building) => <option key={building} value={building}>{building}</option>)}
               </select>
             </label>
 
-            <label className="relative">
+            <label className="relative shrink-0">
               <span className="sr-only">Filter tipe ruang</span>
-              <SlidersHorizontal className="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-slate-400" aria-hidden="true" />
-              <select value={filterRoomType} onChange={(event) => setFilterRoomType(event.target.value)} className="min-h-11 w-full appearance-none rounded-xl border border-slate-300 bg-white py-2.5 pl-9 pr-9 text-sm font-semibold text-slate-700 shadow-sm outline-none hover:border-slate-400 focus:border-yarsi-primary focus:ring-4 focus:ring-emerald-100 xl:w-48">
+              <SlidersHorizontal className="pointer-events-none absolute left-2.5 top-3.5 h-3.5 w-3.5 text-slate-400" aria-hidden="true" />
+              <select value={filterRoomType} onChange={(event) => setFilterRoomType(event.target.value)} className="min-h-11 appearance-none rounded-xl border border-slate-300 bg-white py-2.5 pl-8 pr-7 text-xs font-semibold text-slate-700 shadow-sm outline-none hover:border-slate-400 focus:border-yarsi-primary focus:ring-4 focus:ring-emerald-100 max-w-[130px] sm:max-w-[150px] truncate">
                 <option value="all">Semua tipe ruang</option>
                 <option value="auditorium">Auditorium</option>
                 <option value="classroom">Smart Classroom</option>
@@ -350,13 +355,13 @@ export function CalendarTimeline({
             </label>
 
             {viewMode === 'week_room' && (
-              <label className="relative">
+              <label className="relative shrink-0">
                 <span className="sr-only">Pilih Ruangan</span>
-                <Building2 className="pointer-events-none absolute left-3 top-3.5 h-4 w-4 text-yarsi-primary" aria-hidden="true" />
+                <Building2 className="pointer-events-none absolute left-2.5 top-3.5 h-3.5 w-3.5 text-yarsi-primary" aria-hidden="true" />
                 <select
                   value={resolvedActiveRoomId}
                   onChange={(e) => setActiveRoomId(e.target.value)}
-                  className="min-h-11 w-full appearance-none rounded-xl border border-emerald-300 bg-emerald-50/80 py-2.5 pl-9 pr-9 text-sm font-bold text-yarsi-dark shadow-sm outline-none hover:border-yarsi-primary focus:border-yarsi-primary focus:ring-4 focus:ring-emerald-100 xl:w-60 cursor-pointer"
+                  className="min-h-11 appearance-none rounded-xl border border-emerald-300 bg-emerald-50/80 py-2.5 pl-8 pr-7 text-xs font-bold text-yarsi-dark shadow-sm outline-none hover:border-yarsi-primary focus:border-yarsi-primary focus:ring-4 focus:ring-emerald-100 max-w-[170px] sm:max-w-[210px] truncate cursor-pointer"
                 >
                   {filteredRooms.map((room) => (
                     <option key={room.id} value={room.id}>
@@ -367,9 +372,9 @@ export function CalendarTimeline({
               </label>
             )}
 
-            <div className="grid grid-cols-2 rounded-xl border border-slate-200 bg-slate-100/80 p-1 text-xs font-bold sm:col-span-2 xl:min-w-[292px]">
-              <button type="button" onClick={() => setViewMode('day_rooms')} aria-pressed={viewMode === 'day_rooms'} className={`min-h-10 rounded-lg px-3 ${viewMode === 'day_rooms' ? 'bg-white text-yarsi-primary shadow-sm ring-1 ring-black/5' : 'text-slate-600 hover:bg-white/70 hover:text-slate-900'}`}>Semua ruang</button>
-              <button type="button" onClick={() => setViewMode('week_room')} aria-pressed={viewMode === 'week_room'} className={`min-h-10 rounded-lg px-3 ${viewMode === 'week_room' ? 'bg-white text-yarsi-primary shadow-sm ring-1 ring-black/5' : 'text-slate-600 hover:bg-white/70 hover:text-slate-900'}`}>Per ruang</button>
+            <div className="inline-flex shrink-0 rounded-xl border border-slate-200 bg-slate-100/80 p-1 text-xs font-bold">
+              <button type="button" onClick={() => setViewMode('day_rooms')} aria-pressed={viewMode === 'day_rooms'} className={`min-h-9 whitespace-nowrap rounded-lg px-2.5 ${viewMode === 'day_rooms' ? 'bg-white text-yarsi-primary shadow-sm ring-1 ring-black/5' : 'text-slate-600 hover:bg-white/70 hover:text-slate-900'}`}>Semua ruang</button>
+              <button type="button" onClick={() => setViewMode('week_room')} aria-pressed={viewMode === 'week_room'} className={`min-h-9 whitespace-nowrap rounded-lg px-2.5 ${viewMode === 'week_room' ? 'bg-white text-yarsi-primary shadow-sm ring-1 ring-black/5' : 'text-slate-600 hover:bg-white/70 hover:text-slate-900'}`}>Per ruang</button>
             </div>
           </div>
         </div>
@@ -574,9 +579,24 @@ export function CalendarTimeline({
               <div className="min-w-[940px]">
                 <div className="sticky top-0 z-30 grid grid-cols-[84px_repeat(7,1fr)] border-b border-slate-200 bg-slate-50/95 backdrop-blur">
                   <div className="sticky left-0 z-40 flex items-center justify-center border-r border-slate-200 bg-slate-100 text-[11px] font-bold uppercase tracking-wide text-slate-500">WIB</div>
-                  {weekDates.map((date) => (
-                    <div key={date} className={`border-r border-slate-200 px-2 py-3 text-center last:border-r-0 ${date === todayDate ? 'bg-emerald-50' : ''}`}><p className={`text-xs font-extrabold ${date === todayDate ? 'text-yarsi-primary' : 'text-slate-800'}`}>{formatShortDateIndo(date)}</p><p className="mt-0.5 text-[10px] font-semibold text-slate-500">{date === todayDate ? 'Hari ini' : date.slice(-2)}</p></div>
-                  ))}
+                  {weekDates.map((date) => {
+                    const isToday = date === todayDate;
+                    const isSelected = date === currentDateStr;
+                    const dayName = new Intl.DateTimeFormat('id-ID', { timeZone: 'Asia/Jakarta', weekday: 'short' }).format(new Date(date));
+                    return (
+                      <div key={date} className={`border-r border-slate-200 px-3 py-2.5 last:border-r-0 ${isToday ? 'bg-emerald-50/70' : isSelected ? 'bg-slate-100/60' : ''}`}>
+                        <div className="flex items-center justify-between gap-2">
+                          <span className={`rounded px-1.5 py-0.5 font-mono text-[10px] font-bold ${isToday ? 'bg-yarsi-primary text-white' : 'bg-slate-200/80 text-slate-600'}`}>
+                            {dayName}
+                          </span>
+                          {isToday && <span className="text-[9px] font-bold text-yarsi-primary">Hari ini</span>}
+                        </div>
+                        <h3 className={`mt-1.5 truncate text-xs font-extrabold ${isToday ? 'text-yarsi-primary' : 'text-slate-950'}`}>
+                          {formatShortDateIndo(date)}
+                        </h3>
+                      </div>
+                    );
+                  })}
                 </div>
 
                 <div className="relative grid grid-cols-[84px_repeat(7,1fr)] bg-white" style={{ gridTemplateRows: `repeat(${TIME_SLOTS.length}, 52px)` }}>
