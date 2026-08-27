@@ -6,7 +6,6 @@ import { useAppStore } from '@/lib/store';
 import { CalendarTimeline } from '@/components/calendar/CalendarTimeline';
 import { CalendarGrid } from '@/components/calendar/CalendarGrid';
 import {
-  CalendarDays,
   LayoutGrid,
   Clock,
   PlusCircle,
@@ -24,61 +23,64 @@ function ScheduleContent() {
   );
 
   return (
-    <main className="max-w-[1440px] mx-auto px-3 sm:px-6 lg:px-8 py-5">
+    <main className="mx-auto max-w-[1440px] space-y-5 overflow-x-clip px-3 py-4 sm:px-6 sm:py-6 lg:px-8">
       {/* Top Banner */}
-      <section className="bg-yarsi-dark text-white rounded-xl p-5 sm:p-7 border border-emerald-950/40 flex flex-col md:flex-row md:items-center justify-between gap-5">
-        <div>
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-900/60 text-emerald-200 text-xs font-semibold mb-2">
-            <CalendarDays className="w-3.5 h-3.5 text-emerald-300" />
+      <section className="relative isolate overflow-hidden rounded-2xl border border-emerald-950/40 bg-[linear-gradient(120deg,#043b2e_0%,#075240_58%,#087158_100%)] p-5 text-white shadow-[0_20px_45px_-30px_rgba(0,63,47,0.85)] sm:p-7">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-200/70 to-transparent" aria-hidden="true" />
+        <div className="relative flex flex-col justify-between gap-5 md:flex-row md:items-center">
+        <div className="max-w-3xl">
+          <div className="mb-3 inline-flex items-center gap-2 rounded-lg border border-white/10 bg-black/10 px-2.5 py-1.5 text-xs font-semibold text-emerald-100">
+            <span className="relative flex h-2 w-2" aria-hidden="true"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-300 opacity-60" /><span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-300" /></span>
             <span>Jadwal Ruangan Terpadu</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
+          <h1 className="text-balance text-2xl font-black tracking-[-0.025em] sm:text-3xl lg:text-[2rem]">
             Kalender Ruangan Kampus YARSI
           </h1>
-          <p className="text-xs sm:text-sm text-emerald-100/90 mt-1 max-w-2xl">
-            Pantau ketersediaan slot ruangan, agenda kegiatan terkonfirmasi, dan jadwal perkuliahan secara real-time.
+          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-emerald-50/85 sm:text-[15px]">
+            Temukan ruang dan waktu yang tersedia, lalu ajukan peminjaman langsung dari slot kalender.
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5">
+        <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center">
           {/* Toggle View Mode */}
-          <div className="bg-emerald-950/50 p-1 rounded-lg border border-emerald-800/40 flex text-xs font-bold text-white">
+          <div className="grid grid-cols-2 rounded-xl border border-white/10 bg-black/15 p-1 text-xs font-bold text-white backdrop-blur-sm">
             <button
               type="button"
               onClick={() => setCalendarMode('timeline')}
               aria-pressed={calendarMode === 'timeline'}
-              className={`min-h-10 flex items-center gap-1.5 px-3 py-2 rounded-md transition-all ${
+              className={`flex min-h-10 items-center justify-center gap-1.5 rounded-lg px-3 py-2 ${
                 calendarMode === 'timeline'
                   ? 'bg-white text-yarsi-dark shadow-sm'
                   : 'hover:bg-white/10 text-emerald-100'
               }`}
             >
-              <Clock className="w-3.5 h-3.5" />
-              <span>Timeline Harian</span>
+              <Clock className="h-3.5 w-3.5" aria-hidden="true" />
+              <span>Timeline</span>
             </button>
 
             <button
               type="button"
               onClick={() => setCalendarMode('month')}
               aria-pressed={calendarMode === 'month'}
-              className={`min-h-10 flex items-center gap-1.5 px-3 py-2 rounded-md transition-all ${
+              className={`flex min-h-10 items-center justify-center gap-1.5 rounded-lg px-3 py-2 ${
                 calendarMode === 'month'
                   ? 'bg-white text-yarsi-dark shadow-sm'
                   : 'hover:bg-white/10 text-emerald-100'
               }`}
             >
-              <LayoutGrid className="w-3.5 h-3.5" />
-              <span>Bulan Penuh</span>
+              <LayoutGrid className="h-3.5 w-3.5" aria-hidden="true" />
+              <span>Bulanan</span>
             </button>
           </div>
 
           <Link
             href="/dashboard/booking/new"
-            className="min-h-10 inline-flex items-center gap-1.5 px-4 py-2 rounded-lg font-bold text-xs bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-sm transition-all"
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-amber-400 px-4 py-2 text-xs font-extrabold text-amber-950 shadow-[0_8px_18px_-12px_rgba(0,0,0,0.8)] hover:bg-amber-300 active:bg-amber-500"
           >
-            <PlusCircle className="w-4 h-4" />
+            <PlusCircle className="h-4 w-4" aria-hidden="true" />
             <span>Pinjam Ruang</span>
           </Link>
+        </div>
         </div>
       </section>
 
@@ -109,7 +111,7 @@ function ScheduleContent() {
 
 export default function SchedulePage() {
   return (
-    <Suspense fallback={<div role="status" className="p-12 text-center text-slate-600">Memuat kalender ruangan...</div>}>
+    <Suspense fallback={<div role="status" className="mx-auto max-w-[1440px] px-4 py-12 text-center text-sm font-medium text-slate-600">Memuat kalender ruangan…</div>}>
       <ScheduleContent />
     </Suspense>
   );

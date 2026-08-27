@@ -58,205 +58,101 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-140px)] bg-slate-50 flex items-center justify-center p-4 py-8 relative">
-      {/* Background Subtle Grid Accent */}
-      <div className="absolute inset-0 opacity-[0.03] bg-[radial-gradient(#0D7A5F_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none" />
+    <main className="relative flex min-h-[calc(100dvh-128px)] items-center justify-center overflow-hidden bg-slate-50 px-4 py-8 sm:px-6 sm:py-12">
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_10%_15%,rgba(0,106,78,.08),transparent_28rem),radial-gradient(circle_at_90%_85%,rgba(245,158,11,.06),transparent_24rem)]" />
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-[0.035] [background-image:linear-gradient(#006A4E_1px,transparent_1px),linear-gradient(90deg,#006A4E_1px,transparent_1px)] [background-size:32px_32px]" />
 
-      {/* Compact Main Card (Ukuran Pas & Proporsional) */}
-      <div className="w-full max-w-3xl grid grid-cols-1 md:grid-cols-12 bg-white rounded-2xl shadow-xl shadow-slate-900/5 border border-slate-200/90 overflow-hidden relative z-10">
-        
-        {/* SISI KIRI: Banner Identitas YARSI Compact */}
-        <div className="md:col-span-5 bg-gradient-to-br from-yarsi-darker via-yarsi-dark to-yarsi-primary text-white p-6 sm:p-7 flex flex-col justify-between relative overflow-hidden">
-          {/* Subtle Accent Glow */}
-          <div className="absolute -top-12 -left-12 w-36 h-36 bg-emerald-400/20 rounded-full blur-2xl pointer-events-none" />
-
-          <div className="relative z-10 space-y-5">
-            {/* Logo */}
-            <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-white/15 backdrop-blur border border-white/20 flex items-center justify-center text-white shadow-xs">
-                <Building2 className="w-5 h-5 text-emerald-200" />
-              </div>
-              <div>
-                <div className="flex items-center gap-1">
-                  <h2 className="text-base font-black tracking-tight leading-none text-white">SIPERU</h2>
-                  <span className="text-[9px] font-bold px-1 py-0.2 rounded bg-emerald-400/20 text-emerald-200 border border-emerald-300/30">
-                    YARSI
-                  </span>
-                </div>
-                <p className="text-[10px] text-emerald-200 mt-0.5">Smart Campus Booking</p>
-              </div>
-            </div>
-
-            {/* Headline Singkat */}
-            <div className="space-y-1">
-              <h3 className="text-lg font-extrabold leading-snug text-white">
-                Peminjaman Fasilitas Kampus
-              </h3>
-              <p className="text-[11px] text-emerald-100/80 leading-relaxed">
-                Reservasi digital Auditorium, Smart Classroom, & Lab AI terpadu.
-              </p>
-            </div>
-
-            {/* Feature Pills */}
-            <div className="space-y-2 pt-1">
-              <div className="flex items-center gap-2 text-[11px] text-emerald-100 bg-white/10 px-2.5 py-1.5 rounded-lg border border-white/10">
-                <CalendarDays className="w-3.5 h-3.5 text-emerald-300 shrink-0" />
-                <span>Jadwal Ruangan Real-Time</span>
-              </div>
-              <div className="flex items-center gap-2 text-[11px] text-emerald-100 bg-white/10 px-2.5 py-1.5 rounded-lg border border-white/10">
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-300 shrink-0" />
-                <span>Izin Resmi LPF & Yayasan</span>
-              </div>
-              <div className="flex items-center gap-2 text-[11px] text-emerald-100 bg-white/10 px-2.5 py-1.5 rounded-lg border border-white/10">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-300 shrink-0" />
-                <span>E-Ticket QR Siap Pakai</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Catatan Bantuan Bawah */}
-          <div className="relative z-10 pt-4 mt-4 border-t border-white/15">
-            <div className="flex items-start gap-1.5 text-[10px] text-emerald-200/90 leading-tight">
-              <HelpCircle className="w-3.5 h-3.5 text-emerald-300 shrink-0 mt-0.5" />
-              <span>Bantuan akun: Hubungi PTI YARSI (Gedung Rektorat).</span>
-            </div>
-          </div>
-        </div>
-
-        {/* SISI KANAN: Formulir Masuk Akun yang Rapi & Compact */}
-        <div className="md:col-span-7 p-6 sm:p-8 flex flex-col justify-between bg-white">
-          <div className="space-y-5">
-            <div className="space-y-1">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-yarsi-primary bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200 inline-block">
-                Layanan Sivitas Akademika
+      <div className="relative z-10 grid w-full max-w-4xl overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-[0_28px_80px_-40px_rgba(15,23,42,.45)] md:grid-cols-12">
+        <section className="relative flex flex-col justify-between overflow-hidden bg-gradient-to-br from-yarsi-darker via-yarsi-dark to-yarsi-primary p-6 text-white sm:p-8 md:col-span-5">
+          <div aria-hidden="true" className="absolute inset-0 opacity-[0.08] [background-image:linear-gradient(rgba(255,255,255,.5)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.5)_1px,transparent_1px)] [background-size:32px_32px]" />
+          <div className="relative">
+            <Link href="/" className="inline-flex items-center gap-3 rounded-lg focus-visible:outline-white">
+              <span className="flex h-11 w-11 items-center justify-center rounded-lg border border-white/20 bg-white/10 shadow-sm backdrop-blur">
+                <Building2 className="h-5 w-5 text-emerald-200" />
               </span>
-              <h2 className="text-xl font-black text-slate-900 tracking-tight mt-0.5">
-                Masuk ke Akun Anda
-              </h2>
-              <p className="text-xs text-slate-500">
-                Gunakan username dan kata sandi akun YARSI Anda (seperti di SISAKAD).
-              </p>
+              <span>
+                <span className="block text-lg font-black leading-none tracking-tight">SIPERU YARSI</span>
+                <span className="mt-1 block text-[10px] font-semibold uppercase tracking-[0.13em] text-emerald-200">Peminjaman Ruang Kampus</span>
+              </span>
+            </Link>
+
+            <div className="mt-7 max-w-xs sm:mt-10">
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-amber-300">Satu akun, satu alur</p>
+              <h1 className="mt-3 text-2xl font-black leading-tight tracking-tight sm:text-3xl">Kelola kebutuhan ruang dengan lebih pasti.</h1>
+              <p className="mt-4 text-xs leading-6 text-emerald-50/75 sm:text-sm">Periksa jadwal, ajukan peminjaman, dan pantau persetujuan dari satu tempat.</p>
             </div>
 
-            {/* Error Banner */}
+            <ul className="mt-8 hidden divide-y divide-white/10 border-y border-white/10 md:block">
+              {[
+                { icon: CalendarDays, label: 'Jadwal ruang terintegrasi' },
+                { icon: CheckCircle2, label: 'Persetujuan LPF & Yayasan' },
+                { icon: ShieldCheck, label: 'E-tiket untuk akses ruang' },
+              ].map((item) => {
+                const Icon = item.icon;
+                return <li key={item.label} className="flex items-center gap-3 py-3 text-xs font-semibold text-emerald-50"><Icon className="h-4 w-4 shrink-0 text-emerald-300" />{item.label}</li>;
+              })}
+            </ul>
+          </div>
+
+          <div className="relative mt-6 flex items-start gap-2 border-t border-white/15 pt-4 text-[11px] leading-5 text-emerald-100/70 md:mt-8 md:pt-5">
+            <HelpCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-300" />
+            Bantuan akun tersedia melalui PTI YARSI, Gedung Rektorat.
+          </div>
+        </section>
+
+        <section className="flex flex-col justify-between bg-white p-6 sm:p-8 md:col-span-7 lg:p-10" aria-labelledby="login-title">
+          <div className="mx-auto w-full max-w-sm">
+            <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-yarsi-primary">Portal sivitas akademika</p>
+            <h2 id="login-title" className="mt-2 text-2xl font-black tracking-tight text-slate-950">Masuk ke akun Anda</h2>
+            <p className="mt-2 text-xs leading-5 text-slate-500 sm:text-sm">Gunakan kredensial akun YARSI yang terhubung dengan layanan kampus.</p>
+
             {(errorMessage || error) && (
-              <div className="p-3 bg-rose-50 border border-rose-300 rounded-xl text-xs text-rose-900 flex items-start gap-2">
-                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-bold text-[11px]">Gagal Masuk</p>
-                  <p className="text-[10px] text-rose-700">{errorMessage || error}</p>
-                </div>
+              <div role="alert" aria-live="assertive" className="mt-5 flex items-start gap-2.5 rounded-lg border border-rose-200 bg-rose-50 p-3 text-rose-900">
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-rose-600" />
+                <div><p className="text-xs font-bold">Gagal masuk</p><p className="mt-0.5 text-[11px] leading-4 text-rose-700">{errorMessage || error}</p></div>
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-3.5">
-              {/* Kolom Username */}
+            <form onSubmit={handleSubmit} className="mt-6 space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Username
-                </label>
+                <label htmlFor="username" className="mb-1.5 block text-xs font-bold text-slate-700">Username</label>
                 <div className="relative">
-                  <User className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
-                  <input
-                    type="text"
-                    required
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    placeholder="Masukkan username akun YARSI Anda"
-                    className="w-full pl-9 pr-3 py-2 text-xs sm:text-sm font-medium bg-slate-50 hover:bg-slate-100/60 focus:bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yarsi-primary text-slate-900 transition-all placeholder:text-slate-400"
-                  />
+                  <User className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <input id="username" name="username" autoComplete="username" type="text" required value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Username akun YARSI" className="min-h-12 w-full rounded-lg border border-slate-300 bg-slate-50/70 py-2 pl-10 pr-3 text-sm font-medium text-slate-900 outline-none hover:border-slate-400 focus:border-yarsi-primary focus:bg-white focus:ring-4 focus:ring-emerald-100" />
                 </div>
               </div>
 
-              {/* Kolom Kata Sandi */}
               <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="block text-xs font-bold text-slate-700">
-                    Kata Sandi
-                  </label>
-                  <a
-                    href="#"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      alert('Untuk bantuan lupa kata sandi akun kampus, silakan hubungi Pusat Teknologi Informasi (PTI) Universitas YARSI di Gedung Rektorat.');
-                    }}
-                    className="text-[10px] text-yarsi-primary font-bold hover:underline"
-                  >
-                    Lupa Kata Sandi?
-                  </a>
+                <div className="mb-1.5 flex items-center justify-between gap-3">
+                  <label htmlFor="password" className="text-xs font-bold text-slate-700">Kata sandi</label>
+                  <button type="button" onClick={() => alert('Untuk bantuan lupa kata sandi akun kampus, silakan hubungi Pusat Teknologi Informasi (PTI) Universitas YARSI di Gedung Rektorat.')} className="min-h-9 text-[11px] font-bold text-yarsi-primary hover:underline">Lupa kata sandi?</button>
                 </div>
                 <div className="relative">
-                  <Key className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Masukkan kata sandi Anda"
-                    className="w-full pl-9 pr-9 py-2 text-xs sm:text-sm font-medium bg-slate-50 hover:bg-slate-100/60 focus:bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yarsi-primary text-slate-900 transition-all placeholder:text-slate-400"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 focus:outline-none"
-                    aria-label="Toggle password visibility"
-                  >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  <Key className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <input id="password" name="password" autoComplete="current-password" type={showPassword ? 'text' : 'password'} required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Kata sandi akun YARSI" className="min-h-12 w-full rounded-lg border border-slate-300 bg-slate-50/70 py-2 pl-10 pr-12 text-sm font-medium text-slate-900 outline-none hover:border-slate-400 focus:border-yarsi-primary focus:bg-white focus:ring-4 focus:ring-emerald-100" />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-1 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-md text-slate-400 hover:bg-slate-100 hover:text-slate-700" aria-label={showPassword ? 'Sembunyikan kata sandi' : 'Tampilkan kata sandi'} aria-pressed={showPassword}>
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
               </div>
 
-              {/* Tombol Submit */}
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full py-2.5 px-4 rounded-xl font-bold text-xs sm:text-sm text-white bg-yarsi-primary hover:bg-yarsi-dark shadow-sm hover:shadow transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 mt-1"
-              >
-                {isLoading ? (
-                  <Loader2 className="w-4 h-4 animate-spin text-white" />
-                ) : (
-                  <>
-                    <Lock className="w-3.5 h-3.5" />
-                    <span>Masuk ke Akun Saya</span>
-                    <ArrowRight className="w-3.5 h-3.5 ml-0.5" />
-                  </>
-                )}
+              <button type="submit" disabled={isLoading} className="flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-yarsi-primary px-4 text-sm font-extrabold text-white shadow-[0_8px_20px_-10px_rgba(0,106,78,.9)] hover:-translate-y-0.5 hover:bg-yarsi-dark hover:shadow-md disabled:translate-y-0 disabled:cursor-wait disabled:opacity-65">
+                {isLoading ? <><Loader2 className="h-4 w-4 animate-spin" /><span>Memverifikasi akun…</span></> : <><Lock className="h-4 w-4" /><span>Masuk ke SIPERU</span><ArrowRight className="h-4 w-4" /></>}
               </button>
             </form>
 
-            {/* Pemisah Atau */}
-            <div className="relative py-1">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-slate-200" />
-              </div>
-              <div className="relative flex justify-center text-[11px]">
-                <span className="bg-white px-2.5 text-slate-400 font-medium">atau</span>
-              </div>
-            </div>
-
-            {/* Mode Tamu / Publik */}
-            <button
-              type="button"
-              onClick={handleGuestMode}
-              className="w-full py-2 px-3 rounded-xl font-semibold text-xs text-slate-700 bg-slate-50 hover:bg-slate-100 border border-slate-200 transition-all flex items-center justify-center gap-1.5 hover:border-slate-300"
-            >
-              <Compass className="w-3.5 h-3.5 text-yarsi-primary" />
-              <span>Lihat Jadwal Ruangan sebagai Tamu (Mode Publik)</span>
+            <div className="my-5 flex items-center gap-3 text-[10px] font-bold uppercase tracking-wider text-slate-400"><span className="h-px flex-1 bg-slate-200" />Akses publik<span className="h-px flex-1 bg-slate-200" /></div>
+            <button type="button" onClick={handleGuestMode} className="flex min-h-11 w-full items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-3 text-xs font-bold text-slate-700 hover:border-emerald-300 hover:bg-emerald-50 hover:text-yarsi-dark">
+              <Compass className="h-4 w-4 text-yarsi-primary" />Lihat kalender tanpa masuk
             </button>
           </div>
 
-          {/* Footer Bar */}
-          <div className="pt-4 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400 mt-4">
-            <span className="flex items-center gap-1">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-              <span>Koneksi Aman YARSI</span>
-            </span>
-            <Link href="/" className="text-yarsi-primary font-bold hover:underline">
-              Kembali ke Beranda
-            </Link>
+          <div className="mx-auto mt-8 flex w-full max-w-sm items-center justify-between gap-3 border-t border-slate-100 pt-4 text-[11px] text-slate-400">
+            <span className="flex items-center gap-1.5"><ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />Koneksi aman YARSI</span>
+            <Link href="/" className="font-bold text-yarsi-primary hover:underline">Kembali ke beranda</Link>
           </div>
-        </div>
+        </section>
       </div>
-    </div>
+    </main>
   );
 }

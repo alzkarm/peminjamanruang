@@ -4,10 +4,9 @@ import React, { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAppStore } from '@/lib/store';
 import { BookingCategory, BookingEquipment, BookingLogistikItem } from '@/lib/types';
-import { checkRoomConflict, formatDateIndo } from '@/lib/utils';
+import { checkRoomConflict } from '@/lib/utils';
 import {
   Calendar,
-  Clock,
   Building2,
   Users,
   AlertCircle,
@@ -19,8 +18,9 @@ import {
   PackageCheck,
   Plus,
   Trash2,
-  CheckSquare,
   MapPin,
+  ChevronLeft,
+  LoaderCircle,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -39,7 +39,7 @@ function NewBookingForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const { currentUser, rooms, bookings, academicBlocks, addBooking, error } = useAppStore();
+  const { currentUser, rooms, bookings, academicBlocks, addBooking } = useAppStore();
 
   // Prefilled params from URL
   const initialRoomId = searchParams.get('roomId') || rooms[0]?.id || '';
@@ -121,6 +121,8 @@ function NewBookingForm() {
   );
 
   const isCapacityExceeded = estimatedAttendees > (selectedRoom?.capacity || 0);
+  const isTimeRangeInvalid = Boolean(startTime && endTime && endTime <= startTime);
+  const hasScheduleConflict = isTimeRangeInvalid || conflictResult.hasConflict;
 
   const handleEquipmentToggle = (eqId: string) => {
     setSelectedEquipments((prev) => {
@@ -167,6 +169,22 @@ function NewBookingForm() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      const extension = file.name.split('.').pop()?.toLowerCase();
+      if (!extension || !['pdf', 'doc', 'docx', 'xls', 'xlsx'].includes(extension)) {
+        setSelectedFile(null);
+        setUploadedFileName('Belum ada berkas');
+        setErrorMessage('Format dokumen tidak didukung. Gunakan PDF, Word, atau Excel.');
+        e.target.value = '';
+        return;
+      }
+      if (file.size > 15 * 1024 * 1024) {
+        setSelectedFile(null);
+        setUploadedFileName('Belum ada berkas');
+        setErrorMessage('Ukuran dokumen melebihi batas 15 MB.');
+        e.target.value = '';
+        return;
+      }
+      setErrorMessage('');
       setSelectedFile(file);
       setUploadedFileName(file.name);
     }
@@ -178,6 +196,11 @@ function NewBookingForm() {
 
     if (!isInternalApproved) {
       setErrorMessage('Anda wajib mencentang konfirmasi persetujuan internal fakultas/kemahasiswaan sebelum mengajukan permohonan.');
+      return;
+    }
+
+    if (isTimeRangeInvalid) {
+      setErrorMessage('Jam selesai harus lebih akhir daripada jam mulai.');
       return;
     }
 
@@ -256,28 +279,52 @@ function NewBookingForm() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-8 space-y-6">
+    <div className="mx-auto max-w-6xl space-y-6 px-4 py-5 sm:px-6 sm:py-8 lg:px-8">
       {/* Header */}
-      <div className="space-y-1">
-        <div className="flex items-center gap-2">
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
           <Link
             href="/dashboard"
-            className="text-xs font-semibold text-slate-500 hover:text-yarsi-primary"
+            className="mb-3 inline-flex min-h-9 items-center gap-1.5 rounded-lg pr-2 text-xs font-bold text-slate-500 hover:text-yarsi-primary"
           >
+            <ChevronLeft className="h-4 w-4" aria-hidden="true" />
             Kembali ke dashboard
           </Link>
-        </div>
-        <h1 className="text-2xl sm:text-3xl font-black text-slate-900">
+        <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-yarsi-primary">Formulir peminjaman</p>
+        <h1 className="mt-1 text-2xl font-black tracking-[-0.025em] text-slate-950 sm:text-3xl">
           Ajukan Peminjaman Ruangan
         </h1>
-        <p className="text-xs sm:text-sm text-slate-500">
+        <p className="mt-1.5 text-sm leading-relaxed text-slate-500">
           Pilih ruangan dan jadwal, lalu lengkapi informasi kegiatan yang dibutuhkan.
         </p>
-      </div>
+        </div>
+        <div className="hidden items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800 sm:flex">
+          <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+          Data tersimpan selama halaman terbuka
+        </div>
+      </header>
+
+      <nav aria-label="Tahapan formulir" className="sticky top-2 z-20 overflow-x-auto rounded-2xl border border-slate-200 bg-white/95 p-1.5 shadow-[0_12px_30px_-24px_rgba(15,23,42,0.45)] backdrop-blur sm:top-3">
+        <ol className="grid w-full min-w-[360px] grid-cols-4 gap-1 text-[11px] font-bold sm:text-xs">
+          {[
+            ['schedule-section', '01', 'Ruang & waktu'],
+            ['activity-section', '02', 'Detail kegiatan'],
+            ['facility-section', '03', 'Fasilitas'],
+            ['document-section', '04', 'Dokumen'],
+          ].map(([id, number, label]) => (
+            <li key={id}>
+              <a href={`#${id}`} className="flex min-h-10 min-w-0 items-center gap-1.5 rounded-xl px-2 text-slate-600 hover:bg-emerald-50 hover:text-yarsi-primary sm:gap-2 sm:px-3">
+                <span className="font-mono text-[10px] text-emerald-600">{number}</span>
+                <span className="truncate">{label}</span>
+              </a>
+            </li>
+          ))}
+        </ol>
+      </nav>
 
       {/* Error Alert */}
       {errorMessage && (
-        <div role="alert" className="p-4 bg-rose-50 border border-rose-300 rounded-lg text-sm text-rose-900 flex items-start gap-3">
+        <div role="alert" className="flex items-start gap-3 rounded-xl border border-rose-300 bg-rose-50 p-4 text-sm text-rose-900 shadow-sm">
           <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
           <div>
             <p className="font-bold text-rose-950">Validasi Pengajuan</p>
@@ -287,7 +334,7 @@ function NewBookingForm() {
       )}
 
       {submitSuccess && (
-        <div role="status" className="p-6 bg-emerald-50 border border-emerald-300 rounded-xl text-center space-y-2">
+        <div role="status" className="space-y-2 rounded-2xl border border-emerald-300 bg-emerald-50 p-7 text-center shadow-sm">
           <div className="w-12 h-12 rounded-full bg-emerald-600 text-white mx-auto flex items-center justify-center">
             <CheckCircle2 className="w-8 h-8" />
           </div>
@@ -302,7 +349,7 @@ function NewBookingForm() {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* STEP 1: ROOM & TIME SELECTION */}
-        <div className="bg-white rounded-xl border border-slate-200 p-5 sm:p-6 space-y-6">
+        <section id="schedule-section" className="scroll-mt-24 space-y-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_16px_35px_-32px_rgba(0,106,78,0.7)] sm:p-6">
           <div className="flex items-center gap-2.5 pb-4 border-b border-slate-100">
             <div className="p-2 rounded-lg bg-emerald-50 text-yarsi-primary">
               <Building2 className="w-5 h-5" />
@@ -396,6 +443,8 @@ function NewBookingForm() {
                     required
                     value={startTime}
                     onChange={(e) => setStartTime(e.target.value)}
+                    step={1800}
+                    aria-invalid={isTimeRangeInvalid}
                     className="w-full min-h-11 px-3.5 py-2.5 text-xs sm:text-sm font-medium bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yarsi-primary text-slate-800"
                   />
                 </div>
@@ -409,21 +458,23 @@ function NewBookingForm() {
                     required
                     value={endTime}
                     onChange={(e) => setEndTime(e.target.value)}
+                    step={1800}
+                    aria-invalid={isTimeRangeInvalid}
                     className="w-full min-h-11 px-3.5 py-2.5 text-xs sm:text-sm font-medium bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yarsi-primary text-slate-800"
                   />
                 </div>
               </div>
 
               {/* REAL-TIME CONFLICT STATUS BOX */}
-              {conflictResult.hasConflict ? (
-                <div role="alert" className="p-3 bg-rose-50 border border-rose-300 rounded-lg text-sm text-rose-900 flex items-start gap-2.5">
+              {hasScheduleConflict ? (
+                <div role="alert" aria-live="polite" className="flex items-start gap-3 rounded-xl border border-rose-300 bg-gradient-to-br from-rose-50 to-white p-4 text-sm text-rose-900 shadow-sm animate-fade-in">
                   <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
                   <div className="space-y-1">
                     <p className="font-black text-rose-950">
                       Jadwal tidak tersedia
                     </p>
                     <p className="text-[11px] leading-relaxed text-rose-800">
-                      {conflictResult.reason}
+                      {isTimeRangeInvalid ? 'Jam selesai harus lebih akhir daripada jam mulai.' : conflictResult.reason}
                     </p>
                     <p className="text-[10px] text-rose-600 font-semibold">
                       Pilih ruangan lain atau ubah waktu kegiatan sebelum mengirim permohonan.
@@ -431,8 +482,8 @@ function NewBookingForm() {
                   </div>
                 </div>
               ) : (
-                <div role="status" className="p-3 bg-emerald-50 border border-emerald-300 rounded-lg text-sm text-emerald-900 flex items-center gap-2">
-                  <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                <div role="status" aria-live="polite" className="flex items-center gap-3 rounded-xl border border-emerald-300 bg-gradient-to-br from-emerald-50 to-white p-4 text-sm text-emerald-900 shadow-sm animate-fade-in">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white shadow-sm"><CheckCircle2 className="h-5 w-5" aria-hidden="true" /></span>
                   <div>
                     <p className="font-bold text-emerald-950">Waktu tersedia</p>
                     <p className="text-[11px] text-emerald-700">
@@ -443,10 +494,10 @@ function NewBookingForm() {
               )}
             </div>
           </div>
-        </div>
+        </section>
 
         {/* STEP 2: DETAILS */}
-        <div className="bg-white rounded-xl border border-slate-200 p-5 sm:p-6 space-y-6">
+        <section id="activity-section" className="scroll-mt-24 space-y-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_16px_35px_-32px_rgba(0,106,78,0.7)] sm:p-6">
           <div className="flex items-center gap-2.5 pb-4 border-b border-slate-100">
             <div className="p-2 rounded-lg bg-amber-50 text-amber-700">
               <FileText className="w-5 h-5" />
@@ -559,10 +610,10 @@ function NewBookingForm() {
               />
             </div>
           </div>
-        </div>
+        </section>
 
         {/* STEP 3: LOGISTICS & FASILITAS TAMBAHAN (BookingLogistik Model) */}
-        <div className="bg-white rounded-xl border border-slate-200 p-5 sm:p-6 space-y-6">
+        <section id="facility-section" className="scroll-mt-24 space-y-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_16px_35px_-32px_rgba(0,106,78,0.7)] sm:p-6">
           <div className="flex items-center gap-2.5 pb-4 border-b border-slate-100">
             <div className="p-2 rounded-lg bg-teal-50 text-teal-700">
               <PackageCheck className="w-5 h-5" />
@@ -592,17 +643,19 @@ function NewBookingForm() {
                   <div
                     key={eq.id}
                     onClick={() => handleEquipmentToggle(eq.id)}
-                    className={`p-3 rounded-lg border transition-all cursor-pointer flex items-start gap-3 ${
+                    className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3.5 ${
                       state.selected
-                        ? 'bg-emerald-50/70 border-emerald-300 ring-1 ring-emerald-500/30'
-                        : 'bg-slate-50/60 border-slate-200 hover:bg-slate-100'
+                        ? 'border-emerald-300 bg-emerald-50/70 shadow-sm ring-1 ring-emerald-500/20'
+                        : 'border-slate-200 bg-slate-50/60 hover:border-slate-300 hover:bg-slate-100'
                     }`}
                   >
                     <input
                       type="checkbox"
                       checked={state.selected}
-                      onChange={() => {}}
-                      className="mt-0.5 rounded text-yarsi-primary focus:ring-yarsi-primary"
+                      onClick={(event) => event.stopPropagation()}
+                      onChange={() => handleEquipmentToggle(eq.id)}
+                      aria-label={`Pilih ${eq.name}`}
+                      className="mt-0.5 h-5 w-5 rounded border-slate-300 text-yarsi-primary focus:ring-yarsi-primary"
                     />
 
                     <div className="flex-1 text-xs">
@@ -700,10 +753,10 @@ function NewBookingForm() {
               </button>
             </div>
           </div>
-        </div>
+        </section>
 
         {/* STEP 4: DOCUMENT UPLOAD (dokumenUrl / attachment) */}
-        <div className="bg-white rounded-xl border border-slate-200 p-5 sm:p-6 space-y-6">
+        <section id="document-section" className="scroll-mt-24 space-y-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_16px_35px_-32px_rgba(0,106,78,0.7)] sm:p-6">
           <div className="flex items-center gap-2.5 pb-4 border-b border-slate-100">
             <div className="p-2 rounded-lg bg-purple-50 text-purple-700">
               <UploadCloud className="w-5 h-5" />
@@ -718,19 +771,22 @@ function NewBookingForm() {
             </div>
           </div>
 
-          <div className="border-2 border-dashed border-slate-300 rounded-xl p-6 text-center space-y-3 bg-slate-50 hover:bg-slate-100/60 transition-colors">
-            <FileText className="w-10 h-10 text-slate-400 mx-auto" />
+          <div className={`space-y-3 rounded-2xl border-2 border-dashed p-6 text-center ${selectedFile ? 'border-emerald-300 bg-emerald-50/60' : 'border-slate-300 bg-slate-50 hover:border-emerald-300 hover:bg-emerald-50/30'}`}>
+            <span className={`mx-auto flex h-12 w-12 items-center justify-center rounded-xl ${selectedFile ? 'bg-emerald-600 text-white' : 'bg-white text-slate-400 shadow-sm ring-1 ring-slate-200'}`}>
+              {selectedFile ? <CheckCircle2 className="h-6 w-6" aria-hidden="true" /> : <FileText className="h-6 w-6" aria-hidden="true" />}
+            </span>
             <div className="space-y-1">
               <p className="text-xs font-bold text-slate-700">
-                Berkas Terpilih: <span className="text-yarsi-primary font-semibold">{uploadedFileName}</span>
+                {selectedFile ? 'Berkas siap diunggah:' : 'Belum ada berkas dipilih'} {selectedFile && <span className="text-yarsi-primary font-semibold">{uploadedFileName}</span>}
               </p>
               <p className="text-[11px] text-slate-500">
                 Dokumen akan diunggah dan diverifikasi oleh tim LPF & Yayasan sebagai lampiran resmi.
               </p>
             </div>
 
-            <label className="min-h-11 inline-flex items-center cursor-pointer px-4 bg-white hover:bg-slate-100 border border-slate-300 rounded-lg text-sm font-bold text-slate-800 focus-within:ring-2 focus-within:ring-yarsi-primary">
-              <span>Pilih dokumen</span>
+            <label className="inline-flex min-h-11 cursor-pointer items-center rounded-xl border border-slate-300 bg-white px-4 text-sm font-bold text-slate-800 shadow-sm hover:border-emerald-300 hover:text-yarsi-primary focus-within:ring-2 focus-within:ring-yarsi-primary">
+              <UploadCloud className="mr-2 h-4 w-4" aria-hidden="true" />
+              <span>{selectedFile ? 'Ganti dokumen' : 'Pilih dokumen'}</span>
               <input
                 type="file"
                 accept=".pdf,.doc,.docx,.xls,.xlsx"
@@ -739,10 +795,10 @@ function NewBookingForm() {
               />
             </label>
           </div>
-        </div>
+        </section>
 
         {/* STEP 5: VERIFIKASI INTERNAL HIMA / BEM (PRIORITAS 5) */}
-        <div className="bg-emerald-50 rounded-xl border border-emerald-300 p-5 sm:p-6 space-y-4">
+        <div className={`space-y-4 rounded-2xl border p-5 sm:p-6 ${isInternalApproved ? 'border-emerald-300 bg-emerald-50' : 'border-amber-300 bg-amber-50'}`}>
           <div className="flex items-start gap-3">
             <input
               type="checkbox"
@@ -763,21 +819,21 @@ function NewBookingForm() {
         </div>
 
         {/* SUBMIT BUTTON BAR */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-slate-200">
+        <div className="sticky bottom-3 z-20 flex items-center justify-between gap-2 rounded-2xl border border-slate-200 bg-white/95 p-3 shadow-[0_18px_48px_-20px_rgba(15,23,42,0.35)] backdrop-blur sm:gap-3">
           <Link
             href="/dashboard"
-            className="min-h-11 inline-flex items-center px-5 rounded-lg text-sm font-bold text-slate-700 hover:bg-slate-100"
+            className="inline-flex min-h-11 shrink-0 items-center px-3 text-sm font-bold text-slate-600 hover:text-slate-950 sm:px-5"
           >
             Batal
           </Link>
 
           <button
             type="submit"
-            disabled={isSubmitting || conflictResult.hasConflict || !isInternalApproved}
-            className="w-full sm:w-auto min-h-12 px-7 rounded-lg font-bold text-sm text-white bg-yarsi-primary hover:bg-yarsi-dark flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={isSubmitting || hasScheduleConflict || !isInternalApproved || isCapacityExceeded}
+            className="flex min-h-12 min-w-0 flex-1 items-center justify-center gap-2 rounded-xl bg-yarsi-primary px-4 text-sm font-bold text-white shadow-[0_10px_22px_-14px_rgba(0,106,78,0.85)] hover:bg-yarsi-dark active:bg-yarsi-darker disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 disabled:shadow-none sm:w-auto sm:flex-none sm:px-7"
           >
             {isSubmitting ? (
-              <span>Mengirim permohonan...</span>
+              <><LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" /><span>Mengirim permohonan…</span></>
             ) : (
               <>
                 <span>Kirim Permohonan Peminjaman</span>

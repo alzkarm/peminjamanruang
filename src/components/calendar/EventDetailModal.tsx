@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { Booking, AcademicBlock } from '@/lib/types';
 import { useAppStore } from '@/lib/store';
 import { Modal } from '@/components/common/Modal';
@@ -21,6 +22,8 @@ import {
   XCircle,
   Phone,
   Building2,
+  ArrowRight,
+  LockKeyhole,
 } from 'lucide-react';
 
 interface EventDetailModalProps {
@@ -38,7 +41,7 @@ export function EventDetailModal({
   academicBlock,
   dateStr,
 }: EventDetailModalProps) {
-  const { currentUser } = useAppStore();
+  const { currentUser, rooms } = useAppStore();
 
   if (!isOpen) return null;
 
@@ -124,6 +127,60 @@ export function EventDetailModal({
   }
 
   if (!booking) return null;
+
+  const isPrivacySafeEvent = !booking.userName;
+  const matchedRoom = rooms.find((room) => room.id === booking.roomId);
+
+  if (isPrivacySafeEvent) {
+    return (
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+        title="Detail Ketersediaan Ruang"
+        subtitle="Informasi publik jadwal ruangan"
+        maxWidth="md"
+      >
+        <div className="space-y-5">
+          <div className="rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-white p-5">
+            <div className="flex items-start gap-3">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-700 ring-1 ring-amber-200">
+                <LockKeyhole className="h-5 w-5" aria-hidden="true" />
+              </div>
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.14em] text-amber-700">Slot tidak tersedia</p>
+                <h3 className="mt-1 text-lg font-extrabold text-slate-950">Waktu ini sudah terjadwal</h3>
+                <p className="mt-1 text-sm leading-relaxed text-slate-600">Detail kegiatan dan pemohon dilindungi pada kalender publik.</p>
+              </div>
+            </div>
+          </div>
+
+          <dl className="divide-y divide-slate-100 rounded-xl border border-slate-200 bg-slate-50/70 px-4">
+            <div className="flex items-start gap-3 py-3.5">
+              <Calendar className="mt-0.5 h-4 w-4 shrink-0 text-yarsi-primary" aria-hidden="true" />
+              <div><dt className="text-xs font-medium text-slate-500">Tanggal</dt><dd className="mt-0.5 text-sm font-bold text-slate-900">{formatDateIndo(booking.date)}</dd></div>
+            </div>
+            <div className="flex items-start gap-3 py-3.5">
+              <Clock className="mt-0.5 h-4 w-4 shrink-0 text-yarsi-primary" aria-hidden="true" />
+              <div><dt className="text-xs font-medium text-slate-500">Waktu</dt><dd className="mt-0.5 text-sm font-bold text-slate-900">{booking.startTime}–{booking.endTime} WIB</dd></div>
+            </div>
+            <div className="flex items-start gap-3 py-3.5">
+              <Building2 className="mt-0.5 h-4 w-4 shrink-0 text-yarsi-primary" aria-hidden="true" />
+              <div><dt className="text-xs font-medium text-slate-500">Ruangan</dt><dd className="mt-0.5 text-sm font-bold text-slate-900">{matchedRoom?.name || booking.roomName}</dd>{matchedRoom && <dd className="text-xs text-slate-500">{matchedRoom.building} · Lantai {matchedRoom.floor}</dd>}</div>
+            </div>
+          </dl>
+
+          <Link
+            href={`/dashboard/booking/new?roomId=${booking.roomId}&date=${booking.date}`}
+            onClick={onClose}
+            className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-yarsi-primary px-5 text-sm font-bold text-white shadow-sm hover:bg-yarsi-dark active:bg-yarsi-darker"
+          >
+            Cari waktu lain di ruang ini
+            <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          </Link>
+        </div>
+      </Modal>
+    );
+  }
 
   return (
     <Modal

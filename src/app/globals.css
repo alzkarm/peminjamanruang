@@ -6,7 +6,11 @@
   :root {
     --yarsi-primary: #006A4E;
     --yarsi-dark: #075240;
+    --yarsi-darker: #043026;
     --yarsi-light: #E8F8F5;
+    --motion-fast: 160ms;
+    --motion-base: 220ms;
+    --ease-premium: cubic-bezier(0.22, 1, 0.36, 1);
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
   }
@@ -14,6 +18,11 @@
   body {
     @apply bg-slate-50 text-slate-900 antialiased selection:bg-emerald-100 selection:text-emerald-900;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    min-height: 100vh;
+    background-image:
+      radial-gradient(circle at 12% 0%, rgba(0, 106, 78, 0.035), transparent 28rem),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.7), transparent 18rem);
+    background-attachment: fixed;
   }
 
   :focus-visible {
@@ -26,7 +35,26 @@
   input,
   select,
   textarea {
-    @apply transition-colors duration-150;
+    transition-property: color, background-color, border-color, opacity, box-shadow;
+    transition-duration: var(--motion-fast);
+    transition-timing-function: var(--ease-premium);
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: #94a3b8;
+  }
+
+  input:disabled,
+  select:disabled,
+  textarea:disabled {
+    cursor: not-allowed;
+    background-color: #f1f5f9;
+    color: #64748b;
+  }
+
+  html {
+    scroll-behavior: smooth;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -39,6 +67,12 @@
       transition-duration: 0.01ms !important;
     }
   }
+
+  @media (forced-colors: active) {
+    :focus-visible {
+      outline: 2px solid CanvasText;
+    }
+  }
 }
 
 /* Custom scrollbar */
@@ -48,12 +82,13 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: #f8fafc;
 }
 
 ::-webkit-scrollbar-thumb {
   background: #cbd5e1;
-  border-radius: 4px;
+  border: 2px solid #f8fafc;
+  border-radius: 999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {

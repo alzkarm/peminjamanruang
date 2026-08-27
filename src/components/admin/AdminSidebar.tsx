@@ -56,9 +56,9 @@ export function AdminSidebar() {
   ];
 
   return (
-    <aside className="w-full lg:w-72 bg-white rounded-xl border border-slate-200 p-4 space-y-5">
+    <aside className="w-full space-y-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm lg:sticky lg:top-24 lg:w-72 lg:self-start lg:space-y-5 lg:p-4">
       {/* Header */}
-      <div className="pb-3 border-b border-slate-100">
+      <div className="border-b border-slate-100 pb-3">
         <div className="flex items-center gap-2.5">
           <div className="p-2 rounded-lg bg-yarsi-primary text-white">
             <ShieldCheck className="w-5 h-5" />
@@ -71,7 +71,7 @@ export function AdminSidebar() {
       </div>
 
       {/* Navigation List */}
-      <nav className="space-y-1">
+      <nav className="flex gap-2 overflow-x-auto pb-1 lg:block lg:space-y-1 lg:overflow-visible lg:pb-0">
         {navItems.map((item) => {
           const isActive = pathname === item.href;
           const Icon = item.icon;
@@ -80,9 +80,10 @@ export function AdminSidebar() {
             <Link
               key={item.href}
               href={item.href}
-              className={`min-h-11 flex items-start justify-between p-2.5 rounded-lg transition-colors ${
+              aria-current={isActive ? 'page' : undefined}
+              className={`relative flex min-h-12 min-w-[168px] items-start justify-between rounded-xl p-2.5 lg:min-h-14 lg:min-w-0 ${
                 isActive
-                  ? 'bg-emerald-50 text-yarsi-primary border border-emerald-200 font-bold'
+                  ? 'border border-emerald-200 bg-emerald-50 text-yarsi-primary font-bold shadow-sm before:absolute before:bottom-2 before:left-0 before:top-2 before:w-0.5 before:rounded-full before:bg-yarsi-primary'
                   : 'text-slate-700 hover:bg-slate-50 border border-transparent'
               }`}
             >
@@ -94,7 +95,7 @@ export function AdminSidebar() {
                 />
                 <div>
                   <p className="text-xs font-bold leading-tight">{item.label}</p>
-                  <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">
+                  <p className="mt-0.5 hidden text-[11px] leading-snug text-slate-500 lg:block">
                     {item.description}
                   </p>
                 </div>
@@ -113,7 +114,7 @@ export function AdminSidebar() {
       </nav>
 
       {/* Role Context Indicator */}
-      <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 text-xs space-y-2">
+      <div className="hidden space-y-2 rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs lg:block">
         <p className="font-bold text-slate-700 flex items-center gap-1.5">
           <Users className="w-3.5 h-3.5 text-yarsi-primary" />
           <span>Role Pengguna Aktif</span>
@@ -131,7 +132,8 @@ export function AdminSidebar() {
           <button
             type="button"
             onClick={() => loginAsRole('admin_lpf')}
-            className={`min-h-9 py-1.5 px-2 rounded-md text-[11px] font-bold border transition-colors ${
+            aria-pressed={currentUser.role === 'admin_lpf'}
+            className={`min-h-10 rounded-lg border px-2 py-1.5 text-[11px] font-bold ${
               currentUser.role === 'admin_lpf'
                 ? 'bg-yarsi-primary text-white border-yarsi-primary'
                 : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
@@ -142,7 +144,8 @@ export function AdminSidebar() {
           <button
             type="button"
             onClick={() => loginAsRole('admin_yayasan')}
-            className={`min-h-9 py-1.5 px-2 rounded-md text-[11px] font-bold border transition-colors ${
+            aria-pressed={currentUser.role === 'admin_yayasan'}
+            className={`min-h-10 rounded-lg border px-2 py-1.5 text-[11px] font-bold ${
               currentUser.role === 'admin_yayasan'
                 ? 'bg-yarsi-primary text-white border-yarsi-primary'
                 : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
@@ -154,7 +157,7 @@ export function AdminSidebar() {
       </div>
 
       {/* Return to Public Portal */}
-      <div className="pt-1">
+      <div className="hidden pt-1 lg:block">
         <Link
           href="/"
           className="min-h-10 flex items-center justify-center gap-2 p-2 text-xs font-semibold text-slate-700 hover:text-yarsi-primary hover:bg-slate-50 rounded-lg border border-slate-200 transition-colors"

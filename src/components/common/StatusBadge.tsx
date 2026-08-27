@@ -11,6 +11,7 @@ import {
   Ban,
   CheckCheck,
   GraduationCap,
+  RotateCcw,
 } from 'lucide-react';
 
 interface StatusBadgeProps {
@@ -53,6 +54,8 @@ export function StatusBadge({
         return <XCircle className={iconClass} />;
       case 'CANCELLED':
         return <Ban className={iconClass} />;
+      case 'RETURNED':
+        return <RotateCcw className={iconClass} />;
       case 'COMPLETED':
         return <CheckCheck className={iconClass} />;
       case 'ACADEMIC_BLOCKED':
@@ -62,9 +65,9 @@ export function StatusBadge({
 
   return (
     <span
-      className={`inline-flex items-center rounded-md border ${config.bg} ${sizeClasses[size]} ${className}`}
+      className={`inline-flex items-center whitespace-nowrap rounded-lg border shadow-[0_1px_1px_rgba(15,23,42,0.04)] ${config.bg} ${sizeClasses[size]} ${className}`}
     >
-      {showIcon && renderIcon()}
+      {showIcon && <span aria-hidden="true">{renderIcon()}</span>}
       <span>{config.label}</span>
     </span>
   );

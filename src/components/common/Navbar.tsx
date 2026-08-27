@@ -18,6 +18,7 @@ import {
   X,
   FileCheck2,
   Lock,
+  Home,
 } from 'lucide-react';
 
 export function Navbar() {
@@ -31,6 +32,22 @@ export function Navbar() {
     setMounted(true);
     fetchInitialData();
   }, [fetchInitialData]);
+
+  useEffect(() => {
+    setMobileMenuOpen(false);
+    setUserDropdownOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setMobileMenuOpen(false);
+        setUserDropdownOpen(false);
+      }
+    };
+    window.addEventListener('keydown', closeOnEscape);
+    return () => window.removeEventListener('keydown', closeOnEscape);
+  }, []);
 
   // Compute pending counts
   const pendingLPFCount = bookings.filter((b) => b.status === 'PENDING_LPF').length;
@@ -47,7 +64,7 @@ export function Navbar() {
   const isAdmin = currentUser?.role === 'admin_lpf' || currentUser?.role === 'admin_yayasan';
 
   const navLinks: NavLinkItem[] = [
-    { href: '/', label: 'Beranda', icon: CalendarDays },
+    { href: '/', label: 'Beranda', icon: Home },
     { href: '/schedule', label: 'Kalender Ruangan', icon: CalendarDays },
     { href: '/dashboard', label: 'Peminjaman Saya', icon: LayoutDashboard },
     { href: '/dashboard/booking/new', label: 'Pinjam Ruang', icon: PlusCircle, highlight: true },
@@ -81,7 +98,7 @@ export function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-slate-200 bg-white">
+    <header className="sticky top-0 z-40 w-full border-b border-slate-200 bg-white/95 shadow-[0_8px_24px_-24px_rgba(15,23,42,0.55)] backdrop-blur-md">
       {/* Top Banner Notice */}
       <div className="bg-yarsi-dark text-emerald-50 text-xs px-4 py-1.5 border-b border-emerald-950/30">
         <div className="flex items-center gap-2 max-w-7xl mx-auto w-full">
@@ -94,8 +111,8 @@ export function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between gap-4">
           {/* Brand Logo */}
-          <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-lg bg-yarsi-primary flex items-center justify-center text-white">
+          <Link href="/" className="group flex min-w-0 items-center gap-2.5 sm:gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-yarsi-primary text-white">
               <Building2 className="w-5 h-5 text-white" />
             </div>
             <div>
@@ -121,7 +138,8 @@ export function Navbar() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`relative flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-medium transition-all ${
+                  aria-current={isActive ? 'page' : undefined}
+                  className={`relative flex min-h-10 items-center gap-2 rounded-xl px-3.5 py-2 text-sm font-medium ${
                     item.highlight
                       ? isActive
                         ? 'bg-yarsi-dark text-white ring-2 ring-emerald-300/40 shadow-sm'
@@ -131,10 +149,10 @@ export function Navbar() {
                       : 'text-slate-600 hover:text-yarsi-primary hover:bg-slate-50'
                   }`}
                 >
-                  <Icon className={`w-4 h-4 ${item.highlight ? 'text-white' : isActive ? 'text-yarsi-primary' : 'text-slate-400'}`} />
+                  <Icon aria-hidden="true" className={`w-4 h-4 ${item.highlight ? 'text-white' : isActive ? 'text-yarsi-primary' : 'text-slate-400'}`} />
                   <span>{item.label}</span>
                   {item.badge !== undefined && item.badge > 0 && (
-                    <span className="ml-1 inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-bold leading-none text-white bg-rose-500 rounded-full animate-pulse">
+                    <span className="ml-1 inline-flex min-h-5 min-w-5 items-center justify-center rounded-md bg-rose-500 px-1.5 text-[10px] font-bold leading-none text-white">
                       {item.badge}
                     </span>
                   )}
@@ -180,7 +198,7 @@ export function Navbar() {
                       className="fixed inset-0 z-40"
                       onClick={() => setUserDropdownOpen(false)}
                     />
-                    <div className="absolute right-0 mt-2 w-72 rounded-2xl bg-white p-2 shadow-2xl border border-slate-100 ring-1 ring-black/5 z-50 animate-fade-in">
+                    <div className="absolute right-0 z-50 mt-2 w-72 rounded-2xl border border-slate-100 bg-white p-2 shadow-[0_24px_60px_-20px_rgba(15,23,42,0.4)] ring-1 ring-black/5 animate-fade-in">
                       <div className="px-3 py-2.5 border-b border-slate-100 mb-1 bg-slate-50 rounded-xl">
                         <p className="text-xs text-slate-400 font-medium">Masuk sebagai:</p>
                         <p className="text-sm font-bold text-slate-800 leading-snug">{currentUser.name}</p>
@@ -232,10 +250,11 @@ export function Navbar() {
             ) : (
               <Link
                 href="/auth/login"
-                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-yarsi-primary hover:bg-yarsi-dark rounded-xl shadow-sm transition-all"
+                aria-label="Masuk akun"
+                className="inline-flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-xl bg-yarsi-primary px-0 text-sm font-medium text-white shadow-sm hover:bg-yarsi-dark sm:px-4"
               >
                 <User className="w-4 h-4" />
-                <span>Masuk Akun</span>
+                <span className="hidden sm:inline">Masuk Akun</span>
               </Link>
             )}
 
@@ -254,7 +273,7 @@ export function Navbar() {
 
         {/* Mobile Navigation Drawer */}
         {mobileMenuOpen && (
-          <div className="md:hidden border-t border-slate-100 py-3 space-y-1 animate-fade-in">
+          <div className="space-y-1 border-t border-slate-100 py-3 md:hidden animate-fade-in">
             {navLinks.map((item) => {
               const isActive = pathname === item.href;
               const Icon = item.icon;
@@ -263,7 +282,8 @@ export function Navbar() {
                   key={item.href}
                   href={item.href}
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium ${
+                  aria-current={isActive ? 'page' : undefined}
+                  className={`flex min-h-12 items-center justify-between rounded-xl px-3 py-2.5 text-sm font-medium ${
                     item.highlight
                       ? 'bg-yarsi-primary text-white font-semibold'
                       : isActive

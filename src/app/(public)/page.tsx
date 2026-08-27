@@ -4,24 +4,21 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useAppStore } from '@/lib/store';
 import { RoomCard } from '@/components/common/RoomCard';
-import { formatDateIndo, formatShortDateIndo, checkTimeOverlap, getDayOfWeekNumber } from '@/lib/utils';
+import { formatDateIndo, getDayOfWeekNumber } from '@/lib/utils';
 import {
   Search,
   Calendar,
   Building2,
-  Users,
   Activity,
   ArrowRight,
   ShieldCheck,
   CheckCircle2,
   Clock,
-  Laptop,
   GraduationCap,
-  Layers,
-  Filter,
   FileCheck2,
   QrCode,
-  Star,
+  MapPin,
+  SlidersHorizontal,
 } from 'lucide-react';
 
 export default function HomePage() {
@@ -29,7 +26,9 @@ export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedBuilding, setSelectedBuilding] = useState('all');
   const [selectedCategory, setSelectedCategory] = useState('all');
-  const [selectedDateStr, setSelectedDateStr] = useState('2026-08-16');
+  const [selectedDateStr, setSelectedDateStr] = useState(() =>
+    new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta' }).format(new Date()),
+  );
 
   // Buildings list
   const buildings = Array.from(new Set(rooms.map((r) => r.building)));
@@ -78,163 +77,188 @@ export default function HomePage() {
     ...activeAcademicForDate.map((ab) => ab.roomId),
   ]);
 
-  const availableRoomsCount = rooms.length - occupiedRoomIds.size;
-  const utilizationPercent = Math.round((occupiedRoomIds.size / rooms.length) * 100);
+  const occupiedRoomsCount = occupiedRoomIds.size;
+  const availableRoomsCount = Math.max(rooms.length - occupiedRoomsCount, 0);
+  const utilizationPercent = rooms.length
+    ? Math.round((occupiedRoomsCount / rooms.length) * 100)
+    : 0;
+  const hasActiveFilters =
+    Boolean(searchQuery) || selectedBuilding !== 'all' || selectedCategory !== 'all';
+
+  const resetFilters = () => {
+    setSearchQuery('');
+    setSelectedBuilding('all');
+    setSelectedCategory('all');
+  };
 
   return (
-    <div className="min-h-screen bg-slate-50 space-y-12 pb-16">
-      {/* HERO SECTION */}
-      <section className="bg-yarsi-dark text-white pt-10 pb-16 px-4 sm:px-6 lg:px-8 border-b border-emerald-950/40">
-        <div className="max-w-7xl mx-auto space-y-7">
-          <div className="max-w-3xl space-y-3.5">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-emerald-900/60 border border-emerald-800 text-xs font-semibold text-emerald-200">
-              <ShieldCheck className="w-4 h-4 text-emerald-300" />
-              <span>Sistem Informasi Peminjaman Ruangan · Universitas YARSI</span>
-            </div>
+    <div className="min-h-screen bg-slate-50 pb-16 sm:pb-20">
+      <section className="relative overflow-hidden border-b border-emerald-950/40 bg-yarsi-darker text-white">
+        <div aria-hidden="true" className="absolute inset-0 bg-[linear-gradient(115deg,rgba(16,185,129,0.13),transparent_46%),radial-gradient(circle_at_82%_18%,rgba(245,158,11,0.10),transparent_26rem)]" />
+        <div aria-hidden="true" className="absolute inset-0 opacity-[0.07] [background-image:linear-gradient(rgba(255,255,255,.5)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.5)_1px,transparent_1px)] [background-size:40px_40px]" />
 
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-tight">
-              Peminjaman Ruangan Kampus Terpadu & Terjadwal Real-Time
-            </h1>
-
-            <p className="text-sm sm:text-base text-emerald-100/90 leading-relaxed max-w-2xl">
-              Cek ketersediaan Auditorium Ar-Rahman, Smart Classroom, Laboratorium Komputer AI, hingga Ruang Rapat Senat dengan sistem verifikasi multi-tier LPF dan Yayasan YARSI.
-            </p>
-
-            <div className="flex flex-wrap items-center gap-3 pt-2">
-              <Link
-                href="/schedule"
-                className="min-h-11 inline-flex items-center gap-2 px-5 rounded-lg font-bold text-sm bg-white text-yarsi-dark hover:bg-emerald-50 transition-colors"
-              >
-                <Calendar className="w-4 h-4 text-yarsi-primary" />
-                <span>Lihat Kalender Ruangan</span>
-              </Link>
-
-              <Link
-                href="/dashboard/booking/new"
-                className="min-h-11 inline-flex items-center gap-2 px-5 rounded-lg font-bold text-sm bg-amber-500 hover:bg-amber-400 text-slate-950 transition-colors"
-              >
-                <span>Ajukan Peminjaman</span>
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-            </div>
-          </div>
-
-          {/* Quick Search Card Bar */}
-          <div className="bg-white p-4 sm:p-5 rounded-xl border border-slate-200 text-slate-800">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-              {/* Search input */}
-              <div className="relative md:col-span-2">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5 pointer-events-none" />
-                <input
-                  type="text"
-                  aria-label="Cari nama ruangan atau kode"
-                  placeholder="Cari nama ruangan, kode (misal: MY-1201), atau gedung..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full min-h-11 pl-10 pr-4 py-2 bg-white text-xs sm:text-sm font-medium rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-yarsi-primary"
-                />
+        <div className="relative mx-auto max-w-7xl px-4 pb-24 pt-10 sm:px-6 sm:pb-28 sm:pt-14 lg:px-8">
+          <div className="grid items-end gap-10 lg:grid-cols-[minmax(0,1.25fr)_minmax(310px,.75fr)] lg:gap-14">
+            <div className="max-w-3xl">
+              <div className="mb-5 inline-flex items-center gap-2 border-l-2 border-amber-400 pl-3 text-xs font-bold uppercase tracking-[0.16em] text-emerald-200">
+                <ShieldCheck className="h-4 w-4" />
+                Universitas YARSI · Layanan Ruang Kampus
               </div>
-
-              {/* Building selector */}
-              <div>
-                <select
-                  aria-label="Filter gedung"
-                  value={selectedBuilding}
-                  onChange={(e) => setSelectedBuilding(e.target.value)}
-                  className="w-full min-h-11 px-3 py-2 bg-white text-xs sm:text-sm font-medium rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-yarsi-primary text-slate-700"
+              <h1 className="max-w-3xl text-3xl font-black leading-[1.08] tracking-[-0.035em] text-white sm:text-5xl lg:text-[3.45rem]">
+                Temukan ruang yang tepat, pada waktu yang tepat.
+              </h1>
+              <p className="mt-5 max-w-2xl text-sm leading-7 text-emerald-50/80 sm:text-base">
+                Lihat jadwal akademik dan peminjaman dalam satu kalender, lalu ajukan ruang tanpa menebak ketersediaannya.
+              </p>
+              <div className="mt-7 flex flex-col gap-3 min-[420px]:flex-row">
+                <Link
+                  href="/schedule"
+                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-white px-5 text-sm font-extrabold text-yarsi-dark shadow-[0_10px_28px_rgba(0,0,0,.18)] hover:-translate-y-0.5 hover:bg-emerald-50"
                 >
-                  <option value="all">Semua Gedung Kampus</option>
-                  {buildings.map((b) => (
-                    <option key={b} value={b}>
-                      {b}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Date selector */}
-              <div>
-                <input
-                  type="date"
-                  aria-label="Pilih tanggal ketersediaan"
-                  value={selectedDateStr}
-                  onChange={(e) => setSelectedDateStr(e.target.value)}
-                  className="w-full min-h-11 px-3 py-2 bg-white text-xs sm:text-sm font-medium rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-yarsi-primary text-slate-700 font-sans"
-                />
+                  <Calendar className="h-4 w-4 text-yarsi-primary" />
+                  Buka Kalender Ruang
+                </Link>
+                <Link
+                  href="/dashboard/booking/new"
+                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border border-emerald-300/35 bg-emerald-800/55 px-5 text-sm font-bold text-white hover:-translate-y-0.5 hover:border-emerald-200/60 hover:bg-emerald-800"
+                >
+                  Ajukan Peminjaman
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
               </div>
             </div>
+
+            <aside aria-label="Ringkasan jadwal tanggal terpilih" className="overflow-hidden rounded-xl border border-white/15 bg-white/[0.08] shadow-[0_20px_60px_rgba(0,0,0,.22)] backdrop-blur-md">
+              <div className="flex items-start justify-between gap-4 border-b border-white/10 px-5 py-4">
+                <div>
+                  <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-emerald-200">Ringkasan tanggal</p>
+                  <p className="mt-1 text-sm font-bold text-white">{formatDateIndo(selectedDateStr)}</p>
+                </div>
+                <span className="inline-flex items-center gap-1.5 rounded-md bg-emerald-400/15 px-2 py-1 text-[10px] font-bold text-emerald-100 ring-1 ring-inset ring-emerald-300/25">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" /> WIB
+                </span>
+              </div>
+              <div className="p-5">
+                <div className="flex items-end justify-between gap-4">
+                  <div>
+                    <p className="text-4xl font-black tracking-tight text-white">{availableRoomsCount}</p>
+                    <p className="mt-1 text-xs font-medium text-emerald-100/75">ruang tanpa jadwal aktif</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-lg font-black text-amber-300">{occupiedRoomsCount}</p>
+                    <p className="text-[11px] text-emerald-100/65">ruang terjadwal</p>
+                  </div>
+                </div>
+                <div className="mt-5 h-1.5 overflow-hidden rounded-full bg-white/10" role="progressbar" aria-label="Persentase ruang terjadwal" aria-valuemin={0} aria-valuemax={100} aria-valuenow={utilizationPercent}>
+                  <div className="h-full rounded-full bg-gradient-to-r from-amber-400 to-amber-300 transition-[width] duration-300" style={{ width: `${utilizationPercent}%` }} />
+                </div>
+                <div className="mt-4 grid grid-cols-2 divide-x divide-white/10 border-t border-white/10 pt-4">
+                  <div className="pr-4">
+                    <div className="flex items-center gap-2 text-emerald-200">
+                      <GraduationCap className="h-4 w-4" />
+                      <span className="text-lg font-black text-white">{activeAcademicForDate.length}</span>
+                    </div>
+                    <p className="mt-1 text-[11px] text-emerald-100/65">jadwal akademik</p>
+                  </div>
+                  <div className="pl-4">
+                    <div className="flex items-center gap-2 text-amber-300">
+                      <Clock className="h-4 w-4" />
+                      <span className="text-lg font-black text-white">{activeBookingsForDate.length}</span>
+                    </div>
+                    <p className="mt-1 text-[11px] text-emerald-100/65">peminjaman aktif</p>
+                  </div>
+                </div>
+              </div>
+            </aside>
           </div>
         </div>
       </section>
 
-      {/* STATS OVERVIEW FOR SELECTED DATE */}
-      <section aria-label="Statistik keterisian" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6 relative z-20">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          <div className="bg-white p-4 rounded-xl border border-slate-200 flex items-center gap-3.5">
-            <div className="p-2.5 bg-emerald-50 text-yarsi-primary rounded-lg shrink-0">
-              <Building2 className="w-5 h-5" />
+      <section aria-label="Pencarian ruangan" className="relative z-20 mx-auto -mt-14 max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="rounded-xl border border-slate-200/90 bg-white p-4 shadow-[0_18px_48px_-24px_rgba(15,23,42,.32)] sm:p-5">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 text-sm font-extrabold text-slate-900">
+              <SlidersHorizontal className="h-4 w-4 text-yarsi-primary" />
+              Cari ketersediaan ruang
             </div>
-            <div>
-              <p className="text-xs text-slate-500 font-semibold">Total Ruangan</p>
-              <h3 className="text-lg sm:text-xl font-black text-slate-900">{rooms.length} Ruang</h3>
-              <p className="text-[10px] text-slate-600 font-medium">3 Gedung Utama</p>
-            </div>
+            {hasActiveFilters && (
+              <button type="button" onClick={resetFilters} className="min-h-9 text-xs font-bold text-yarsi-primary hover:text-yarsi-dark hover:underline">
+                Reset filter
+              </button>
+            )}
           </div>
-
-          <div className="bg-white p-4 rounded-xl border border-slate-200 flex items-center gap-3.5">
-            <div className="p-2.5 bg-teal-50 text-teal-700 rounded-lg shrink-0">
-              <CheckCircle2 className="w-5 h-5" />
-            </div>
-            <div>
-              <p className="text-xs text-slate-500 font-semibold">Tersedia Tanggal Ini</p>
-              <h3 className="text-lg sm:text-xl font-black text-emerald-800">{availableRoomsCount} Ruang</h3>
-              <p className="text-[10px] text-emerald-700 font-medium">{formatShortDateIndo(selectedDateStr)}</p>
-            </div>
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-[minmax(0,1.6fr)_minmax(180px,.7fr)_minmax(180px,.7fr)]">
+            <label className="block">
+              <span className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-slate-500">Nama, kode, atau gedung</span>
+              <span className="relative block">
+                <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <input
+                  type="search"
+                  placeholder="Contoh: Auditorium atau MY-1201"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="min-h-12 w-full rounded-lg border border-slate-300 bg-slate-50/70 py-2 pl-10 pr-4 text-sm font-medium text-slate-900 outline-none hover:border-slate-400 focus:border-yarsi-primary focus:bg-white focus:ring-4 focus:ring-emerald-100"
+                />
+              </span>
+            </label>
+            <label className="block">
+              <span className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-slate-500">Gedung</span>
+              <span className="relative block">
+                <MapPin className="pointer-events-none absolute left-3.5 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                <select
+                  value={selectedBuilding}
+                  onChange={(e) => setSelectedBuilding(e.target.value)}
+                  className="min-h-12 w-full appearance-none rounded-lg border border-slate-300 bg-slate-50/70 py-2 pl-10 pr-8 text-sm font-semibold text-slate-700 outline-none hover:border-slate-400 focus:border-yarsi-primary focus:bg-white focus:ring-4 focus:ring-emerald-100"
+                >
+                  <option value="all">Semua gedung</option>
+                  {buildings.map((building) => <option key={building} value={building}>{building}</option>)}
+                </select>
+              </span>
+            </label>
+            <label className="block">
+              <span className="mb-1.5 block text-[11px] font-bold uppercase tracking-wider text-slate-500">Tanggal</span>
+              <input
+                type="date"
+                value={selectedDateStr}
+                onChange={(e) => setSelectedDateStr(e.target.value)}
+                className="min-h-12 w-full rounded-lg border border-slate-300 bg-slate-50/70 px-3 py-2 font-sans text-sm font-semibold text-slate-700 outline-none hover:border-slate-400 focus:border-yarsi-primary focus:bg-white focus:ring-4 focus:ring-emerald-100"
+              />
+            </label>
           </div>
-
-          <div className="bg-white p-4 rounded-xl border border-slate-200 flex items-center gap-3.5">
-            <div className="p-2.5 bg-purple-50 text-purple-700 rounded-lg shrink-0">
-              <GraduationCap className="w-5 h-5" />
+          <div className="mt-4 grid grid-cols-3 divide-x divide-slate-200 border-t border-slate-100 pt-4" aria-live="polite">
+            <div className="flex items-center gap-2 pr-3 sm:gap-3">
+              <Building2 className="hidden h-4 w-4 text-yarsi-primary sm:block" />
+              <div><strong className="block text-base text-slate-900">{rooms.length}</strong><span className="text-[10px] text-slate-500 sm:text-xs">total ruang</span></div>
             </div>
-            <div>
-              <p className="text-xs text-slate-500 font-semibold">Sesi Terjadwal</p>
-              <h3 className="text-lg sm:text-xl font-black text-purple-900">
-                {activeBookingsForDate.length + activeAcademicForDate.length} Sesi
-              </h3>
-              <p className="text-[10px] text-purple-800 font-medium">Kuliah & Peminjaman</p>
+            <div className="flex items-center gap-2 px-3 sm:gap-3">
+              <CheckCircle2 className="hidden h-4 w-4 text-emerald-600 sm:block" />
+              <div><strong className="block text-base text-emerald-700">{availableRoomsCount}</strong><span className="text-[10px] text-slate-500 sm:text-xs">tanpa jadwal</span></div>
             </div>
-          </div>
-
-          <div className="bg-white p-4 rounded-xl border border-slate-200 flex items-center gap-3.5">
-            <div className="p-2.5 bg-amber-50 text-amber-700 rounded-lg shrink-0">
-              <Activity className="w-5 h-5" />
-            </div>
-            <div>
-              <p className="text-xs text-slate-500 font-semibold">Tingkat Okupansi</p>
-              <h3 className="text-lg sm:text-xl font-black text-amber-900">{utilizationPercent}%</h3>
-              <p className="text-[10px] text-amber-800 font-medium">Pemanfaatan Ruang</p>
+            <div className="flex items-center gap-2 pl-3 sm:gap-3">
+              <Activity className="hidden h-4 w-4 text-amber-600 sm:block" />
+              <div><strong className="block text-base text-slate-900">{utilizationPercent}%</strong><span className="text-[10px] text-slate-500 sm:text-xs">ruang terjadwal</span></div>
             </div>
           </div>
         </div>
       </section>
 
       {/* ROOM DIRECTORY SECTION */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+      <section id="rooms" className="mx-auto mt-12 max-w-7xl space-y-6 px-4 sm:mt-14 sm:px-6 lg:px-8">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-xl font-black text-slate-900">Daftar Ruangan & Ketersediaan</h2>
-              <span className="text-xs font-bold text-yarsi-primary bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md">
+              <h2 className="text-xl font-black tracking-tight text-slate-950 sm:text-2xl">Ruang yang dapat Anda gunakan</h2>
+              <span className="rounded-md border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-bold text-yarsi-primary">
                 {filteredRooms.length} Ruang
               </span>
             </div>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Jadwal diperbarui untuk tanggal <strong>{formatDateIndo(selectedDateStr)}</strong>
+            <p className="mt-1 text-xs leading-5 text-slate-500 sm:text-sm">
+              Status ringkas untuk <strong className="font-bold text-slate-700">{formatDateIndo(selectedDateStr)}</strong>. Buka kalender untuk melihat slot per jam.
             </p>
           </div>
 
           {/* Category Filter Pills */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1" role="group" aria-label="Filter kategori ruang">
+          <div className="flex max-w-full items-center gap-1 overflow-x-auto rounded-lg border border-slate-200 bg-white p-1 shadow-sm" role="group" aria-label="Filter kategori ruang">
             {[
               { id: 'all', label: 'Semua Ruang' },
               { id: 'auditorium', label: 'Auditorium & Aula' },
@@ -248,10 +272,10 @@ export default function HomePage() {
                 type="button"
                 onClick={() => setSelectedCategory(cat.id)}
                 aria-pressed={selectedCategory === cat.id}
-                className={`min-h-10 px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all border ${
+                className={`min-h-9 whitespace-nowrap rounded-md px-3 py-1.5 text-xs font-bold ${
                   selectedCategory === cat.id
-                    ? 'bg-yarsi-primary text-white border-yarsi-primary shadow-xs'
-                    : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                    ? 'bg-yarsi-primary text-white shadow-sm'
+                    : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
                 }`}
               >
                 {cat.label}
@@ -262,24 +286,20 @@ export default function HomePage() {
 
         {/* Room Cards Grid */}
         {filteredRooms.length === 0 ? (
-          <div className="bg-white rounded-xl border border-slate-200 p-8 sm:p-12 text-center space-y-3">
-            <Building2 className="w-12 h-12 text-slate-300 mx-auto" />
-            <h3 className="text-base font-bold text-slate-700">Tidak ada ruangan yang sesuai filter</h3>
-            <p className="text-xs text-slate-500">Silakan ubah kata kunci pencarian atau gedung.</p>
+          <div className="rounded-xl border border-dashed border-slate-300 bg-white px-6 py-14 text-center">
+            <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-400"><Search className="h-5 w-5" /></span>
+            <h3 className="mt-4 text-base font-bold text-slate-800">Belum ada ruang yang cocok</h3>
+            <p className="mt-1 text-xs text-slate-500">Coba kata kunci lain atau tampilkan kembali semua gedung.</p>
             <button
               type="button"
-              onClick={() => {
-                setSearchQuery('');
-                setSelectedBuilding('all');
-                setSelectedCategory('all');
-              }}
-              className="text-xs font-bold text-yarsi-primary hover:underline"
+              onClick={resetFilters}
+              className="mt-4 min-h-10 rounded-lg border border-emerald-200 bg-emerald-50 px-4 text-xs font-bold text-yarsi-primary hover:border-emerald-300 hover:bg-emerald-100"
             >
               Reset Filter
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
             {filteredRooms.map((room) => {
               // Check if room has active bookings or lectures on selected date
               const activeBooking = activeBookingsForDate.find((b) => b.roomId === room.id);
@@ -306,60 +326,37 @@ export default function HomePage() {
       </section>
 
       {/* HOW IT WORKS / STEP-BY-STEP WORKFLOW */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-slate-900 text-white rounded-xl p-6 sm:p-10 border border-slate-800 space-y-7">
-          <div className="text-center max-w-2xl mx-auto space-y-2">
-            <span className="text-xs font-bold tracking-wider text-emerald-300 bg-emerald-950 px-2.5 py-1 rounded-md border border-emerald-800">
-              Alur Pengajuan SIPERU
-            </span>
-            <h2 className="text-2xl sm:text-3xl font-black">
-              4 Langkah Mudah Reservasi Ruangan Kampus
-            </h2>
-            <p className="text-xs sm:text-sm text-slate-300">
-              Seluruh permohonan tercatat real-time dan terverifikasi secara digital tanpa berkas fisik berlebih.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-            <div className="bg-slate-800/80 p-5 rounded-xl border border-slate-700/80 space-y-2.5">
-              <div className="w-9 h-9 rounded-lg bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 font-black text-base flex items-center justify-center">
-                1
-              </div>
-              <h3 className="font-bold text-sm text-white">Masuk Akun YARSI</h3>
-              <p className="text-xs text-slate-300 leading-relaxed">
-                Gunakan kredensial akun resmi YARSI Anda untuk autentikasi SSO.
-              </p>
+      <section className="mx-auto mt-14 max-w-7xl px-4 sm:mt-16 sm:px-6 lg:px-8">
+        <div className="overflow-hidden rounded-xl border border-slate-800 bg-slate-950 text-white shadow-[0_24px_70px_-36px_rgba(15,23,42,.8)]">
+          <div className="grid lg:grid-cols-[.78fr_1.22fr]">
+            <div className="border-b border-slate-800 p-6 sm:p-8 lg:border-b-0 lg:border-r lg:p-10">
+              <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-emerald-400">Alur SIPERU</p>
+              <h2 className="mt-3 text-2xl font-black leading-tight tracking-tight sm:text-3xl">Dari pencarian hingga izin akses, dalam satu alur.</h2>
+              <p className="mt-4 text-sm leading-6 text-slate-400">Setiap permohonan tercatat dan melewati jalur persetujuan sesuai jenis ruang.</p>
+              <Link href="/dashboard/booking/new" className="mt-6 inline-flex min-h-11 items-center gap-2 text-sm font-bold text-emerald-300 hover:text-emerald-200">
+                Mulai pengajuan <ArrowRight className="h-4 w-4" />
+              </Link>
             </div>
-
-            <div className="bg-slate-800/80 p-5 rounded-xl border border-slate-700/80 space-y-2.5">
-              <div className="w-9 h-9 rounded-lg bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 font-black text-base flex items-center justify-center">
-                2
-              </div>
-              <h3 className="font-bold text-sm text-white">Pilih Ruang & Slot</h3>
-              <p className="text-xs text-slate-300 leading-relaxed">
-                Sistem memeriksa otomatis ketersediaan ruangan agar terhindar dari tabrakan jadwal.
-              </p>
-            </div>
-
-            <div className="bg-slate-800/80 p-5 rounded-xl border border-slate-700/80 space-y-2.5">
-              <div className="w-9 h-9 rounded-lg bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 font-black text-base flex items-center justify-center">
-                3
-              </div>
-              <h3 className="font-bold text-sm text-white">Verifikasi Petugas</h3>
-              <p className="text-xs text-slate-300 leading-relaxed">
-                Ruang reguler diverifikasi LPF, sementara auditorium & senat diteruskan ke Yayasan.
-              </p>
-            </div>
-
-            <div className="bg-slate-800/80 p-5 rounded-xl border border-slate-700/80 space-y-2.5">
-              <div className="w-9 h-9 rounded-lg bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 font-black text-base flex items-center justify-center">
-                4
-              </div>
-              <h3 className="font-bold text-sm text-white">E-Tiket & QR Code</h3>
-              <p className="text-xs text-slate-300 leading-relaxed">
-                Terbitkan e-tiket resmi ber-QR Code untuk izin akses ke petugas operasional.
-              </p>
-            </div>
+            <ol className="grid sm:grid-cols-2">
+              {[
+                { icon: ShieldCheck, step: '01', title: 'Masuk dengan akun YARSI', copy: 'Identitas pemohon terhubung ke akun resmi kampus.' },
+                { icon: Calendar, step: '02', title: 'Tentukan ruang & waktu', copy: 'Periksa slot kosong langsung dari kalender terintegrasi.' },
+                { icon: FileCheck2, step: '03', title: 'Tunggu verifikasi', copy: 'LPF atau Yayasan meninjau permohonan sesuai kewenangan.' },
+                { icon: QrCode, step: '04', title: 'Gunakan e-tiket', copy: 'Tunjukkan QR Code yang terbit setelah pengajuan disetujui.' },
+              ].map((item) => {
+                const Icon = item.icon;
+                return (
+                  <li key={item.step} className="group border-b border-slate-800 p-5 last:border-b-0 sm:p-6 sm:[&:nth-child(odd)]:border-r sm:[&:nth-child(3)]:border-b-0">
+                    <div className="flex items-center justify-between">
+                      <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-300 ring-1 ring-inset ring-emerald-400/20 group-hover:bg-emerald-500/15"><Icon className="h-4 w-4" /></span>
+                      <span className="font-mono text-xs font-bold text-slate-600">{item.step}</span>
+                    </div>
+                    <h3 className="mt-5 text-sm font-bold text-white">{item.title}</h3>
+                    <p className="mt-2 text-xs leading-5 text-slate-400">{item.copy}</p>
+                  </li>
+                );
+              })}
+            </ol>
           </div>
         </div>
       </section>

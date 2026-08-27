@@ -103,3 +103,12 @@ Dokumen ini mencatat perkembangan sistem peminjaman ruangan kampus YARSI.
 - Backend Controller Jadwal Massal (`backend/src/academic-bulk/academic-bulk.controller.ts`)
 - Backend Service Jadwal Massal (`backend/src/academic-bulk/academic-bulk.service.ts`)
 - PROGRESS.md
+
+---
+
+## UI/UX Refinement — 27 Agustus 2026
+
+- Kalender publik kini memakai grid 30 menit, event bertingkat, konteks ruang yang persisten, agenda mobile, serta state loading/error/retry yang jelas.
+- Form peminjaman, dashboard pengguna, antrean persetujuan, navigasi, dialog, status, dan state responsif dipoles dengan hierarki visual YARSI yang lebih konsisten.
+- Beranda, pencarian ruang, kartu ketersediaan, dan login diselaraskan dengan komposisi yang lebih modern, informatif, dan ramah akses.
+- Validasi waktu/lampiran, fokus dialog, target sentuh, reduced motion, dan tampilan desktop/mobile telah diverifikasi.
