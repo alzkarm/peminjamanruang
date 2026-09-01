@@ -16,13 +16,25 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 
+import { AuthGateModal } from '@/components/common/AuthGateModal';
+
 function ScheduleContent() {
   const searchParams = useSearchParams();
   const initialRoomId = searchParams.get('roomId') || undefined;
 
-  const { rooms, bookings, academicBlocks } = useAppStore();
+  const { currentUser, rooms, bookings, academicBlocks } = useAppStore();
   const [calendarMode, setCalendarMode] = useState<'timeline' | 'month'>('timeline');
   const [selectedDate, setSelectedDate] = useState('2026-08-16');
+  const [authGateOpen, setAuthGateOpen] = useState(false);
+
+  const isGuest = !currentUser || currentUser.role === 'guest';
+
+  const handleBookingClick = (e: React.MouseEvent) => {
+    if (isGuest) {
+      e.preventDefault();
+      setAuthGateOpen(true);
+    }
+  };
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
@@ -72,7 +84,8 @@ function ScheduleContent() {
           </div>
 
           <Link
-            href="/dashboard/booking/new"
+            href={initialRoomId ? `/dashboard/booking/new?roomId=${initialRoomId}` : '/dashboard/booking/new'}
+            onClick={handleBookingClick}
             className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl font-bold text-xs bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-md transition-all"
           >
             <PlusCircle className="w-4 h-4" />
@@ -100,6 +113,14 @@ function ScheduleContent() {
           }}
         />
       )}
+
+      {/* Auth Gate Modal */}
+      <AuthGateModal
+        isOpen={authGateOpen}
+        onClose={() => setAuthGateOpen(false)}
+        targetRoomId={initialRoomId}
+        actionTitle="Peminjaman Ruangan Memerlukan Akun Civitas"
+      />
     </div>
   );
 }

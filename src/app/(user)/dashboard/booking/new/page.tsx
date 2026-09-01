@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, Suspense } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAppStore } from '@/lib/store';
 import { BookingCategory, BookingEquipment, BookingLogistikItem } from '@/lib/types';
@@ -60,13 +60,28 @@ function NewBookingForm() {
   const [estimatedAttendees, setEstimatedAttendees] = useState(50);
 
   // Applicant info
-  const [userName, setUserName] = useState(currentUser.name || '');
-  const [userNimNidn, setUserNimNidn] = useState(currentUser.identifier || '');
-  const [userPhone, setUserPhone] = useState(currentUser.phone || '0812-9876-5432');
+  const [mounted, setMounted] = useState(false);
+  const [userName, setUserName] = useState(currentUser?.name || '');
+  const [userNimNidn, setUserNimNidn] = useState(currentUser?.identifier || '');
+  const [userPhone, setUserPhone] = useState(currentUser?.phone || '0812-9876-5432');
   const [userOrganization, setUserOrganization] = useState(
-    currentUser.organization || 'BEM FTI Universitas YARSI'
+    currentUser?.organization || 'BEM FTI Universitas YARSI'
   );
-  const [department, setDepartment] = useState(currentUser.department || 'Fakultas Teknologi Informasi');
+  const [department, setDepartment] = useState(currentUser?.department || 'Fakultas Teknologi Informasi');
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (currentUser && currentUser.role !== 'guest') {
+      if (currentUser.name) setUserName(currentUser.name);
+      if (currentUser.identifier) setUserNimNidn(currentUser.identifier);
+      if (currentUser.phone) setUserPhone(currentUser.phone);
+      if (currentUser.organization) setUserOrganization(currentUser.organization);
+      if (currentUser.department) setDepartment(currentUser.department);
+    }
+  }, [currentUser]);
 
   // Facilities Checklist
   const [selectedEquipments, setSelectedEquipments] = useState<
@@ -223,11 +238,11 @@ function NewBookingForm() {
           roomName: selectedRoom.name,
           building: selectedRoom.building,
           floor: selectedRoom.floor,
-          userId: currentUser.id,
-          userName: userName || currentUser.name,
-          userEmail: currentUser.email,
-          userNimNidn: userNimNidn || currentUser.identifier,
-          userRole: currentUser.role,
+          userId: currentUser?.id || 'usr-temp',
+          userName: userName || currentUser?.name || 'Civitas YARSI',
+          userEmail: currentUser?.email || `${userNimNidn || 'user'}@yarsi.ac.id`,
+          userNimNidn: userNimNidn || currentUser?.identifier || '',
+          userRole: currentUser?.role || 'mahasiswa',
           userPhone,
           userOrganization,
           department,
@@ -273,6 +288,80 @@ function NewBookingForm() {
       setErrorMessage(err.message || 'Gagal mengirimkan permohonan peminjaman ruangan.');
     }
   };
+
+  const isGuest = !mounted || !currentUser || currentUser.role === 'guest';
+
+  if (!mounted) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-16 flex items-center justify-center">
+        <div className="animate-pulse space-y-4 text-center">
+          <div className="w-12 h-12 rounded-full bg-emerald-100 mx-auto" />
+          <p className="text-xs text-slate-400 font-medium">Memuat data formulir SIPERU...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isGuest) {
+    const loginQuery = new URLSearchParams();
+    loginQuery.append('redirect', '/dashboard/booking/new');
+    if (roomId) loginQuery.append('roomId', roomId);
+    if (date) loginQuery.append('date', date);
+    if (startTime) loginQuery.append('startTime', startTime);
+    if (endTime) loginQuery.append('endTime', endTime);
+
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-16">
+        <div className="bg-white rounded-3xl border border-slate-200/80 shadow-2xl p-8 sm:p-12 text-center space-y-6">
+          <div className="w-16 h-16 rounded-3xl bg-emerald-50 border border-emerald-200 text-yarsi-primary mx-auto flex items-center justify-center shadow-inner">
+            <Building2 className="w-8 h-8" />
+          </div>
+
+          <div className="max-w-lg mx-auto space-y-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-yarsi-primary bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
+              Autentikasi LDAP SSO Diperlukan
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 mt-2">
+              Pengajuan Peminjaman Ruangan
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-500 leading-relaxed">
+              Anda sedang menjelajah dalam Mode Tamu. Untuk mengisi formulir reservasi ruangan, memilih logistik, dan mengunggah dokumen persetujuan, silakan masuk dengan akun SSO LDAP YARSI Anda.
+            </p>
+          </div>
+
+          {selectedRoom && (
+            <div className="bg-emerald-50/60 border border-emerald-200/80 rounded-2xl p-4 max-w-md mx-auto text-left flex items-center justify-between gap-3">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-700">Ruangan Terpilih</p>
+                <p className="text-sm font-extrabold text-slate-900 mt-0.5">{selectedRoom.name}</p>
+                <p className="text-xs text-slate-500">{selectedRoom.building} • Kapasitas {selectedRoom.capacity} Orang</p>
+              </div>
+              <span className="text-[11px] font-bold text-yarsi-primary bg-white px-2.5 py-1 rounded-full border border-emerald-200 shadow-xs shrink-0">
+                Tersimpan
+              </span>
+            </div>
+          )}
+
+          <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <Link
+              href="/"
+              className="w-full sm:w-auto px-6 py-3 rounded-xl font-bold text-xs sm:text-sm text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors text-center"
+            >
+              Kembali ke Katalog
+            </Link>
+
+            <Link
+              href={`/auth/login?${loginQuery.toString()}`}
+              className="w-full sm:w-auto px-6 py-3 rounded-xl font-bold text-xs sm:text-sm text-white bg-yarsi-primary hover:bg-yarsi-dark shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2"
+            >
+              <span>Masuk dengan LDAP SSO</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">

@@ -20,63 +20,16 @@ import {
   setAuthToken,
 } from './api';
 
-// Default initial user
-export const DEFAULT_USER: UserSession = {
-  id: 'user-default-1',
-  name: 'Ahmad Fikri Pratama',
-  identifier: '1402022001',
-  role: 'mahasiswa',
-  email: 'ahmad.fikri@mhs.yarsi.ac.id',
-  department: 'Fakultas Teknologi Informasi',
-  organization: 'BEM Fakultas Teknologi Informasi',
-  phone: '0812-9876-5432',
-  avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200',
-};
-
-// Fallback initial demo accounts for instant switching
-export const DEMO_ACCOUNTS: Record<Role, { username: string; password?: string; name: string; dept: string }> = {
-  mahasiswa: {
-    username: '1402022001',
-    password: 'password123',
-    name: 'Ahmad Fikri Pratama (Mahasiswa)',
-    dept: 'BEM Fakultas Teknologi Informasi',
-  },
-  dosen: {
-    username: '0314058201',
-    password: 'password123',
-    name: 'Dr. dr. Siti Nurhaliza, Sp.A (Dosen)',
-    dept: 'Fakultas Kedokteran',
-  },
-  tendik: {
-    username: '19880210201402',
-    password: 'password123',
-    name: 'M. Yusuf, S.Kom (Tendik)',
-    dept: 'Biro Administrasi Akademik & Kemahasiswaan',
-  },
-  admin_lpf: {
-    username: 'lpf.admin',
-    password: 'password123',
-    name: 'Bambang Sudibyo, S.T. (LPF)',
-    dept: 'Biro Layanan Pengelolaan Fasilitas (LPF)',
-  },
-  admin_yayasan: {
-    username: 'yayasan.admin',
-    password: 'password123',
-    name: 'Drs. H. Muhammad Shadiq, M.M.',
-    dept: 'Biro Sekretariat & Aset Yayasan YARSI',
-  },
-  security_cs: {
-    username: 'security.cs',
-    password: 'password123',
-    name: 'Petugas CS & Keamanan Menara',
-    dept: 'Pelayanan Terpadu & Keamanan Kampus',
-  },
-  guest: {
-    username: 'guest',
-    password: 'password123',
-    name: 'Tamu / Pengunjung Kampus',
-    dept: 'Civitas Academica',
-  },
+// Default Guest User for unauthenticated state
+export const GUEST_USER: UserSession = {
+  id: 'guest',
+  name: 'Tamu / Pengunjung',
+  identifier: 'GUEST',
+  role: 'guest',
+  email: 'guest@yarsi.ac.id',
+  department: 'Civitas Academica',
+  organization: 'Pengunjung Umum',
+  phone: '-',
 };
 
 interface AppState {
@@ -98,8 +51,7 @@ interface AppState {
 
   // Auth actions
   setCurrentUser: (user: UserSession) => void;
-  login: (username: string, password?: string) => Promise<UserSession>;
-  loginAsRole: (role: Role) => Promise<void>;
+  login: (username: string, password?: string, roleCategory?: Role) => Promise<UserSession>;
   logout: () => void;
 
   // Booking actions
@@ -150,7 +102,7 @@ interface AppState {
 export const useAppStore = create<AppState>()(
   persist(
     (set, get) => ({
-      currentUser: DEFAULT_USER,
+      currentUser: GUEST_USER,
       rooms: [],
       bookings: [],
       academicBlocks: [],
@@ -217,7 +169,7 @@ export const useAppStore = create<AppState>()(
         set({ currentUser: user });
       },
 
-      login: async (username, password) => {
+      login: async (username, password, roleCategory) => {
         set({ isLoading: true, error: null });
         try {
           const res = await authApi.login(username, password);
@@ -226,43 +178,19 @@ export const useAppStore = create<AppState>()(
           get().fetchBookings();
           return res.user;
         } catch (err: any) {
-          set({ isLoading: false, error: err.message });
-          throw err;
-        }
-      },
-
-      loginAsRole: async (role) => {
-        const demo = DEMO_ACCOUNTS[role] || DEMO_ACCOUNTS.mahasiswa;
-        try {
-          await get().login(demo.username, demo.password);
-        } catch (err) {
-          // Fallback offline user if backend is offline
-          const fallbackUser: UserSession = {
-            id: `usr-${role}`,
-            name: demo.name,
-            identifier: demo.username,
-            role,
-            email: `${demo.username}@yarsi.ac.id`,
-            department: demo.dept,
-            organization: demo.dept,
-            phone: '0812-9876-5432',
-          };
-          set({ currentUser: fallbackUser });
+          // No offline fallback — LDAP is the only authentication path
+          const errorMessage =
+            err?.message ||
+            'Gagal terhubung ke server autentikasi LDAP YARSI. Pastikan Anda terhubung ke jaringan kampus.';
+          set({ isLoading: false, error: errorMessage });
+          throw new Error(errorMessage);
         }
       },
 
       logout: () => {
         removeAuthToken();
         set({
-          currentUser: {
-            id: 'guest',
-            name: 'Tamu / Pengunjung',
-            identifier: 'GUEST',
-            role: 'guest',
-            email: 'guest@yarsi.ac.id',
-            department: 'Civitas Academica',
-            phone: '',
-          },
+          currentUser: GUEST_USER,
         });
       },
 

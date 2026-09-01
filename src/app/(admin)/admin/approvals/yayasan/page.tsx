@@ -50,7 +50,7 @@ export default function YayasanApprovalsPage() {
   );
 
   const handleApproveYayasan = async (booking: Booking) => {
-    await approveBookingYayasan(booking.id, yayasanMemo, currentUser.name);
+    await approveBookingYayasan(booking.id, yayasanMemo, currentUser?.name || 'Pengurus Yayasan');
     setApprovalTarget(null);
   };
 
@@ -59,7 +59,7 @@ export default function YayasanApprovalsPage() {
       alert('Wajib mengisi memo alasan penolakan.');
       return;
     }
-    await rejectBooking(booking.id, rejectionReason.trim(), currentUser.name);
+    await rejectBooking(booking.id, rejectionReason.trim(), currentUser?.name || 'Pengurus Yayasan');
     setRejectionTarget(null);
     setRejectionReason('');
   };
@@ -69,7 +69,7 @@ export default function YayasanApprovalsPage() {
       alert('Wajib mengisi catatan revisi permohonan.');
       return;
     }
-    await returnBooking(booking.id, returnNotes.trim(), currentUser.name);
+    await returnBooking(booking.id, returnNotes.trim(), currentUser?.name || 'Pengurus Yayasan');
     setReturnTarget(null);
     setReturnNotes('');
   };

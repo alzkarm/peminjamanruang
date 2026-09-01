@@ -19,7 +19,7 @@ import {
 
 export function AdminSidebar() {
   const pathname = usePathname();
-  const { bookings, currentUser, loginAsRole } = useAppStore();
+  const { bookings, currentUser, logout } = useAppStore();
 
   const pendingLPFCount = bookings.filter((b) => b.status === 'PENDING_LPF').length;
   const pendingYayasanCount = bookings.filter((b) => b.status === 'RECOMMENDED_YAYASAN').length;
@@ -116,40 +116,18 @@ export function AdminSidebar() {
       <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-xs space-y-2">
         <p className="font-bold text-slate-700 flex items-center gap-1.5">
           <Users className="w-3.5 h-3.5 text-yarsi-primary" />
-          <span>Role Pengguna Aktif</span>
+          <span>Admin Terverifikasi SSO</span>
         </p>
-        <div className="flex items-center justify-between bg-white p-2 rounded-lg border border-slate-200">
-          <div>
-            <p className="font-bold text-slate-800">{currentUser.name.split(',')[0]}</p>
-            <p className="text-[10px] text-slate-500 uppercase font-mono">
-              {currentUser.role.replace('_', ' ')}
-            </p>
+        <div className="bg-white p-2.5 rounded-lg border border-slate-200 space-y-1">
+          <p className="font-bold text-slate-800">{currentUser?.name?.split(',')[0] || 'Administrator'}</p>
+          <p className="text-[10px] text-slate-500 font-mono">
+            {currentUser?.identifier} • {currentUser?.department}
+          </p>
+          <div className="pt-1">
+            <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-900 border border-emerald-300">
+              {currentUser?.role === 'admin_yayasan' ? 'Pengurus Yayasan' : 'Admin LPF'}
+            </span>
           </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-1.5 pt-1">
-          <button
-            type="button"
-            onClick={() => loginAsRole('admin_lpf')}
-            className={`py-1.5 px-2 rounded-lg text-[11px] font-bold border transition-colors ${
-              currentUser.role === 'admin_lpf'
-                ? 'bg-yarsi-primary text-white border-yarsi-primary'
-                : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
-            }`}
-          >
-            Mode LPF
-          </button>
-          <button
-            type="button"
-            onClick={() => loginAsRole('admin_yayasan')}
-            className={`py-1.5 px-2 rounded-lg text-[11px] font-bold border transition-colors ${
-              currentUser.role === 'admin_yayasan'
-                ? 'bg-yarsi-primary text-white border-yarsi-primary'
-                : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'
-            }`}
-          >
-            Mode Yayasan
-          </button>
         </div>
       </div>
 
@@ -160,7 +138,7 @@ export function AdminSidebar() {
           className="flex items-center justify-center gap-2 p-2.5 text-xs font-semibold text-slate-600 hover:text-yarsi-primary hover:bg-slate-50 rounded-xl border border-slate-200 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span>Kembali ke Halaman Publik</span>
+          <span>Kembali ke Beranda Publik</span>
         </Link>
       </div>
     </aside>

@@ -3,7 +3,9 @@
 import React, { useState } from 'react';
 import { Room, Booking, AcademicBlock } from '@/lib/types';
 import { formatDateIndo, formatShortDateIndo, checkTimeOverlap, getDayOfWeekNumber } from '@/lib/utils';
+import { useAppStore } from '@/lib/store';
 import { EventDetailModal } from './EventDetailModal';
+import { AuthGateModal } from '@/components/common/AuthGateModal';
 import {
   ChevronLeft,
   ChevronRight,
@@ -15,6 +17,7 @@ import {
   Sparkles,
   CheckCircle2,
   GraduationCap,
+  Lock,
 } from 'lucide-react';
 
 interface CalendarTimelineProps {
@@ -49,6 +52,9 @@ export function CalendarTimeline({
   initialDate,
   selectedRoomId,
 }: CalendarTimelineProps) {
+  const { currentUser } = useAppStore();
+  const isGuest = !currentUser || currentUser.role === 'guest';
+
   // Current selected date (default to 2026-08-16 or today)
   const [currentDateStr, setCurrentDateStr] = useState<string>(
     initialDate || '2026-08-16'
@@ -64,6 +70,31 @@ export function CalendarTimeline({
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [selectedAcademic, setSelectedAcademic] = useState<AcademicBlock | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
+
+  // Auth Gate for Guest slot click
+  const [authGateOpen, setAuthGateOpen] = useState(false);
+  const [targetSlot, setTargetSlot] = useState<{
+    roomId: string;
+    roomName: string;
+    date: string;
+    startTime: string;
+    endTime: string;
+  } | null>(null);
+
+  const handleSlotClick = (
+    e: React.MouseEvent,
+    roomId: string,
+    roomName: string,
+    date: string,
+    startTime: string,
+    endTime: string
+  ) => {
+    if (isGuest) {
+      e.preventDefault();
+      setTargetSlot({ roomId, roomName, date, startTime, endTime });
+      setAuthGateOpen(true);
+    }
+  };
 
   // Navigate Date
   const handlePrevDay = () => {
@@ -385,6 +416,9 @@ export function CalendarTimeline({
                             ) : (
                               <a
                                 href={`/dashboard/booking/new?roomId=${room.id}&date=${currentDateStr}&startTime=${slot}&endTime=${nextHour}`}
+                                onClick={(e) =>
+                                  handleSlotClick(e, room.id, room.name, currentDateStr, slot, nextHour)
+                                }
                                 className="w-full h-full min-h-[56px] rounded-xl border border-dashed border-slate-200 hover:border-emerald-400 hover:bg-emerald-50/40 transition-all flex items-center justify-center text-[11px] text-slate-300 hover:text-emerald-700 font-medium"
                               >
                                 <span className="hidden group-hover:inline">+ Pinjam</span>
@@ -525,6 +559,17 @@ export function CalendarTimeline({
                               ) : (
                                 <a
                                   href={`/dashboard/booking/new?roomId=${activeRoomId}&date=${dayDateStr}&startTime=${slot}&endTime=${nextH}`}
+                                  onClick={(e) => {
+                                    const activeRoom = rooms.find((r) => r.id === activeRoomId);
+                                    handleSlotClick(
+                                      e,
+                                      activeRoomId,
+                                      activeRoom?.name || 'Ruangan Terpilih',
+                                      dayDateStr,
+                                      slot,
+                                      nextH
+                                    );
+                                  }}
                                   className="w-full h-full min-h-[48px] rounded-lg border border-dashed border-slate-200 hover:border-emerald-400 hover:bg-emerald-50/40 flex items-center justify-center text-[10px] text-slate-300 hover:text-emerald-700"
                                 >
                                   <span className="hidden group-hover:inline">+ Slot</span>
@@ -549,6 +594,17 @@ export function CalendarTimeline({
         onClose={() => setModalOpen(false)}
         booking={selectedBooking}
         academicBlock={selectedAcademic}
+      />
+
+      {/* Auth Gate Modal for Guest Timeline Booking */}
+      <AuthGateModal
+        isOpen={authGateOpen}
+        onClose={() => setAuthGateOpen(false)}
+        targetRoomId={targetSlot?.roomId}
+        targetRoomName={targetSlot?.roomName}
+        targetDate={targetSlot?.date}
+        targetStartTime={targetSlot?.startTime}
+        targetEndTime={targetSlot?.endTime}
       />
     </div>
   );

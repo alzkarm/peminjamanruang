@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAppStore } from '@/lib/store';
 import { Booking, BookingStatus } from '@/lib/types';
@@ -27,14 +27,19 @@ import {
 
 export default function UserDashboardPage() {
   const { currentUser, bookings, cancelBooking } = useAppStore();
+  const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState<string>('all');
   const [selectedTicket, setSelectedTicket] = useState<Booking | null>(null);
   const [cancelTargetId, setCancelTargetId] = useState<string | null>(null);
   const [cancelReason, setCancelReason] = useState<string>('Agenda internal dibatalkan / dipindahkan');
 
-  // Filter user's bookings (or all if demo admin)
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Filter user's bookings (or all if admin)
   const userBookings = bookings.filter((b) => {
-    // If admin, show all bookings; if student/lecturer, show theirs or matching userId
+    if (!currentUser) return false;
     if (currentUser.role === 'admin_lpf' || currentUser.role === 'admin_yayasan') {
       return true;
     }
@@ -175,6 +180,59 @@ export default function UserDashboardPage() {
     );
   };
 
+  const isGuest = !mounted || !currentUser || currentUser.role === 'guest';
+
+  if (!mounted) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex items-center justify-center">
+        <div className="animate-pulse space-y-4 text-center">
+          <div className="w-12 h-12 rounded-full bg-emerald-100 mx-auto" />
+          <p className="text-xs text-slate-400 font-medium">Memuat data sesi SIPERU...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isGuest) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 py-16">
+        <div className="bg-white rounded-3xl border border-slate-200/80 shadow-2xl p-8 sm:p-12 text-center space-y-6">
+          <div className="w-16 h-16 rounded-3xl bg-emerald-50 border border-emerald-200 text-yarsi-primary mx-auto flex items-center justify-center shadow-inner">
+            <ShieldCheck className="w-8 h-8" />
+          </div>
+
+          <div className="max-w-md mx-auto space-y-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-yarsi-primary bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
+              Autentikasi Diperlukan
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 mt-2">
+              Akses Dashboard Peminjaman Saya
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-500 leading-relaxed">
+              Anda sedang menjelajah dalam Mode Tamu. Silakan masuk menggunakan akun SSO LDAP Universitas YARSI untuk melihat riwayat reservasi, status verifikasi LPF & Yayasan, serta mengunduh E-Ticket QR Anda.
+            </p>
+          </div>
+
+          <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
+            <Link
+              href="/"
+              className="w-full sm:w-auto px-6 py-3 rounded-xl font-bold text-xs sm:text-sm text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors text-center"
+            >
+              Kembali ke Beranda
+            </Link>
+
+            <Link
+              href="/auth/login?redirect=/dashboard"
+              className="w-full sm:w-auto px-6 py-3 rounded-xl font-bold text-xs sm:text-sm text-white bg-yarsi-primary hover:bg-yarsi-dark shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2"
+            >
+              <span>Masuk Melalui LDAP SSO</span>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
       {/* Top Profile & Stats Banner */}
@@ -182,23 +240,23 @@ export default function UserDashboardPage() {
         <div className="flex items-start sm:items-center gap-4">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={currentUser.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200'}
-            alt={currentUser.name}
+            src={currentUser?.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200'}
+            alt={currentUser?.name || 'User'}
             className="w-16 h-16 rounded-2xl object-cover ring-2 ring-emerald-500 shadow-md"
           />
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <h1 className="text-xl sm:text-2xl font-black text-slate-900">
-                {currentUser.name}
+                {currentUser?.name}
               </h1>
               <span className="text-[11px] uppercase font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-yarsi-primary border border-emerald-300">
-                {currentUser.role.toUpperCase()}
+                {currentUser?.role?.toUpperCase()}
               </span>
             </div>
             <p className="text-xs text-slate-500 font-mono">
-              {currentUser.identifier} • {currentUser.organization || currentUser.department}
+              {currentUser?.identifier} • {currentUser?.organization || currentUser?.department}
             </p>
-            <p className="text-xs text-slate-400">{currentUser.email} • {currentUser.phone}</p>
+            <p className="text-xs text-slate-400">{currentUser?.email} • {currentUser?.phone}</p>
           </div>
         </div>
 

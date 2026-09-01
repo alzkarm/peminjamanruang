@@ -84,7 +84,7 @@ export default function LpfApprovalsPage() {
   };
 
   const handleApprove = async (booking: Booking) => {
-    await approveBookingLPF(booking.id, approvalNotes, currentUser.name);
+    await approveBookingLPF(booking.id, approvalNotes, currentUser?.name || 'Admin LPF');
     setApprovalTarget(null);
     setApprovalNotes('');
   };
@@ -94,7 +94,7 @@ export default function LpfApprovalsPage() {
       alert('Catatan/alasan penolakan wajib diisi.');
       return;
     }
-    await rejectBooking(booking.id, rejectionReason.trim(), currentUser.name);
+    await rejectBooking(booking.id, rejectionReason.trim(), currentUser?.name || 'Admin LPF');
     setRejectionTarget(null);
     setRejectionReason('');
   };
@@ -104,14 +104,14 @@ export default function LpfApprovalsPage() {
       alert('Catatan perbaikan / revisi wajib diisi agar pemohon mengetahui hal yang perlu diperbaiki.');
       return;
     }
-    await returnBooking(booking.id, returnNotes.trim(), currentUser.name);
+    await returnBooking(booking.id, returnNotes.trim(), currentUser?.name || 'Admin LPF');
     setReturnTarget(null);
     setReturnNotes('');
   };
 
   const handleBulkApprove = () => {
     selectedIds.forEach((id) => {
-      approveBookingLPF(id, 'Disetujui melalui bulk approval LPF', currentUser.name);
+      approveBookingLPF(id, 'Disetujui melalui bulk approval LPF', currentUser?.name || 'Admin LPF');
     });
     setSelectedIds([]);
   };

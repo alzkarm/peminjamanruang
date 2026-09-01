@@ -24,12 +24,24 @@ import {
   Star,
 } from 'lucide-react';
 
+import { AuthGateModal } from '@/components/common/AuthGateModal';
+
 export default function HomePage() {
-  const { rooms, bookings, academicBlocks } = useAppStore();
+  const { currentUser, rooms, bookings, academicBlocks } = useAppStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedBuilding, setSelectedBuilding] = useState('all');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedDateStr, setSelectedDateStr] = useState('2026-08-16');
+  const [authGateOpen, setAuthGateOpen] = useState(false);
+
+  const isGuest = !currentUser || currentUser.role === 'guest';
+
+  const handleHeroBookingClick = (e: React.MouseEvent) => {
+    if (isGuest) {
+      e.preventDefault();
+      setAuthGateOpen(true);
+    }
+  };
 
   // Buildings list
   const buildings = Array.from(new Set(rooms.map((r) => r.building)));
@@ -116,6 +128,7 @@ export default function HomePage() {
 
               <Link
                 href="/dashboard/booking/new"
+                onClick={handleHeroBookingClick}
                 className="inline-flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-lg hover:shadow-xl transition-all"
               >
                 <span>Ajukan Peminjaman Ruang</span>
@@ -364,6 +377,13 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+
+      {/* Auth Gate Modal */}
+      <AuthGateModal
+        isOpen={authGateOpen}
+        onClose={() => setAuthGateOpen(false)}
+        actionTitle="Peminjaman Ruangan Memerlukan Akun Civitas"
+      />
     </div>
   );
 }
