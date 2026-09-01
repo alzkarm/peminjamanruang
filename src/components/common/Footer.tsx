@@ -58,7 +58,7 @@ export function Footer() {
               </li>
               <li>
                 <Link href="/auth/login" className="hover:text-emerald-400 transition-colors">
-                  Login SSO LDAP YARSI
+                  Masuk Akun YARSI
                 </Link>
               </li>
             </ul>

@@ -16,11 +16,11 @@ import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { Role } from '@/common/types';
 
 @Controller('academic-bulk')
-@UseGuards(JwtAuthGuard, RolesGuard)
 export class AcademicBulkController {
   constructor(private readonly academicBulkService: AcademicBulkService) {}
 
   @Post()
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN_UNIV, Role.ADMIN_YAYASAN)
   async createBulk(
     @CurrentUser('id') userId: string,
@@ -30,12 +30,19 @@ export class AcademicBulkController {
   }
 
   @Get()
+  async findAll() {
+    return this.academicBulkService.findAll();
+  }
+
+  @Get('groups')
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN_UNIV, Role.ADMIN_YAYASAN)
   async findAllGroups() {
     return this.academicBulkService.findAllGroups();
   }
 
   @Delete(':bulkGroupId')
+  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.ADMIN_UNIV, Role.ADMIN_YAYASAN)
   async deleteGroup(@Param('bulkGroupId') bulkGroupId: string) {
     return this.academicBulkService.deleteGroup(bulkGroupId);

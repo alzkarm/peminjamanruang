@@ -3,6 +3,7 @@ import { PrismaService } from '@/prisma/prisma.service';
 import * as ExcelJS from 'exceljs';
 import { Response } from 'express';
 import { BookingStatus } from '@/common/types';
+import { BookingStatus as PrismaBookingStatus } from '@prisma/client';
 
 export interface ReportFilterDto {
   startDate?: string;
@@ -26,7 +27,7 @@ export class ReportsService {
 
     const bookings = await this.prisma.booking.findMany({
       where: {
-        ...(status ? { status: status.toString() } : {}),
+        ...(status ? { status: status as PrismaBookingStatus } : {}),
         ...(roomId ? { roomId } : {}),
         ...(floorId ? { room: { floorId } } : {}),
         ...(startDate || endDate

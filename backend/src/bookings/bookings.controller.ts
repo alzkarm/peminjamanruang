@@ -9,6 +9,9 @@ import {
   UseGuards,
   UseInterceptors,
   UploadedFile,
+  Res,
+  BadRequestException,
+  NotFoundException,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { BookingsService } from './bookings.service';
@@ -22,7 +25,18 @@ import { RolesGuard } from '@/common/guards/roles.guard';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { Role } from '@/common/types';
 import { diskStorage } from 'multer';
-import { extname } from 'path';
+import { basename, extname, join } from 'path';
+import { randomUUID } from 'crypto';
+import { existsSync, promises as fs } from 'fs';
+import { Response } from 'express';
+
+const ALLOWED_UPLOADS: Record<string, string[]> = {
+  '.pdf': ['application/pdf'],
+  '.doc': ['application/msword'],
+  '.docx': ['application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+  '.xls': ['application/vnd.ms-excel'],
+  '.xlsx': ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
+};
 
 @Controller('bookings')
 @UseGuards(JwtAuthGuard)
@@ -35,10 +49,13 @@ export class BookingsController {
       storage: diskStorage({
         destination: './uploads',
         filename: (req, file, cb) => {
-          const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-          cb(null, `proposal-${uniqueSuffix}${extname(file.originalname)}`);
+          cb(null, `${randomUUID()}${extname(file.originalname).toLowerCase()}`);
         },
       }),
+      fileFilter: (req, file, cb) => {
+        const extension = extname(file.originalname).toLowerCase();
+        cb(null, !!ALLOWED_UPLOADS[extension]?.includes(file.mimetype));
+      },
       limits: { fileSize: 15 * 1024 * 1024 }, // 15MB max
     }),
   )
@@ -47,8 +64,33 @@ export class BookingsController {
     @Body() dto: CreateBookingDto,
     @UploadedFile() file?: Express.Multer.File,
   ) {
-    const attachmentUrl = file ? `/uploads/${file.filename}` : undefined;
-    return this.bookingsService.create(userId, dto, attachmentUrl);
+    if (file && !(await hasExpectedFileSignature(file))) {
+      await fs.unlink(file.path).catch(() => undefined);
+      throw new BadRequestException('Jenis file lampiran tidak valid.');
+    }
+    const attachmentUrl = file ? `/attachments/${file.filename}` : undefined;
+    try {
+      return await this.bookingsService.create(userId, dto, attachmentUrl);
+    } catch (error) {
+      if (file) await fs.unlink(file.path).catch(() => undefined);
+      throw error;
+    }
+  }
+
+  @Get(':id/attachment')
+  async downloadAttachment(
+    @Param('id') id: string,
+    @CurrentUser() currentUser: { id: string; role: Role },
+    @Res() response: Response,
+  ) {
+    const storedPath = await this.bookingsService.getAttachmentForUser(id, currentUser);
+    const filename = basename(storedPath);
+    if (!filename || filename !== storedPath.split('/').pop()) {
+      throw new NotFoundException('Lampiran tidak ditemukan.');
+    }
+    const absolutePath = join(process.cwd(), 'uploads', filename);
+    if (!existsSync(absolutePath)) throw new NotFoundException('Lampiran tidak ditemukan.');
+    return response.download(absolutePath, filename);
   }
 
   @Get()
@@ -80,4 +122,12 @@ export class BookingsController {
     const reason = body?.notes || body?.catatan;
     return this.bookingsService.cancelBooking(id, currentUser, reason);
   }
+}
+
+async function hasExpectedFileSignature(file: Express.Multer.File) {
+  const header = await fs.readFile(file.path).then((data) => data.subarray(0, 8));
+  const extension = extname(file.filename).toLowerCase();
+  if (extension === '.pdf') return header.subarray(0, 5).toString() === '%PDF-';
+  if (extension === '.doc') return header.subarray(0, 4).equals(Buffer.from([0xd0, 0xcf, 0x11, 0xe0]));
+  return header.subarray(0, 2).equals(Buffer.from('PK'));
 }

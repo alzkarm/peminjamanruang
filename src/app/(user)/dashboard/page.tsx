@@ -23,6 +23,7 @@ import {
   RotateCcw,
   ShieldCheck,
   PackageCheck,
+  Check,
 } from 'lucide-react';
 
 export default function UserDashboardPage() {
@@ -64,6 +65,10 @@ export default function UserDashboardPage() {
   ).length;
   const returnedCount = userBookings.filter((b) => b.status === 'RETURNED').length;
   const completedCount = userBookings.filter((b) => b.status === 'COMPLETED').length;
+  const todayDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta' }).format(new Date());
+  const upcomingBooking = userBookings
+    .filter((booking) => booking.status === 'APPROVED' && booking.date >= todayDate)
+    .sort((first, second) => `${first.date}${first.startTime}`.localeCompare(`${second.date}${second.startTime}`))[0];
 
   const handleConfirmCancel = async () => {
     if (cancelTargetId) {
@@ -234,9 +239,9 @@ export default function UserDashboardPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <div className="mx-auto max-w-7xl space-y-7 px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
       {/* Top Profile & Stats Banner */}
-      <div className="bg-white rounded-3xl border border-slate-200/80 shadow-card p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="flex items-start sm:items-center gap-4">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -271,9 +276,35 @@ export default function UserDashboardPage() {
         </div>
       </div>
 
+      {upcomingBooking && (
+        <section aria-labelledby="upcoming-booking-title" className="relative overflow-hidden rounded-2xl border border-emerald-800/40 bg-[linear-gradient(115deg,#043b2e_0%,#075240_62%,#087158_100%)] p-5 text-white shadow-[0_18px_42px_-30px_rgba(0,63,47,0.9)] sm:p-6">
+          <div className="absolute inset-y-0 right-0 w-1/3 bg-gradient-to-l from-emerald-400/10 to-transparent" aria-hidden="true" />
+          <div className="relative flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex items-start gap-4">
+              <div className="flex h-16 w-16 shrink-0 flex-col items-center justify-center rounded-2xl bg-white text-yarsi-dark shadow-lg ring-1 ring-white/70">
+                <span className="text-[10px] font-bold uppercase tracking-wide text-emerald-700">{new Intl.DateTimeFormat('id-ID', { month: 'short', timeZone: 'Asia/Jakarta' }).format(new Date(`${upcomingBooking.date}T00:00:00+07:00`))}</span>
+                <span className="text-2xl font-black leading-none">{upcomingBooking.date.slice(-2)}</span>
+              </div>
+              <div className="min-w-0">
+                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-200">Peminjaman terdekat</p>
+                <h2 id="upcoming-booking-title" className="mt-1 truncate text-lg font-extrabold sm:text-xl">{upcomingBooking.title}</h2>
+                <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-emerald-50/85">
+                  <span className="inline-flex items-center gap-1.5"><Building2 className="h-3.5 w-3.5 text-emerald-300" aria-hidden="true" />{upcomingBooking.roomName}</span>
+                  <span className="inline-flex items-center gap-1.5 font-bold text-white"><Clock className="h-3.5 w-3.5 text-amber-300" aria-hidden="true" />{upcomingBooking.startTime}–{upcomingBooking.endTime} WIB</span>
+                </div>
+              </div>
+            </div>
+            <button type="button" onClick={() => setSelectedTicket(upcomingBooking)} className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-white px-5 text-sm font-bold text-yarsi-dark shadow-sm hover:bg-emerald-50">
+              <QrCode className="h-4 w-4" aria-hidden="true" />
+              Buka tiket akses
+            </button>
+          </div>
+        </section>
+      )}
+
       {/* Summary Counter Badges */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-        <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
+      <section aria-label="Ringkasan status peminjaman" className="grid grid-cols-2 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm sm:grid-cols-5">
+        <div className="flex items-center justify-between border-b border-r border-slate-100 p-4 sm:border-b-0">
           <div>
             <p className="text-xs text-slate-400 font-semibold">Total Pengajuan</p>
             <h3 className="text-2xl font-black text-slate-800">{totalCount}</h3>
@@ -283,7 +314,7 @@ export default function UserDashboardPage() {
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
+        <div className="flex items-center justify-between border-b border-slate-100 p-4 sm:border-b-0 sm:border-r">
           <div>
             <p className="text-xs text-slate-400 font-semibold">Antrean Review</p>
             <h3 className="text-2xl font-black text-amber-600">{pendingCount}</h3>
@@ -293,7 +324,7 @@ export default function UserDashboardPage() {
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
+        <div className="flex items-center justify-between border-b border-r border-slate-100 p-4 sm:border-b-0">
           <div>
             <p className="text-xs text-slate-400 font-semibold">Perlu Revisi</p>
             <h3 className="text-2xl font-black text-amber-700">{returnedCount}</h3>
@@ -303,7 +334,7 @@ export default function UserDashboardPage() {
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between">
+        <div className="flex items-center justify-between border-b border-slate-100 p-4 sm:border-b-0 sm:border-r">
           <div>
             <p className="text-xs text-slate-400 font-semibold">Disetujui (Ready)</p>
             <h3 className="text-2xl font-black text-emerald-600">{approvedCount}</h3>
@@ -313,7 +344,7 @@ export default function UserDashboardPage() {
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex items-center justify-between col-span-2 sm:col-span-1">
+        <div className="col-span-2 flex items-center justify-between p-4 sm:col-span-1">
           <div>
             <p className="text-xs text-slate-400 font-semibold">Selesai Digunakan</p>
             <h3 className="text-2xl font-black text-teal-700">{completedCount}</h3>
@@ -322,7 +353,7 @@ export default function UserDashboardPage() {
             <Star className="w-5 h-5" />
           </div>
         </div>
-      </div>
+      </section>
 
       {/* Booking List & Tabs */}
       <div className="space-y-4">
@@ -359,7 +390,7 @@ export default function UserDashboardPage() {
 
         {/* Bookings Card List */}
         {filteredBookings.length === 0 ? (
-          <div className="bg-white rounded-3xl border border-slate-200 p-12 text-center space-y-4">
+          <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center space-y-4">
             <Calendar className="w-12 h-12 text-slate-300 mx-auto" />
             <h3 className="text-base font-bold text-slate-700">Belum ada data peminjaman</h3>
             <p className="text-xs text-slate-400 max-w-sm mx-auto">
@@ -442,9 +473,10 @@ export default function UserDashboardPage() {
                         {booking.logistik.map((l, i) => (
                           <span
                             key={i}
-                            className="text-[10px] bg-slate-100 text-slate-700 border border-slate-200 px-2 py-0.5 rounded font-medium"
+                            className="inline-flex items-center gap-1 text-[10px] bg-slate-100 text-slate-700 border border-slate-200 px-2 py-0.5 rounded font-medium"
                           >
-                            ✓ {l.jenisItem} ({l.jumlah}x)
+                            <Check className="w-2.5 h-2.5 text-emerald-600 shrink-0" />
+                            <span>{l.jenisItem} ({l.jumlah}x)</span>
                           </span>
                         ))}
                       </div>
@@ -542,8 +574,7 @@ export default function UserDashboardPage() {
         >
           <div className="space-y-6">
             {/* Ticket Card Container */}
-            <div className="bg-gradient-to-br from-yarsi-dark via-yarsi-primary to-emerald-950 text-white rounded-3xl p-6 shadow-2xl relative overflow-hidden space-y-6">
-              <div className="absolute top-0 right-0 w-40 h-40 bg-white/5 rounded-full blur-2xl pointer-events-none" />
+            <div className="bg-gradient-to-br from-yarsi-dark via-yarsi-primary to-emerald-950 text-white rounded-2xl p-6 shadow-xl border border-emerald-800/30 relative overflow-hidden space-y-6">
 
               {/* Header */}
               <div className="flex items-center justify-between border-b border-white/20 pb-4">

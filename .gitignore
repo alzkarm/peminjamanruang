@@ -10,6 +10,7 @@ out/
 build/
 dist/
 backend/dist/
+*.tsbuildinfo
 backend/prisma/dev.db
 backend/prisma/dev.db-journal
 

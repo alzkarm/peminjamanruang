@@ -60,6 +60,7 @@ export function checkTimeOverlap(
 export interface ConflictCheckResult {
   hasConflict: boolean;
   reason?: string;
+  pendingNotice?: string;
   conflictingBooking?: Booking;
   conflictingAcademic?: AcademicBlock;
 }
@@ -71,9 +72,10 @@ export function checkRoomConflict(
   endTime: string,
   bookings: Booking[],
   academicBlocks: AcademicBlock[],
-  excludeBookingId?: string
+  excludeBookingId?: string,
+  currentUserId?: string
 ): ConflictCheckResult {
-  // 1. Check academic blocks
+  // 1. Check academic blocks (HARD CONFLICT)
   const dayNum = getDayOfWeekNumber(dateStr);
   const academicConflict = academicBlocks.find(
     (ab) =>
@@ -91,7 +93,7 @@ export function checkRoomConflict(
     };
   }
 
-  // 2. Check existing bookings (Approved or In Review)
+  // 2. Check active bookings (APPROVED, PENDING_LPF, RECOMMENDED_YAYASAN - STRICT HARD CONFLICT)
   const activeStatuses: BookingStatus[] = [
     "APPROVED",
     "PENDING_LPF",
@@ -108,13 +110,22 @@ export function checkRoomConflict(
   );
 
   if (bookingConflict) {
+    const isSelf = Boolean(
+      currentUserId &&
+        (bookingConflict.userId === currentUserId || bookingConflict.userNimNidn === currentUserId)
+    );
     const statusLabel =
       bookingConflict.status === "APPROVED"
-        ? "Telah Disetujui"
+        ? "Telah Resmi Disetujui"
         : "Sedang Dalam Antrean Review";
+
+    const reason = isSelf
+      ? `Anda sudah memiliki permohonan (${statusLabel}): "${bookingConflict.title}" pada slot waktu (${bookingConflict.startTime} - ${bookingConflict.endTime}). Silakan batalkan permohonan tersebut di Dashboard jika ingin mengajukan ulang.`
+      : `Terbentur Peminjaman (${statusLabel}): "${bookingConflict.title}" oleh ${bookingConflict.userName || 'Pengguna'} (${bookingConflict.startTime} - ${bookingConflict.endTime}). Pilih jam atau ruangan lain.`;
+
     return {
       hasConflict: true,
-      reason: `Terbentur Peminjaman (${statusLabel}): ${bookingConflict.title} oleh ${bookingConflict.userName} (${bookingConflict.startTime} - ${bookingConflict.endTime})`,
+      reason,
       conflictingBooking: bookingConflict,
     };
   }
@@ -174,7 +185,7 @@ export function getStatusBadgeConfig(status: BookingStatus) {
         label: "Selesai",
         bg: "bg-teal-50 text-teal-800 border-teal-300 ring-teal-500/20",
         dot: "bg-teal-600",
-        iconName: "Sparkles",
+        iconName: "CheckCheck",
       };
     case "ACADEMIC_BLOCKED":
       return {
