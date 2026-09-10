@@ -146,7 +146,12 @@ export default function ReportsAnalyticsPage() {
             type="date"
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
-            className="w-full px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yarsi-primary font-sans"
+            onClick={(e) => {
+              try {
+                e.currentTarget.showPicker?.();
+              } catch {}
+            }}
+            className="w-full px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yarsi-primary font-sans cursor-pointer"
           />
         </div>
 
@@ -158,7 +163,12 @@ export default function ReportsAnalyticsPage() {
             type="date"
             value={endDate}
             onChange={(e) => setEndDate(e.target.value)}
-            className="w-full px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yarsi-primary font-sans"
+            onClick={(e) => {
+              try {
+                e.currentTarget.showPicker?.();
+              } catch {}
+            }}
+            className="w-full px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yarsi-primary font-sans cursor-pointer"
           />
         </div>
 

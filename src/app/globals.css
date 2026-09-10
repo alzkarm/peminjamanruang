@@ -126,10 +126,24 @@
   box-shadow: 0 12px 28px -4px rgba(13, 122, 95, 0.12), 0 4px 12px -2px rgba(0, 0, 0, 0.04);
 }
 
-/* Hide default browser calendar/clock picker indicator icon */
-input[type="time"]::-webkit-calendar-picker-indicator,
-input[type="date"]::-webkit-calendar-picker-indicator {
-  display: none !important;
-  -webkit-appearance: none;
+/* Interactive browser calendar/clock picker indicator */
+input[type="date"],
+input[type="time"] {
+  cursor: pointer;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.6;
+  border-radius: 4px;
+  padding: 2px;
+  transition: opacity 0.2s ease, transform 0.1s ease;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator:hover,
+input[type="time"]::-webkit-calendar-picker-indicator:hover {
+  opacity: 1;
+  transform: scale(1.1);
 }
 

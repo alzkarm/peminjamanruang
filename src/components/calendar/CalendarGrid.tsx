@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Room, Booking, AcademicBlock } from '@/lib/types';
 import { EventDetailModal } from './EventDetailModal';
 import {
@@ -14,6 +14,8 @@ interface CalendarGridProps {
   rooms: Room[];
   bookings: Booking[];
   academicBlocks: AcademicBlock[];
+  selectedDateStr?: string;
+  hideHeader?: boolean;
   onSelectDate?: (dateStr: string) => void;
 }
 
@@ -21,12 +23,28 @@ export function CalendarGrid({
   rooms,
   bookings,
   academicBlocks,
+  selectedDateStr,
+  hideHeader = false,
   onSelectDate,
 }: CalendarGridProps) {
   const today = new Date();
   const todayStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta' }).format(today);
-  const [currentYear, setCurrentYear] = useState(today.getFullYear());
-  const [currentMonth, setCurrentMonth] = useState(today.getMonth());
+  
+  const initialDate = selectedDateStr ? new Date(selectedDateStr + 'T00:00:00') : today;
+  const validInitialDate = !isNaN(initialDate.getTime()) ? initialDate : today;
+
+  const [currentYear, setCurrentYear] = useState(validInitialDate.getFullYear());
+  const [currentMonth, setCurrentMonth] = useState(validInitialDate.getMonth());
+
+  useEffect(() => {
+    if (selectedDateStr) {
+      const d = new Date(selectedDateStr + 'T00:00:00');
+      if (!isNaN(d.getTime())) {
+        setCurrentYear(d.getFullYear());
+        setCurrentMonth(d.getMonth());
+      }
+    }
+  }, [selectedDateStr]);
 
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [modalOpen, setModalOpen] = useState(false);

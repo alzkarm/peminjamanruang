@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useAppStore } from '@/lib/store';
 import { BookingCategory, BookingEquipment, BookingLogistikItem } from '@/lib/types';
 import { checkRoomConflict, formatDateIndo } from '@/lib/utils';
-import confetti from 'canvas-confetti';
 import {
   Calendar,
   Clock,
@@ -22,6 +21,7 @@ import {
   Plus,
   Trash2,
   CheckSquare,
+  ChevronDown,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -35,6 +35,8 @@ const STANDARD_EQUIPMENTS = [
   { id: 'eq-podium-vip', name: 'Podium Resmi & Banner Stand', category: 'furniture' },
   { id: 'eq-videotron', name: 'Videotron LED Display 8x4m (Khusus Auditorium)', category: 'audio_visual', isSpecial: true },
 ];
+
+const WEEKDAYS = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
 
 function NewBookingForm() {
   const router = useRouter();
@@ -58,6 +60,38 @@ function NewBookingForm() {
   const [category, setCategory] = useState<BookingCategory>('seminar');
   const [description, setDescription] = useState('');
   const [estimatedAttendees, setEstimatedAttendees] = useState(50);
+  const [isPerSemester, setIsPerSemester] = useState(false);
+  const [selectedSemester, setSelectedSemester] = useState('Semester Ganjil 2026/2027');
+  const [selectedDays, setSelectedDays] = useState<string[]>(['Senin']);
+  const [isDayDropdownOpen, setIsDayDropdownOpen] = useState(false);
+
+  useEffect(() => {
+    if (date) {
+      const day = formatDateIndo(date).split(',')[0];
+      if (day && WEEKDAYS.includes(day)) {
+        setSelectedDays((prev) => (prev.length <= 1 ? [day] : prev));
+      }
+    }
+  }, [date]);
+
+  const handleToggleDay = (day: string) => {
+    setSelectedDays((prev) =>
+      prev.includes(day)
+        ? prev.length > 1
+          ? prev.filter((d) => d !== day)
+          : prev
+        : [...prev, day]
+    );
+  };
+
+  const handleSelectAllWeekdays = () => {
+    if (selectedDays.length === WEEKDAYS.length) {
+      const currentDay = formatDateIndo(date).split(',')[0];
+      setSelectedDays(WEEKDAYS.includes(currentDay) ? [currentDay] : ['Senin']);
+    } else {
+      setSelectedDays([...WEEKDAYS]);
+    }
+  };
 
   // Applicant info
   const [mounted, setMounted] = useState(false);
@@ -254,6 +288,8 @@ function NewBookingForm() {
           date,
           startTime,
           endTime,
+          isPerSemester,
+          semester: isPerSemester ? `${selectedSemester} (Setiap ${selectedDays.join(', ')})` : undefined,
           requiresYayasanApproval: selectedRoom.requiresYayasanApproval,
           isLeaderApproved: isInternalApproved,
           equipments: equipmentsList,
@@ -267,18 +303,6 @@ function NewBookingForm() {
 
       setIsSubmitting(false);
       setSubmitSuccess(true);
-
-      // Trigger Celebration Confetti
-      try {
-        confetti({
-          particleCount: 120,
-          spread: 80,
-          origin: { y: 0.6 },
-          colors: ['#0D7A5F', '#10B981', '#F59E0B', '#3B82F6'],
-        });
-      } catch (err) {
-        // ignore
-      }
 
       setTimeout(() => {
         router.push('/dashboard');
@@ -478,14 +502,24 @@ function NewBookingForm() {
                 <label className="block text-xs font-bold text-slate-700 mb-1">
                   Tanggal Pelaksanaan *
                 </label>
-                <div className="relative">
-                  <Calendar className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+                <div 
+                  className="relative cursor-pointer"
+                  onClick={() => {
+                    const el = document.getElementById('booking-date-input') as HTMLInputElement;
+                    try { el?.showPicker?.(); } catch {}
+                  }}
+                >
+                  <Calendar className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5 pointer-events-none" />
                   <input
+                    id="booking-date-input"
                     type="date"
                     required
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2.5 text-xs sm:text-sm font-medium bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yarsi-primary text-slate-800"
+                    onClick={(e) => {
+                      try { e.currentTarget.showPicker?.(); } catch {}
+                    }}
+                    className="w-full pl-10 pr-4 py-2.5 text-xs sm:text-sm font-medium bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yarsi-primary text-slate-800 cursor-pointer"
                   />
                 </div>
               </div>
@@ -500,7 +534,10 @@ function NewBookingForm() {
                     required
                     value={startTime}
                     onChange={(e) => setStartTime(e.target.value)}
-                    className="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yarsi-primary text-slate-800"
+                    onClick={(e) => {
+                      try { e.currentTarget.showPicker?.(); } catch {}
+                    }}
+                    className="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yarsi-primary text-slate-800 cursor-pointer"
                   />
                 </div>
                 <div>
@@ -512,9 +549,135 @@ function NewBookingForm() {
                     required
                     value={endTime}
                     onChange={(e) => setEndTime(e.target.value)}
-                    className="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yarsi-primary text-slate-800"
+                    onClick={(e) => {
+                      try { e.currentTarget.showPicker?.(); } catch {}
+                    }}
+                    className="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yarsi-primary text-slate-800 cursor-pointer"
                   />
                 </div>
+              </div>
+
+              {/* Checkbox Peminjaman Rutin Per Semester */}
+              <div className="p-3.5 bg-slate-50 hover:bg-slate-100/70 border border-slate-200 rounded-2xl transition-all">
+                <label className="flex items-start gap-3 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={isPerSemester}
+                    onChange={(e) => setIsPerSemester(e.target.checked)}
+                    className="mt-0.5 w-4 h-4 text-yarsi-primary rounded border-slate-300 focus:ring-yarsi-primary cursor-pointer accent-emerald-600"
+                  />
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-slate-900">
+                        Peminjaman Rutin Per Semester
+                      </span>
+                      <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+                        1 Semester (16 Pertemuan)
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 leading-relaxed">
+                      Centang jika ruangan dipinjam secara rutin setiap minggu pada hari dan jam yang sama selama satu semester akademik.
+                    </p>
+                  </div>
+                </label>
+
+                {isPerSemester && (
+                  <div className="mt-3 pt-3 border-t border-slate-200 grid grid-cols-1 sm:grid-cols-2 gap-3 animate-fade-in">
+                    <div>
+                      <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                        Pilih Semester Akademik
+                      </label>
+                      <select
+                        value={selectedSemester}
+                        onChange={(e) => setSelectedSemester(e.target.value)}
+                        className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yarsi-primary text-slate-800 font-semibold cursor-pointer"
+                      >
+                        <option value="Semester Ganjil 2026/2027">Semester Ganjil 2026/2027 (Sep 2026 - Jan 2027)</option>
+                        <option value="Semester Genap 2026/2027">Semester Genap 2026/2027 (Feb 2027 - Jul 2027)</option>
+                      </select>
+                    </div>
+                    <div className="relative">
+                      <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                        Jadwal Pengulangan (Hari)
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => setIsDayDropdownOpen(!isDayDropdownOpen)}
+                        className="w-full px-3 py-2 text-xs bg-white border border-slate-200 hover:border-slate-300 rounded-xl text-slate-800 font-semibold flex items-center justify-between transition-colors shadow-xs cursor-pointer"
+                      >
+                        <span className="truncate">
+                          {selectedDays.length === WEEKDAYS.length
+                            ? 'Setiap Hari (Senin – Sabtu)'
+                            : selectedDays.length === 0
+                            ? 'Pilih hari...'
+                            : `Setiap ${selectedDays.join(', ')}`}
+                        </span>
+                        <ChevronDown
+                          className={`w-4 h-4 text-slate-400 transition-transform ${
+                            isDayDropdownOpen ? 'rotate-180 text-yarsi-primary' : ''
+                          }`}
+                        />
+                      </button>
+
+                      {isDayDropdownOpen && (
+                        <div className="absolute z-30 left-0 right-0 mt-1.5 p-3 bg-white border border-slate-200 rounded-2xl shadow-xl animate-fade-in space-y-2">
+                          <div className="flex items-center justify-between pb-2 border-b border-slate-100 text-[11px]">
+                            <span className="font-bold text-slate-700">Pilih Hari (Senin - Sabtu):</span>
+                            <button
+                              type="button"
+                              onClick={handleSelectAllWeekdays}
+                              className="text-yarsi-primary hover:underline font-bold text-[10px]"
+                            >
+                              {selectedDays.length === WEEKDAYS.length
+                                ? 'Pilih 1 Hari Saja'
+                                : 'Centang Semua (Senin - Sabtu)'}
+                            </button>
+                          </div>
+
+                          <div className="space-y-1 pt-1">
+                            {WEEKDAYS.map((day) => {
+                              const isChecked = selectedDays.includes(day);
+                              return (
+                                <label
+                                  key={day}
+                                  className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-colors ${
+                                    isChecked
+                                      ? 'bg-emerald-50 text-emerald-950'
+                                      : 'hover:bg-slate-50 text-slate-700'
+                                  }`}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={isChecked}
+                                    onChange={() => handleToggleDay(day)}
+                                    className="w-4 h-4 text-yarsi-primary rounded border-slate-300 focus:ring-yarsi-primary accent-emerald-600 cursor-pointer"
+                                  />
+                                  <span>Hari {day}</span>
+                                  {isChecked && (
+                                    <span className="ml-auto text-[10px] text-emerald-600 font-bold">Terpilih</span>
+                                  )}
+                                </label>
+                              );
+                            })}
+                          </div>
+
+                          <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
+                            <span className="text-[10px] text-slate-400">
+                              {selectedDays.length} hari dipilih
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => setIsDayDropdownOpen(false)}
+                              className="px-3 py-1 bg-yarsi-primary text-white text-[10px] font-bold rounded-lg shadow-xs hover:bg-yarsi-dark transition-colors"
+                            >
+                              Simpan Pilihan
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* REAL-TIME CONFLICT STATUS BOX */}

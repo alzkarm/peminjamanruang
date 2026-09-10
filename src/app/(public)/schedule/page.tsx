@@ -23,8 +23,7 @@ function ScheduleContent() {
   const initialRoomId = searchParams.get('roomId') || undefined;
 
   const { currentUser, rooms, bookings, academicBlocks } = useAppStore();
-  const [calendarMode, setCalendarMode] = useState<'timeline' | 'month'>('timeline');
-  const [selectedDate, setSelectedDate] = useState('2026-08-16');
+  const [calendarMode, setCalendarMode] = useState<'day' | 'week' | 'month'>('day');
   const [authGateOpen, setAuthGateOpen] = useState(false);
 
   const isGuest = !currentUser || currentUser.role === 'guest';
@@ -49,40 +48,11 @@ function ScheduleContent() {
             Kalender Ruangan Digital Kampus YARSI
           </h1>
           <p className="text-xs sm:text-sm text-emerald-100/90 mt-1 max-w-2xl">
-            Tampilan kalender interaktif ala Google Calendar. Klik pada slot atau event untuk melihat detail permohonan, nama kegiatan, dan jadwal kuliah semester.
+            Tampilan kalender interaktif per hari, per minggu, dan per bulan. Klik pada slot atau event untuk melihat detail permohonan, nama kegiatan, dan jadwal kuliah semester.
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Toggle View Mode */}
-          <div className="bg-white/10 backdrop-blur p-1 rounded-xl border border-white/20 flex text-xs font-bold text-white">
-            <button
-              type="button"
-              onClick={() => setCalendarMode('timeline')}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition-all ${
-                calendarMode === 'timeline'
-                  ? 'bg-white text-yarsi-dark shadow-sm'
-                  : 'hover:bg-white/10 text-emerald-100'
-              }`}
-            >
-              <Clock className="w-3.5 h-3.5" />
-              <span>Timeline Google Calendar</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setCalendarMode('month')}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition-all ${
-                calendarMode === 'month'
-                  ? 'bg-white text-yarsi-dark shadow-sm'
-                  : 'hover:bg-white/10 text-emerald-100'
-              }`}
-            >
-              <LayoutGrid className="w-3.5 h-3.5" />
-              <span>Bulan Penuh</span>
-            </button>
-          </div>
-
+        <div className="flex items-center gap-2">
           <Link
             href={initialRoomId ? `/dashboard/booking/new?roomId=${initialRoomId}` : '/dashboard/booking/new'}
             onClick={handleBookingClick}
@@ -95,24 +65,14 @@ function ScheduleContent() {
       </div>
 
       {/* Main Calendar Render */}
-      {calendarMode === 'timeline' ? (
-        <CalendarTimeline
-          rooms={rooms}
-          bookings={bookings}
-          academicBlocks={academicBlocks}
-          selectedRoomId={initialRoomId}
-        />
-      ) : (
-        <CalendarGrid
-          rooms={rooms}
-          bookings={bookings}
-          academicBlocks={academicBlocks}
-          onSelectDate={(date) => {
-            setSelectedDate(date);
-            setCalendarMode('timeline');
-          }}
-        />
-      )}
+      <CalendarTimeline
+        rooms={rooms}
+        bookings={bookings}
+        academicBlocks={academicBlocks}
+        selectedRoomId={initialRoomId}
+        viewMode={calendarMode}
+        onViewModeChange={setCalendarMode}
+      />
 
       {/* Auth Gate Modal */}
       <AuthGateModal

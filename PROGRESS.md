@@ -6,24 +6,25 @@ Dokumen ini mencatat perkembangan sistem peminjaman ruangan kampus YARSI.
 
 ## 📌 Status Terkini
 
-- **Tanggal Pembaruan**: 26 Agustus 2026
+- **Tanggal Pembaruan**: 10 September 2026
 - **Kondisi Aplikasi**: 
-  - Backend (NestJS) dan Frontend (Next.js 14) 100% lolos kompilasi & production build (`0 Error`).
-  - Database PostgreSQL (`peminjaman_ruang`) aktif dan tersinkronisasi via Prisma.
-  - Skema database dan repeatable seed data berhasil diaplikasikan dan diverifikasi.
-  - Pengujian unit & integrasi scheduling (15 tests / 4 test suites) 100% PASS.
-  - Verifikasi browser live & End-to-End menyeluruh terhadap PostgreSQL lulus 100% (Kalender Publik, Filter Ruang, Navigasi Tanggal, Form Reservasi dari Slot Kosong, Pencegahan Bentrok, Dual-Tier Approval, Upload Dokumen, dan Layout Responsif YARSI Emerald).
+  - Frontend (Next.js 14) aktif dan berjalan di `http://localhost:3000`.
+  - Backend API (NestJS) aktif dan berjalan di `http://localhost:4000/api`.
+  - Database PostgreSQL terhubung di port 5433 (`siperu_yarsi`), skema Prisma tersinkronisasi, dan data seed ruangan serta pengguna demo berhasil dimuat.
+  - Browser otomatis dibuka dan siap digunakan oleh pengguna.
 
 ---
 
 ## ✅ Yang Baru Selesai Dikerjakan
 
-1. **Modernisasi UI/UX & Elevasi Visual Premium SIPERU YARSI**:
-   - **Navbar & Identitas Kampus:** Header *backdrop-blur* kaca halus (`bg-white/90`), gradient logo badge (`#006A4E`), pill navigasi modern, dan *pulsing live status indicator*.
-   - **Hero & Landing Page:** Gradient hijau zamrud kampus YARSI (`from-[#054434] via-[#006A4E] to-[#054434]`), floating search bar interaktif berbayang lembut, statistik kampus berbingkai ring elegan, dan alur 4 langkah berlingkar nomor gradient `01-04`.
-   - **Kalender Interaktif:** Navigator tanggal modern berlatar segmented chip, live availability dots berdenyut, badge status pill berdesain tajam, serta transisi hover elevasi halus (150-200ms).
-   - **Formulir Peminjaman & Dashboard:** Kartu permohonan 5-langkah berarsitektur modular (`rounded-2xl`, `border-slate-200/90`), dropzone unggah dokumen modern bergaris putus-putus lembut, checklist logistik/fasilitas interaktif, serta ringkasan profil & riwayat reservasi yang tertata rapi.
-   - **Kompilasi & Build Produksi:** `npm run build` lolos 100% sukses (12/12 rute) dan semua pengujian antarmuka lolos verifikasi.
+1. **Penyatuan Tampilan Kalender 3-Mode & Perbaikan Navigasi Tanggal Presisi**:
+   - **Penyebab Masalah Teratasi:** Sebelumnya konversi string tanggal menggunakan `toISOString()` memicu pergeseran zona waktu UTC (mundur 7 jam dari WIB), sehingga tombol hari berikutnya tidak berpindah tanggal. Kini diganti dengan parser kalender lokal presisi (`addDaysToDateStr` dan `addMonthsToDateStr`) yang 100% bebas pergeseran timezone.
+   - **Lewati Akhir Pekan (Sabtu & Minggu):** Navigasi harian dan mingguan otomatis melompati hari Sabtu dan Minggu (`getNextWorkingDay`, `getPrevWorkingDay`, dan `ensureWorkingDay`) sehingga kalender fokus pada hari operasional efektif kampus (Senin s/d Jumat).
+   - **Penyelarasan Subtitle Header:** Keterangan di bawah penunjuk tanggal diperbarui menjadi *"Semua Ruangan Kampus YARSI (X Ruang)"* tanpa kata redundan "Matriks".
+   - **Mode Per Hari (Day View):** Matriks ruangan interaktif seluruh ruangan kampus dengan slot waktu per jam (07:00 - 21:00 WIB), navigasi tanggal lancar maju/mundur (`Hari Ini`), dan filter gedung/tipe ruang.
+   - **Mode Per Minggu (Week View):** Timeline 5 hari kerja (Senin s/d Jumat) dengan navigasi `Minggu Ini` dan selector tab ruangan aktif.
+   - **Mode Per Bulan (Month View):** Kalender bulanan penuh dengan indikator jumlah kegiatan per hari, transisi cepat ke detail harian saat tanggal diklik, dan navigasi `Bulan Ini`.
+   - **Harmonisasi Ikon:** Ikon pengalih kalender diselaraskan memakai rumpun ikon kalender yang senada (`Calendar`, `CalendarRange`, `CalendarDays`).
 
 2. **Penyelesaian Build Produksi & Verifikasi Browser Live**:
    - **Penyebab Build Stall Teratasi:** Membersihkan proses dev server yang menahan file lock pada cache `.next`, eksekusi `npm run build` Next.js 14 kini selesai 100% sukses tanpa stall (12/12 rute terkompilasi).

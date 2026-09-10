@@ -9,7 +9,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '@/prisma/prisma.service';
 import { LoginDto, SyncLdapUserDto } from './dto/login.dto';
-import { Role } from '@/common/types';
+import { Role } from '@prisma/client';
 import * as ldap from 'ldapjs';
 
 /**
@@ -299,7 +299,7 @@ export class AuthService {
         fullName,
         email,
         unitName,
-        role: role.toString(),
+        role: role,
       },
     });
 
@@ -332,7 +332,7 @@ export class AuthService {
         fullName: syncDto.fullName,
         email: syncDto.email,
         unitName: syncDto.unitName,
-        role: Role.USER.toString(),
+        role: Role.USER,
       },
     });
   }

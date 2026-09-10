@@ -102,6 +102,8 @@ export interface Booking {
   status: BookingStatus;
   requiresYayasanApproval: boolean;
   isLeaderApproved?: boolean;
+  isPerSemester?: boolean;
+  semester?: string;
   equipments: BookingEquipment[];
   logistik?: BookingLogistikItem[];
   documentUrl?: string;

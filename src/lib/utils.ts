@@ -237,3 +237,69 @@ export function exportToCSV(filename: string, rows: object[]) {
     document.body.removeChild(link);
   }
 }
+
+export function getTodayDateStr(): string {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+export function formatLocalDateYMD(d: Date): string {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+export function addDaysToDateStr(dateStr: string, days: number): string {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const dt = new Date(y, m - 1, d + days, 12, 0, 0);
+  return formatLocalDateYMD(dt);
+}
+
+export function addMonthsToDateStr(dateStr: string, months: number): string {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const dt = new Date(y, m - 1 + months, d, 12, 0, 0);
+  return formatLocalDateYMD(dt);
+}
+
+export function ensureWorkingDay(dateStr: string): string {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const dt = new Date(y, m - 1, d, 12, 0, 0);
+  const day = dt.getDay(); // 0 is Sunday, 6 is Saturday
+  if (day === 6) {
+    return addDaysToDateStr(dateStr, 2); // Jump to Monday
+  }
+  if (day === 0) {
+    return addDaysToDateStr(dateStr, 1); // Jump to Monday
+  }
+  return dateStr;
+}
+
+export function getNextWorkingDay(dateStr: string): string {
+  let nextDateStr = addDaysToDateStr(dateStr, 1);
+  const [y, m, d] = nextDateStr.split("-").map(Number);
+  let dt = new Date(y, m - 1, d, 12, 0, 0);
+  while (dt.getDay() === 0 || dt.getDay() === 6) {
+    nextDateStr = addDaysToDateStr(nextDateStr, 1);
+    const [ny, nm, nd] = nextDateStr.split("-").map(Number);
+    dt = new Date(ny, nm - 1, nd, 12, 0, 0);
+  }
+  return nextDateStr;
+}
+
+export function getPrevWorkingDay(dateStr: string): string {
+  let prevDateStr = addDaysToDateStr(dateStr, -1);
+  const [y, m, d] = prevDateStr.split("-").map(Number);
+  let dt = new Date(y, m - 1, d, 12, 0, 0);
+  while (dt.getDay() === 0 || dt.getDay() === 6) {
+    prevDateStr = addDaysToDateStr(prevDateStr, -1);
+    const [py, pm, pd] = prevDateStr.split("-").map(Number);
+    dt = new Date(py, pm - 1, pd, 12, 0, 0);
+  }
+  return prevDateStr;
+}
+
+
