@@ -23,6 +23,7 @@ export enum ActivityType {
   KULIAH_TAMU = 'KULIAH_TAMU',
   KULIAH = 'KULIAH',
   AKREDITASI = 'AKREDITASI',
+  UJIAN_CBT = 'UJIAN_CBT',
   LAINNYA = 'LAINNYA',
 }
 

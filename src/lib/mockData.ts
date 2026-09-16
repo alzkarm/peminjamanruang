@@ -631,4 +631,15 @@ export const DEMO_USERS: UserSession[] = [
     phone: '0811-3322-1100',
     avatarUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80',
   },
+  {
+    id: 'user-tendik-1',
+    name: 'Dewi Sartika, S.Kom.',
+    identifier: '19880210201402',
+    role: 'tendik',
+    email: 'dewi.sartika@yarsi.ac.id',
+    department: 'Bagian Administrasi Akademik & Kemahasiswaan',
+    organization: 'Tenaga Kependidikan YARSI',
+    phone: '0813-7788-9900',
+    avatarUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=200&q=80',
+  },
 ];

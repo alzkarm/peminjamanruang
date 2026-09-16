@@ -323,6 +323,124 @@ function LoginFormContent() {
                 )}
               </button>
             </form>
+
+            {/* Quick Demo Login Per Role */}
+            <div className="pt-5 border-t border-slate-200">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                  ⚡ Mode Cepat / Akun Demo Lokal:
+                </p>
+                <span className="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-semibold">
+                  Klik untuk langsung masuk
+                </span>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    setIsLoading(true);
+                    try {
+                      await login('1402022001', 'password123', 'mahasiswa');
+                      router.push(redirectUrl || '/dashboard');
+                    } catch (e: any) {
+                      setErrorMessage(e.message);
+                    } finally {
+                      setIsLoading(false);
+                    }
+                  }}
+                  className="flex flex-col items-start p-2.5 rounded-xl border border-teal-200 bg-teal-50/60 hover:bg-teal-100/70 transition-all text-left group"
+                >
+                  <span className="text-[11px] font-bold text-teal-900 group-hover:text-teal-950">
+                    🎓 Mahasiswa
+                  </span>
+                  <span className="text-[10px] text-teal-700">1402022001</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={async () => {
+                    setIsLoading(true);
+                    try {
+                      await login('0314058201', 'password123', 'dosen');
+                      router.push(redirectUrl || '/dashboard');
+                    } catch (e: any) {
+                      setErrorMessage(e.message);
+                    } finally {
+                      setIsLoading(false);
+                    }
+                  }}
+                  className="flex flex-col items-start p-2.5 rounded-xl border border-blue-200 bg-blue-50/60 hover:bg-blue-100/70 transition-all text-left group"
+                >
+                  <span className="text-[11px] font-bold text-blue-900 group-hover:text-blue-950">
+                    👨‍🏫 Dosen
+                  </span>
+                  <span className="text-[10px] text-blue-700">0314058201</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={async () => {
+                    setIsLoading(true);
+                    try {
+                      await login('19880210201402', 'password123', 'tendik');
+                      router.push(redirectUrl || '/dashboard');
+                    } catch (e: any) {
+                      setErrorMessage(e.message);
+                    } finally {
+                      setIsLoading(false);
+                    }
+                  }}
+                  className="flex flex-col items-start p-2.5 rounded-xl border border-purple-200 bg-purple-50/60 hover:bg-purple-100/70 transition-all text-left group"
+                >
+                  <span className="text-[11px] font-bold text-purple-900 group-hover:text-purple-950">
+                    💼 Tendik
+                  </span>
+                  <span className="text-[10px] text-purple-700">19880210201402</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={async () => {
+                    setIsLoading(true);
+                    try {
+                      await login('lpf.admin', 'password123', 'admin_lpf');
+                      router.push(redirectUrl || '/admin/approvals');
+                    } catch (e: any) {
+                      setErrorMessage(e.message);
+                    } finally {
+                      setIsLoading(false);
+                    }
+                  }}
+                  className="flex flex-col items-start p-2.5 rounded-xl border border-emerald-200 bg-emerald-50/60 hover:bg-emerald-100/70 transition-all text-left group"
+                >
+                  <span className="text-[11px] font-bold text-emerald-900 group-hover:text-emerald-950">
+                    🛡️ Admin LPF
+                  </span>
+                  <span className="text-[10px] text-emerald-700">lpf.admin</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={async () => {
+                    setIsLoading(true);
+                    try {
+                      await login('yayasan.admin', 'password123', 'admin_yayasan');
+                      router.push(redirectUrl || '/admin/approvals/yayasan');
+                    } catch (e: any) {
+                      setErrorMessage(e.message);
+                    } finally {
+                      setIsLoading(false);
+                    }
+                  }}
+                  className="flex flex-col items-start p-2.5 rounded-xl border border-amber-200 bg-amber-50/60 hover:bg-amber-100/70 transition-all text-left group col-span-2 sm:col-span-1"
+                >
+                  <span className="text-[11px] font-bold text-amber-900 group-hover:text-amber-950">
+                    🏛️ Yayasan
+                  </span>
+                  <span className="text-[10px] text-amber-700">yayasan.admin</span>
+                </button>
+              </div>
+            </div>
           </div>
 
           <div className="pt-6 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">

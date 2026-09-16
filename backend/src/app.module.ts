@@ -7,6 +7,7 @@ import { BookingsModule } from './bookings/bookings.module';
 import { AcademicBulkModule } from './academic-bulk/academic-bulk.module';
 import { ReportsModule } from './reports/reports.module';
 import { FeedbacksModule } from './feedbacks/feedbacks.module';
+import { CbtRoomModule } from './cbt-room/cbt-room.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { FeedbacksModule } from './feedbacks/feedbacks.module';
     AcademicBulkModule,
     ReportsModule,
     FeedbacksModule,
+    CbtRoomModule,
   ],
 })
 export class AppModule {}

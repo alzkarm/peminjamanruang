@@ -170,3 +170,23 @@ export interface UserSession {
   avatarUrl?: string;
   token?: string;
 }
+
+export type CbtFaculty = 'FEB' | 'FH' | 'FTI' | 'FK' | 'FKG' | 'FP';
+
+export interface CbtSeatBooking {
+  id: string;
+  userId: string;
+  faculty: CbtFaculty;
+  title: string;
+  seatStart: number;
+  seatEnd: number;
+  startTime: string;
+  endTime: string;
+  notes?: string;
+  createdAt: string;
+  user?: {
+    id: string;
+    fullName: string;
+    unitName: string;
+  };
+}

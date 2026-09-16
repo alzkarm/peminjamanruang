@@ -15,6 +15,7 @@ import {
   BookingEquipment,
   BookingLogistikItem,
   ApprovalLogEntry,
+  CbtSeatBooking,
 } from './types';
 
 const API_BASE_URL =
@@ -670,5 +671,31 @@ export const reportsApi = {
     if (filter?.endDate) params.append('endDate', filter.endDate);
     if (token) params.append('token', token);
     return `${API_BASE_URL}/reports/export/excel?${params.toString()}`;
+  },
+};
+
+export const cbtRoomApi = {
+  async getSeats(startTime: string, endTime: string): Promise<CbtSeatBooking[]> {
+    const params = new URLSearchParams({ startTime, endTime });
+    return request<CbtSeatBooking[]>(`/cbt-room/seats?${params.toString()}`);
+  },
+
+  async bookSeats(payload: {
+    title: string;
+    faculty: string;
+    seatStart: number;
+    seatEnd: number;
+    startTime: string;
+    endTime: string;
+    notes?: string;
+  }): Promise<CbtSeatBooking> {
+    return request<CbtSeatBooking>('/cbt-room/book', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  },
+
+  async getAllBookings(): Promise<CbtSeatBooking[]> {
+    return request<CbtSeatBooking[]>('/cbt-room/bookings');
   },
 };

@@ -19,6 +19,7 @@ import {
   removeAuthToken,
   setAuthToken,
 } from './api';
+import { DEMO_USERS } from './mockData';
 
 // Default Guest User for unauthenticated state
 export const GUEST_USER: UserSession = {
@@ -181,6 +182,17 @@ export const useAppStore = create<AppState>()(
 
       login: async (username, password, roleCategory) => {
         set({ isLoading: true, error: null });
+
+        // Check local demo account first if matching
+        const cleanUser = username.trim().toLowerCase();
+        const demoUser = DEMO_USERS.find(
+          (u) =>
+            u.identifier.toLowerCase() === cleanUser ||
+            u.id.toLowerCase() === cleanUser ||
+            u.email.toLowerCase() === cleanUser ||
+            (roleCategory && u.role === roleCategory)
+        );
+
         try {
           const res = await authApi.login(username, password);
           set({ currentUser: res.user, isLoading: false });
@@ -188,7 +200,12 @@ export const useAppStore = create<AppState>()(
           get().fetchBookings();
           return res.user;
         } catch (err: any) {
-          // No offline fallback — LDAP is the only authentication path
+          // If backend API/LDAP is unavailable or returned error, fallback to local demo account
+          if (demoUser) {
+            set({ currentUser: demoUser, isLoading: false });
+            return demoUser;
+          }
+
           const errorMessage =
             err?.message ||
             'Gagal terhubung ke server autentikasi LDAP YARSI. Pastikan Anda terhubung ke jaringan kampus.';

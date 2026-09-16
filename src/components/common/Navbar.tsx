@@ -21,6 +21,7 @@ import {
   FileCheck2,
   Lock,
   Compass,
+  Monitor,
 } from 'lucide-react';
 
 export function Navbar() {
@@ -56,6 +57,7 @@ export function Navbar() {
   const navLinks: NavLinkItem[] = [
     { href: '/', label: 'Beranda', icon: CalendarDays },
     { href: '/schedule', label: 'Kalender Ruangan', icon: CalendarDays },
+    { href: '/cbt-room', label: 'Ruang CBT', icon: Monitor },
     { href: '/dashboard', label: 'Peminjaman Saya', icon: LayoutDashboard, requiresAuth: true },
     { href: '/dashboard/booking/new', label: 'Pinjam Ruang', icon: PlusCircle, highlight: true, requiresAuth: true },
   ];
