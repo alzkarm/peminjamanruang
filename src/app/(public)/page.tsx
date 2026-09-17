@@ -26,6 +26,7 @@ import {
 } from 'lucide-react';
 
 import { AuthGateModal } from '@/components/common/AuthGateModal';
+import { InteractiveBuilding } from '@/components/home/InteractiveBuilding';
 
 export default function HomePage() {
   const { currentUser, rooms, bookings, academicBlocks } = useAppStore();
@@ -97,44 +98,60 @@ export default function HomePage() {
   return (
     <div className="min-h-screen bg-slate-50 space-y-12 pb-16">
       {/* HERO SECTION */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-yarsi-dark via-yarsi-primary to-emerald-900 text-white pt-12 pb-20 px-4 sm:px-6 lg:px-8">
+      <section className="relative overflow-x-clip bg-gradient-to-br from-yarsi-dark via-yarsi-primary to-emerald-900 text-white pt-2 sm:pt-4 lg:pt-0 pb-16 sm:pb-20 px-4 sm:px-6 lg:px-8">
         {/* Decorative Grid Pattern */}
         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none" />
-        <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-emerald-400/20 blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-24 -left-24 w-96 h-96 rounded-full bg-teal-300/10 blur-3xl pointer-events-none" />
 
-        <div className="max-w-7xl mx-auto relative z-10 space-y-8">
-          <div className="max-w-3xl space-y-4">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 backdrop-blur border border-white/20 text-xs font-semibold text-emerald-200">
-              <Sparkles className="w-4 h-4 text-amber-300" />
-              <span>Smart Campus Universitas YARSI • Sistem Terintegrasi 2026</span>
+        <div className="max-w-7xl mx-auto relative z-10 space-y-12 lg:space-y-16">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+            {/* Left Hero Content */}
+            <div className="lg:col-span-5 xl:col-span-5 space-y-5 pt-4 sm:pt-6">
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/10 backdrop-blur border border-white/20 text-xs font-semibold text-emerald-200 shadow-sm">
+                <Sparkles className="w-4 h-4 text-amber-300" />
+                <span>Smart Campus Universitas YARSI • Sistem Terintegrasi 2026</span>
+              </div>
+
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight leading-tight">
+                Peminjaman Ruangan Kampus <span className="text-emerald-300 underline decoration-amber-400 decoration-wavy decoration-2">Cepat, Transparan</span> & Real-Time
+              </h1>
+
+              <p className="text-sm sm:text-base text-emerald-100/90 leading-relaxed max-w-xl">
+                Cek ketersediaan Auditorium Ar-Rahman, Smart Classroom, Laboratorium Komputer AI, hingga Ruang Rapat Senat secara instan dengan persetujuan digital multi-level LPF & Yayasan.
+              </p>
+
+              <div className="flex flex-wrap items-center gap-3 pt-2">
+                <Link
+                  href="/schedule"
+                  className="inline-flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm bg-white text-yarsi-dark hover:bg-emerald-50 shadow-lg hover:shadow-xl transition-all"
+                >
+                  <Calendar className="w-4 h-4 text-yarsi-primary" />
+                  <span>Lihat Kalender Interaktif</span>
+                </Link>
+
+                <Link
+                  href="/dashboard/booking/new"
+                  onClick={handleHeroBookingClick}
+                  className="inline-flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-lg hover:shadow-xl transition-all"
+                >
+                  <span>Ajukan Peminjaman Ruang</span>
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+              </div>
             </div>
 
-            <h1 className="text-3xl sm:text-5xl font-black tracking-tight leading-tight">
-              Peminjaman Ruangan Kampus <span className="text-emerald-300 underline decoration-amber-400 decoration-wavy decoration-2">Cepat, Transparan</span> & Real-Time
-            </h1>
-
-            <p className="text-sm sm:text-base text-emerald-100/90 leading-relaxed max-w-2xl">
-              Cek ketersediaan Auditorium Ar-Rahman, Smart Classroom, Laboratorium Komputer AI, hingga Ruang Rapat Senat secara instan dengan persetujuan digital multi-level LPF & Yayasan.
-            </p>
-
-            <div className="flex flex-wrap items-center gap-3 pt-2">
-              <Link
-                href="/schedule"
-                className="inline-flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm bg-white text-yarsi-dark hover:bg-emerald-50 shadow-lg hover:shadow-xl transition-all"
-              >
-                <Calendar className="w-4 h-4 text-yarsi-primary" />
-                <span>Lihat Kalender Interaktif</span>
-              </Link>
-
-              <Link
-                href="/dashboard/booking/new"
-                onClick={handleHeroBookingClick}
-                className="inline-flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm bg-amber-500 hover:bg-amber-400 text-slate-950 shadow-lg hover:shadow-xl transition-all"
-              >
-                <span>Ajukan Peminjaman Ruang</span>
-                <ArrowRight className="w-4 h-4" />
-              </Link>
+            {/* Right Hero Interactive Building Illustration - Positioned right, below navbar */}
+            <div className="lg:col-span-7 xl:col-span-7 flex justify-end items-start py-0 lg:mt-10 xl:mt-8 2xl:mt-6">
+              <InteractiveBuilding
+                selectedDate={selectedDateStr}
+                activeBookings={activeBookingsForDate}
+                onSelectRoom={(roomName) => {
+                  setSearchQuery(roomName);
+                  const catalogElem = document.getElementById('catalog-section');
+                  if (catalogElem) {
+                    catalogElem.scrollIntoView({ behavior: 'smooth' });
+                  }
+                }}
+              />
             </div>
           </div>
 
@@ -379,7 +396,7 @@ export default function HomePage() {
       </section>
 
       {/* ROOM DIRECTORY SECTION */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+      <section id="catalog-section" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6 scroll-mt-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2">
