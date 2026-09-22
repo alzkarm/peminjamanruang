@@ -6,7 +6,7 @@ import { Booking, AcademicBlock } from '@/lib/types';
 import { useAppStore } from '@/lib/store';
 import { Modal } from '@/components/common/Modal';
 import { StatusBadge } from '@/components/common/StatusBadge';
-import { formatDateIndo } from '@/lib/utils';
+import { formatDateIndo, isRecurringBooking, getRecurringScheduleLabel } from '@/lib/utils';
 import {
   Calendar,
   Clock,
@@ -24,6 +24,7 @@ import {
   Building2,
   ArrowRight,
   LockKeyhole,
+  Repeat,
 } from 'lucide-react';
 
 interface EventDetailModalProps {
@@ -165,7 +166,7 @@ export function EventDetailModal({
             </div>
             <div className="flex items-start gap-3 py-3.5">
               <Building2 className="mt-0.5 h-4 w-4 shrink-0 text-yarsi-primary" aria-hidden="true" />
-              <div><dt className="text-xs font-medium text-slate-500">Ruangan</dt><dd className="mt-0.5 text-sm font-bold text-slate-900">{matchedRoom?.name || booking.roomName}</dd>{matchedRoom && <dd className="text-xs text-slate-500">{matchedRoom.building} · Lantai {matchedRoom.floor}</dd>}</div>
+              <div><dt className="text-xs font-medium text-slate-500">Ruangan</dt><dd className="mt-0.5 text-sm font-bold text-slate-900">{matchedRoom ? (matchedRoom.code ? `${matchedRoom.name} (${matchedRoom.code})` : matchedRoom.name) : booking.roomName}</dd>{matchedRoom && <dd className="text-xs text-slate-500">{matchedRoom.building ? `${matchedRoom.building} · ` : ''}Lantai {matchedRoom.floorName || matchedRoom.floor}</dd>}</div>
             </div>
           </dl>
 
@@ -194,9 +195,17 @@ export function EventDetailModal({
         {/* Status and Title Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
           <div>
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-              Kategori: {booking.category.toUpperCase()}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                Kategori: {booking.category.toUpperCase()}
+              </span>
+              {isRecurringBooking(booking) && (
+                <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-teal-50 text-teal-800 border border-teal-300">
+                  <Repeat className="w-3 h-3 text-teal-600" />
+                  <span>Rutin Per Semester</span>
+                </span>
+              )}
+            </div>
             <h2 className="text-lg font-bold text-slate-900 leading-snug mt-0.5">
               {booking.title}
             </h2>
@@ -228,13 +237,26 @@ export function EventDetailModal({
               <span>Ruangan & Lokasi</span>
             </span>
             <p className="text-sm font-bold text-slate-800">
-              {booking.roomName}
+              {matchedRoom ? (matchedRoom.code ? `${matchedRoom.name} (${matchedRoom.code})` : matchedRoom.name) : booking.roomName}
             </p>
             <p className="text-xs text-slate-600">
-              {booking.building} (Lantai {booking.floor})
+              {matchedRoom?.building || booking.building ? `${matchedRoom?.building || booking.building} · ` : ''}Lantai {matchedRoom?.floorName || matchedRoom?.floor || booking.floor}
             </p>
           </div>
         </div>
+
+        {/* Dedicated Recurring Information Box */}
+        {isRecurringBooking(booking) && (
+          <div className="flex items-start sm:items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-teal-50/90 border border-teal-200 text-xs text-teal-950 font-medium">
+            <Repeat className="w-4 h-4 text-teal-600 shrink-0 mt-0.5 sm:mt-0" />
+            <div className="flex-1 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+              <span className="font-bold text-teal-900">Jadwal Rutin Pertemuan:</span>
+              <span className="text-teal-800 font-semibold">
+                {getRecurringScheduleLabel(booking)}
+              </span>
+            </div>
+          </div>
+        )}
 
         {/* Applicant Details */}
         <div className="border border-slate-200/80 rounded-xl p-4 space-y-3">

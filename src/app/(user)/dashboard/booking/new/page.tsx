@@ -37,6 +37,37 @@ const STANDARD_EQUIPMENTS = [
 
 const WEEKDAYS = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
 
+const INDO_DAYS_MAP: Record<number, string> = {
+  1: 'Senin',
+  2: 'Selasa',
+  3: 'Rabu',
+  4: 'Kamis',
+  5: 'Jumat',
+  6: 'Sabtu',
+  0: 'Minggu',
+};
+
+function getRecurringDates(startDateStr: string, endDateStr: string, days: string[]): string[] {
+  const result: string[] = [];
+  const [sYear, sMonth, sDay] = startDateStr.split('-').map(Number);
+  const [eYear, eMonth, eDay] = endDateStr.split('-').map(Number);
+
+  const current = new Date(sYear, sMonth - 1, sDay, 12, 0, 0);
+  const end = new Date(eYear, eMonth - 1, eDay, 12, 0, 0);
+
+  while (current <= end) {
+    const dayName = INDO_DAYS_MAP[current.getDay()];
+    if (days.includes(dayName)) {
+      const y = current.getFullYear();
+      const m = String(current.getMonth() + 1).padStart(2, '0');
+      const d = String(current.getDate()).padStart(2, '0');
+      result.push(`${y}-${m}-${d}`);
+    }
+    current.setDate(current.getDate() + 1);
+  }
+  return result;
+}
+
 type AvailabilityState = 'available' | 'unavailable' | 'unknown';
 
 interface RoomAvailability {
@@ -102,7 +133,7 @@ function NewBookingForm() {
   const [description, setDescription] = useState('');
   const [estimatedAttendees, setEstimatedAttendees] = useState(50);
   const [isPerSemester, setIsPerSemester] = useState(false);
-  const [selectedSemester, setSelectedSemester] = useState('Semester Ganjil 2026/2027');
+  const [tenggatPelaksanaan, setTenggatPelaksanaan] = useState('');
   const [selectedDays, setSelectedDays] = useState<string[]>(['Senin']);
   const [isDayDropdownOpen, setIsDayDropdownOpen] = useState(false);
 
@@ -156,21 +187,13 @@ function NewBookingForm() {
     }
   }, [currentUser]);
 
-  // Facilities Checklist
+  // Facilities Checklist (Opsional, default kosong)
   const [selectedEquipments, setSelectedEquipments] = useState<
     Record<string, { selected: boolean; quantity: number; notes: string }>
-  >({
-    'eq-proj-laser': { selected: true, quantity: 1, notes: '' },
-    'eq-sound-mic': { selected: true, quantity: 2, notes: '' },
-    'eq-power-sockets': { selected: true, quantity: 3, notes: '' },
-  });
+  >({});
 
-  // Dynamic Custom Logistics List
-  const [customLogistics, setCustomLogistics] = useState<BookingLogistikItem[]>([
-    { jenisItem: 'Meja Registrasi', jumlah: 2, catatan: 'Diletakkan di depan pintu masuk' },
-    { jenisItem: 'Kursi Tambahan', jumlah: 20, catatan: 'Disusun di baris belakang' },
-    { jenisItem: 'Colokan Listrik', jumlah: 4, catatan: 'Untuk meja narasumber & panitia' },
-  ]);
+  // Dynamic Custom Logistics List (Opsional, default kosong)
+  const [customLogistics, setCustomLogistics] = useState<BookingLogistikItem[]>([]);
   const [newLogistikItem, setNewLogistikItem] = useState('');
   const [newLogistikQty, setNewLogistikQty] = useState(1);
   const [newLogistikNotes, setNewLogistikNotes] = useState('');
@@ -400,6 +423,25 @@ function NewBookingForm() {
       return;
     }
 
+    if (isPerSemester && !tenggatPelaksanaan) {
+      setErrorMessage('Tenggat pelaksanaan wajib diisi untuk peminjaman rutin per semester.');
+      return;
+    }
+
+    if (isPerSemester && date && tenggatPelaksanaan < date) {
+      setErrorMessage('Tenggat pelaksanaan tidak boleh lebih awal dari tanggal pelaksanaan awal.');
+      return;
+    }
+
+    let datesToBook: string[] | undefined = undefined;
+    if (isPerSemester && tenggatPelaksanaan) {
+      datesToBook = getRecurringDates(date, tenggatPelaksanaan, selectedDays);
+      if (datesToBook.length === 0) {
+        setErrorMessage('Tidak ada tanggal yang cocok antara tanggal pelaksanaan dan tenggat pelaksanaan untuk hari pengulangan yang dipilih.');
+        return;
+      }
+    }
+
     if (!selectedRoom) {
       setErrorMessage('Pilih ruangan yang tersedia sebelum mengirim permohonan.');
       return;
@@ -435,6 +477,14 @@ function NewBookingForm() {
       ...customLogistics,
     ];
 
+    const recurringText = isPerSemester
+      ? `Rutin Semester: Setiap ${selectedDays.join(', ')}${tenggatPelaksanaan ? ` (s.d. ${formatDateIndo(tenggatPelaksanaan)})` : ' (1 Semester)'}`
+      : undefined;
+
+    const fullNotes = recurringText
+      ? `${description ? `${description}\n\n` : ''}[${recurringText}]`
+      : description;
+
     try {
       const latestAvailability = await roomsApi.checkAvailability(
         selectedRoom.id,
@@ -466,13 +516,17 @@ function NewBookingForm() {
           title,
           category,
           jenisKegiatan: category.toUpperCase(),
-          description,
+          description: fullNotes,
+          notes: fullNotes,
+          catatan: fullNotes,
           estimatedAttendees: Number(estimatedAttendees),
           date,
+          dates: datesToBook,
           startTime,
           endTime,
           isPerSemester,
-          semester: isPerSemester ? `${selectedSemester} (Setiap ${selectedDays.join(', ')})` : undefined,
+          tenggatPelaksanaan: isPerSemester ? tenggatPelaksanaan : undefined,
+          semester: recurringText,
           requiresYayasanApproval: selectedRoom.requiresYayasanApproval,
           isLeaderApproved: isInternalApproved,
           equipments: equipmentsList,
@@ -778,11 +832,10 @@ function NewBookingForm() {
                                         setRoomSearch(room.name);
                                         setIsRoomMenuOpen(false);
                                       }}
-                                      className={`flex w-full items-start justify-between gap-3 rounded-lg px-3 py-2.5 text-left text-xs transition-colors ${
-                                        isAvailable
+                                      className={`flex w-full items-start justify-between gap-3 rounded-lg px-3 py-2.5 text-left text-xs transition-colors ${isAvailable
                                           ? 'text-slate-800 hover:bg-emerald-50 focus:bg-emerald-50 focus:outline-none'
                                           : 'cursor-not-allowed text-slate-400 opacity-75'
-                                      } ${activeResultIndex === resultIndex ? 'bg-emerald-50' : ''}`}
+                                        } ${activeResultIndex === resultIndex ? 'bg-emerald-50' : ''}`}
                                     >
                                       <span className="min-w-0">
                                         <span className="block truncate font-bold">{room.name}</span>
@@ -834,11 +887,11 @@ function NewBookingForm() {
                 <label className="block text-xs font-bold text-slate-700 mb-1">
                   Tanggal Pelaksanaan *
                 </label>
-                <div 
+                <div
                   className="relative cursor-pointer"
                   onClick={() => {
                     const el = document.getElementById('booking-date-input') as HTMLInputElement;
-                    try { el?.showPicker?.(); } catch {}
+                    try { el?.showPicker?.(); } catch { }
                   }}
                 >
                   <Calendar className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5 pointer-events-none" />
@@ -849,7 +902,7 @@ function NewBookingForm() {
                     value={date}
                     onChange={(e) => setDate(e.target.value)}
                     onClick={(e) => {
-                      try { e.currentTarget.showPicker?.(); } catch {}
+                      try { e.currentTarget.showPicker?.(); } catch { }
                     }}
                     className="w-full pl-10 pr-4 py-2.5 text-xs sm:text-sm font-medium bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yarsi-primary text-slate-800 cursor-pointer"
                   />
@@ -867,7 +920,7 @@ function NewBookingForm() {
                     value={startTime}
                     onChange={(e) => setStartTime(e.target.value)}
                     onClick={(e) => {
-                      try { e.currentTarget.showPicker?.(); } catch {}
+                      try { e.currentTarget.showPicker?.(); } catch { }
                     }}
                     className="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yarsi-primary text-slate-800 cursor-pointer"
                   />
@@ -882,7 +935,7 @@ function NewBookingForm() {
                     value={endTime}
                     onChange={(e) => setEndTime(e.target.value)}
                     onClick={(e) => {
-                      try { e.currentTarget.showPicker?.(); } catch {}
+                      try { e.currentTarget.showPicker?.(); } catch { }
                     }}
                     className="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yarsi-primary text-slate-800 cursor-pointer"
                   />
@@ -917,16 +970,19 @@ function NewBookingForm() {
                   <div className="mt-3 pt-3 border-t border-slate-200 grid grid-cols-1 sm:grid-cols-2 gap-3 animate-fade-in">
                     <div>
                       <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                        Pilih Semester Akademik
+                        Tenggat Pelaksanaan *
                       </label>
-                      <select
-                        value={selectedSemester}
-                        onChange={(e) => setSelectedSemester(e.target.value)}
+                      <input
+                        type="date"
+                        required={isPerSemester}
+                        min={date || undefined}
+                        value={tenggatPelaksanaan}
+                        onChange={(e) => setTenggatPelaksanaan(e.target.value)}
+                        onClick={(e) => {
+                          try { e.currentTarget.showPicker?.(); } catch { }
+                        }}
                         className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yarsi-primary text-slate-800 font-semibold cursor-pointer"
-                      >
-                        <option value="Semester Ganjil 2026/2027">Semester Ganjil 2026/2027 (Sep 2026 - Jan 2027)</option>
-                        <option value="Semester Genap 2026/2027">Semester Genap 2026/2027 (Feb 2027 - Jul 2027)</option>
-                      </select>
+                      />
                     </div>
                     <div className="relative">
                       <label className="block text-[11px] font-bold text-slate-700 mb-1">
@@ -941,13 +997,12 @@ function NewBookingForm() {
                           {selectedDays.length === WEEKDAYS.length
                             ? 'Setiap Hari (Senin – Sabtu)'
                             : selectedDays.length === 0
-                            ? 'Pilih hari...'
-                            : `Setiap ${selectedDays.join(', ')}`}
+                              ? 'Pilih hari...'
+                              : `Setiap ${selectedDays.join(', ')}`}
                         </span>
                         <ChevronDown
-                          className={`w-4 h-4 text-slate-400 transition-transform ${
-                            isDayDropdownOpen ? 'rotate-180 text-yarsi-primary' : ''
-                          }`}
+                          className={`w-4 h-4 text-slate-400 transition-transform ${isDayDropdownOpen ? 'rotate-180 text-yarsi-primary' : ''
+                            }`}
                         />
                       </button>
 
@@ -972,11 +1027,10 @@ function NewBookingForm() {
                               return (
                                 <label
                                   key={day}
-                                  className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-colors ${
-                                    isChecked
+                                  className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-colors ${isChecked
                                       ? 'bg-emerald-50 text-emerald-950'
                                       : 'hover:bg-slate-50 text-slate-700'
-                                  }`}
+                                    }`}
                                 >
                                   <input
                                     type="checkbox"
@@ -1115,11 +1169,10 @@ function NewBookingForm() {
                   min={1}
                   value={estimatedAttendees}
                   onChange={(e) => setEstimatedAttendees(parseInt(e.target.value) || 0)}
-                  className={`w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium bg-slate-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-yarsi-primary ${
-                    isCapacityExceeded
+                  className={`w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium bg-slate-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-yarsi-primary ${isCapacityExceeded
                       ? 'border-rose-400 text-rose-900 bg-rose-50'
                       : 'border-slate-200 text-slate-900'
-                  }`}
+                    }`}
                 />
                 {isCapacityExceeded && (
                   <p className="text-[11px] text-rose-600 mt-1 font-semibold">
@@ -1166,11 +1219,16 @@ function NewBookingForm() {
               <PackageCheck className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-slate-900">
-                3. Fasilitas & Logistik
-              </h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-base font-bold text-slate-900">
+                  3. Fasilitas Tambahan
+                </h2>
+                <span className="text-[10px] font-bold text-slate-500 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-full">
+                  Opsional
+                </span>
+              </div>
               <p className="text-xs text-slate-400">
-                Pilih perlengkapan tambahan yang perlu disiapkan petugas LPF
+                Pilih perlengkapan atau fasilitas tambahan yang perlu disiapkan jika diperlukan (opsional)
               </p>
             </div>
           </div>
@@ -1190,16 +1248,15 @@ function NewBookingForm() {
                   <div
                     key={eq.id}
                     onClick={() => handleEquipmentToggle(eq.id)}
-                    className={`p-3 rounded-xl border transition-all cursor-pointer flex items-start gap-3 ${
-                      state.selected
+                    className={`p-3 rounded-xl border transition-all cursor-pointer flex items-start gap-3 ${state.selected
                         ? 'bg-emerald-50/70 border-emerald-300 ring-1 ring-emerald-500/30'
                         : 'bg-slate-50/60 border-slate-200/80 hover:bg-slate-100'
-                    }`}
+                      }`}
                   >
                     <input
                       type="checkbox"
                       checked={state.selected}
-                      onChange={() => {}}
+                      onChange={() => { }}
                       className="mt-0.5 rounded text-yarsi-primary focus:ring-yarsi-primary"
                     />
 
@@ -1374,7 +1431,7 @@ function NewBookingForm() {
             className="w-full sm:w-auto px-8 py-3.5 rounded-2xl font-bold text-sm text-white bg-yarsi-primary hover:bg-yarsi-dark shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSubmitting ? (
-                <span>Mengirim permohonan...</span>
+              <span>Mengirim permohonan...</span>
             ) : (
               <>
                 <span>Kirim Permohonan Peminjaman</span>

@@ -21,6 +21,8 @@ import {
   Monitor,
 } from 'lucide-react';
 
+import { countUniqueBookingApplications } from '@/lib/utils';
+
 export function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
@@ -44,9 +46,9 @@ export function Navbar() {
   const isAdmin = currentUser?.role === 'admin_lpf' || currentUser?.role === 'admin_yayasan';
   const isHome = pathname === '/';
 
-  // Compute pending counts
-  const pendingLPFCount = bookings.filter((b) => b.status === 'PENDING_LPF').length;
-  const pendingYayasanCount = bookings.filter((b) => b.status === 'RECOMMENDED_YAYASAN').length;
+  // Compute pending counts (grouped by application so recurring series count as 1)
+  const pendingLPFCount = countUniqueBookingApplications(bookings.filter((b) => b.status === 'PENDING_LPF'));
+  const pendingYayasanCount = countUniqueBookingApplications(bookings.filter((b) => b.status === 'RECOMMENDED_YAYASAN'));
 
   interface NavLinkItem {
     href: string;
@@ -62,7 +64,6 @@ export function Navbar() {
     { href: '/schedule', label: 'Kalender Ruangan', icon: CalendarDays },
     { href: '/cbt-room', label: 'Ruang CBT', icon: Monitor },
     { href: '/dashboard', label: 'Peminjaman Saya', icon: LayoutDashboard, requiresAuth: true },
-    { href: '/dashboard/booking/new', label: 'Pinjam Ruang', icon: PlusCircle, highlight: true, requiresAuth: true },
   ];
 
   if (isAdmin) {
@@ -73,6 +74,14 @@ export function Navbar() {
       badge: currentUser?.role === 'admin_yayasan' ? pendingYayasanCount : pendingLPFCount,
     });
   }
+
+  navLinks.push({
+    href: '/dashboard/booking/new',
+    label: 'Pinjam Ruang',
+    icon: PlusCircle,
+    highlight: true,
+    requiresAuth: true,
+  });
 
   const handleNavClick = (e: React.MouseEvent, item: NavLinkItem) => {
     if (item.requiresAuth && isGuest) {
@@ -152,7 +161,7 @@ export function Navbar() {
             </Link>
 
             {/* Desktop Nav Links */}
-            <nav className="hidden md:flex items-center gap-1">
+            <nav className="hidden md:flex items-center gap-0.5 lg:gap-1.5">
               {navLinks.map((item) => {
                 const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
                 const Icon = item.icon;
@@ -161,20 +170,20 @@ export function Navbar() {
                     key={item.href}
                     href={item.href}
                     onClick={(e) => handleNavClick(e, item)}
-                    className={`relative flex min-h-11 items-center gap-2 border-b-2 px-3.5 py-2 text-sm font-semibold transition-colors ${
+                    className={`relative flex min-h-10 lg:min-h-11 items-center gap-1.5 lg:gap-2 border-b-2 px-2 lg:px-3.5 py-2 text-xs lg:text-sm font-semibold transition-colors whitespace-nowrap shrink-0 ${
                       item.highlight
                         ? isHome
-                          ? 'ml-2 rounded-[9px_2px_9px_9px] border-emerald-400/45 bg-emerald-400/10 text-white hover:bg-emerald-400/20'
-                          : 'ml-2 rounded-[9px_2px_9px_9px] border-yarsi-primary bg-yarsi-primary text-white shadow-sm shadow-emerald-900/20 hover:bg-yarsi-dark'
+                          ? 'ml-1.5 lg:ml-2 rounded-[9px_2px_9px_9px] border-emerald-400/45 bg-emerald-400/10 text-white hover:bg-emerald-400/20'
+                          : 'ml-1.5 lg:ml-2 rounded-[9px_2px_9px_9px] border-yarsi-primary bg-yarsi-primary text-white shadow-sm shadow-emerald-900/20 hover:bg-yarsi-dark'
                         : isActive
                         ? isHome ? 'border-emerald-400 text-white' : 'border-yarsi-primary text-yarsi-primary'
                         : isHome ? 'border-transparent text-emerald-50/70 hover:border-emerald-300/40 hover:text-white' : 'border-transparent text-slate-600 hover:border-emerald-200 hover:text-yarsi-primary'
                     }`}
                   >
-                    <Icon className={`h-4 w-4 ${item.highlight || (isHome && isActive) ? 'text-white' : isHome ? 'text-emerald-200/60' : isActive ? 'text-yarsi-primary' : 'text-slate-400'}`} />
-                    <span>{item.label}</span>
+                    <Icon className={`h-4 w-4 shrink-0 ${item.highlight || (isHome && isActive) ? 'text-white' : isHome ? 'text-emerald-200/60' : isActive ? 'text-yarsi-primary' : 'text-slate-400'}`} />
+                    <span className="whitespace-nowrap">{item.label}</span>
                     {item.badge !== undefined && item.badge > 0 && (
-                      <span className="ml-1 inline-flex min-w-5 items-center justify-center rounded bg-rose-600 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white">
+                      <span className="ml-1 inline-flex min-w-5 items-center justify-center rounded bg-rose-600 px-1.5 py-0.5 text-[10px] font-bold leading-none text-white shrink-0">
                         {item.badge}
                       </span>
                     )}

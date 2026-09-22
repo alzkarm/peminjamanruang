@@ -107,10 +107,10 @@ export function CalendarGrid({
             <CalendarIcon className="h-5 w-5" aria-hidden="true" />
           </span>
           <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-yarsi-primary">Kalender bulanan</p>
-          <h2 className="text-lg font-black tracking-tight text-slate-950">
-            {monthNames[currentMonth]} {currentYear}
-          </h2>
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-yarsi-primary">Kalender bulanan</p>
+            <h2 className="text-lg font-black tracking-tight text-slate-950">
+              {monthNames[currentMonth]} {currentYear}
+            </h2>
           </div>
         </div>
 
@@ -144,19 +144,23 @@ export function CalendarGrid({
         </div>
       </div>
 
-      {/* Week Header */}
-      <div className="grid grid-cols-7 gap-1 border-b border-slate-100 pb-2 text-center text-[11px] font-bold uppercase tracking-wide text-slate-500">
-        {['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'].map((day, index) => <div key={day} className={index > 4 ? 'text-amber-700' : ''}>{day}</div>)}
+      {/* Week Header - Google Calendar Style */}
+      <div className="grid grid-cols-7 border-b border-slate-200 pb-2 text-center text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+        {['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'].map((day, index) => (
+          <div key={day} className={index > 4 ? 'text-amber-700' : ''}>
+            {day}
+          </div>
+        ))}
       </div>
 
-      {/* Calendar Month Grid */}
-      <div className="grid grid-cols-7 gap-1.5">
+      {/* Calendar Month Grid - Google Calendar Style */}
+      <div className="grid grid-cols-7 gap-px bg-slate-200 rounded-xl overflow-hidden border border-slate-200">
         {daysArray.map((day, idx) => {
           if (day === null) {
             return (
               <div
                 key={`empty-${idx}`}
-                className="min-h-14 rounded-lg border border-transparent bg-slate-50/60 sm:min-h-[112px]"
+                className="min-h-16 bg-slate-50/60 p-2 sm:min-h-[110px]"
               />
             );
           }
@@ -171,44 +175,49 @@ export function CalendarGrid({
           const dayBookings = bookings.filter(
             (b) =>
               b.date === dateStr &&
-              b.status === 'APPROVED'
+              ['APPROVED', 'PENDING', 'RECOMMENDED', 'PENDING_LPF', 'RECOMMENDED_YAYASAN'].includes(b.status)
           );
 
           return (
             <div
               key={dateStr}
-              className={`flex min-h-16 flex-col justify-between rounded-lg border p-1.5 text-left sm:min-h-[112px] sm:p-2 ${
+              onClick={() => onSelectDate?.(dateStr)}
+              className={`flex min-h-16 flex-col justify-between p-1.5 sm:p-2 cursor-pointer transition-colors sm:min-h-[116px] ${
                 isToday
-                  ? 'border-emerald-400 bg-emerald-50/70 ring-2 ring-emerald-500/15'
+                  ? 'bg-emerald-50/40 hover:bg-emerald-50/70'
                   : isPast
-                    ? 'border-slate-100 bg-slate-50/40'
-                    : 'border-slate-200/90 bg-white hover:border-emerald-300 hover:shadow-sm'
+                  ? 'bg-white/80 hover:bg-slate-50'
+                  : 'bg-white hover:bg-slate-50'
               }`}
             >
+              {/* Day Header with Google Calendar Circle */}
               <div className="flex items-center justify-between">
                 <button
                   type="button"
-                  onClick={() => onSelectDate?.(dateStr)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onSelectDate?.(dateStr);
+                  }}
                   aria-label={`Lihat jadwal ${dateStr}, ${dayBookings.length} agenda`}
-                  className={`text-xs font-bold ${
+                  className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${
                     isToday
-                      ? 'flex h-7 w-7 items-center justify-center rounded-lg bg-yarsi-primary text-white shadow-sm'
-                      : 'flex h-7 w-7 items-center justify-center rounded-lg text-slate-800 hover:bg-emerald-50 hover:text-yarsi-primary'
+                      ? 'bg-emerald-700 text-white font-bold shadow-xs'
+                      : 'text-slate-700 font-semibold hover:bg-slate-200'
                   }`}
                 >
                   {day}
                 </button>
 
                 {dayBookings.length > 0 && (
-                  <span className="rounded-md bg-slate-100 px-1.5 py-0.5 text-[10px] font-bold text-slate-600">
+                  <span className="rounded-full bg-slate-100 px-1.5 py-0.2 text-[9px] font-bold text-slate-500">
                     {dayBookings.length}
                   </span>
                 )}
               </div>
 
-              {/* Event Snippets */}
+              {/* Event Chips */}
               <div className="hidden sm:block space-y-1 my-1 overflow-hidden">
-                {dayBookings.slice(0, 2).map((b) => (
+                {dayBookings.slice(0, 3).map((b) => (
                   <button
                     key={b.id}
                     type="button"
@@ -216,22 +225,31 @@ export function CalendarGrid({
                       e.stopPropagation();
                       handleOpenBooking(b);
                     }}
-                    className="block w-full truncate rounded-md border-l-2 border-emerald-600 bg-emerald-50 p-1.5 text-left text-[10px] font-semibold text-emerald-900 hover:bg-emerald-100"
+                    className={`block w-full truncate rounded px-1.5 py-0.5 text-left text-[10px] font-medium border-l-2 shadow-2xs transition-colors ${
+                      b.status === 'APPROVED'
+                        ? 'border-emerald-600 bg-emerald-50 hover:bg-emerald-100 text-emerald-950'
+                        : b.status === 'RECOMMENDED' || b.status === 'RECOMMENDED_YAYASAN'
+                        ? 'border-sky-500 bg-sky-50 hover:bg-sky-100 text-sky-950'
+                        : 'border-amber-500 bg-amber-50 hover:bg-amber-100 text-amber-950'
+                    }`}
                   >
-                    {b.startTime} Terjadwal
+                    <span className="font-mono font-semibold">{b.startTime}</span>{' '}
+                    <span>{b.roomName || 'Terjadwal'}</span>
                   </button>
                 ))}
 
-                {dayBookings.length > 2 && (
-                  <span className="block text-center text-[9px] font-bold text-slate-400">
-                    +{dayBookings.length - 2} acara lagi
+                {dayBookings.length > 3 && (
+                  <span className="block text-left text-[9px] font-bold text-slate-500 hover:text-emerald-700 pl-1">
+                    +{dayBookings.length - 3} lainnya
                   </span>
                 )}
               </div>
 
-              <button type="button" onClick={() => onSelectDate?.(dateStr)} className="ml-auto hidden items-center gap-1 text-[9px] font-bold text-yarsi-primary hover:text-yarsi-dark sm:inline-flex">
-                Lihat hari <ArrowUpRight className="h-3 w-3" aria-hidden="true" />
-              </button>
+              <div className="sm:hidden flex items-center justify-center">
+                {dayBookings.length > 0 && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 inline-block" />
+                )}
+              </div>
             </div>
           );
         })}

@@ -21,11 +21,11 @@ export function getJakartaScheduleRange(startDate: string, endDateExclusive: str
 }
 
 export function formatJakartaTime(value: string): string {
-  return new Intl.DateTimeFormat('id-ID', {
+  return new Intl.DateTimeFormat('en-GB', {
     timeZone: JAKARTA_TIME_ZONE,
     hour: '2-digit',
     minute: '2-digit',
-    hourCycle: 'h23',
+    hour12: false,
   }).format(new Date(value));
 }
 
@@ -63,7 +63,7 @@ export function mapPublicEventToBooking(event: PublicScheduleEvent): Booking {
     date: getJakartaDateFromIso(event.startTime),
     startTime: formatJakartaTime(event.startTime),
     endTime: formatJakartaTime(event.endTime),
-    status: 'APPROVED',
+    status: (event.status as any) || 'APPROVED',
     requiresYayasanApproval: false,
     equipments: [],
     qrCodeToken: '',
@@ -97,7 +97,13 @@ export function usePublicSchedule(
 
     try {
       const response = await roomsApi.getPublicSchedule(range.startTime, range.endTime);
-      setEvents(response.events.filter((event) => event.status === 'APPROVED'));
+      setEvents(
+        response.events.filter((event) =>
+          ['APPROVED', 'PENDING', 'RECOMMENDED', 'PENDING_LPF', 'RECOMMENDED_YAYASAN'].includes(
+            event.status,
+          ),
+        ),
+      );
       setLastUpdated(new Date());
     } catch (requestError: unknown) {
       setError(requestError instanceof Error ? requestError.message : 'Jadwal ruangan tidak dapat dimuat.');

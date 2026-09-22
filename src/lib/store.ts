@@ -19,7 +19,7 @@ import {
   removeAuthToken,
   setAuthToken,
 } from './api';
-import { getJakartaDateTimeIso } from './utils';
+import { getJakartaDateTimeIso, isRecurringBooking } from './utils';
 import {
   DEMO_USERS,
   INITIAL_ROOMS,
@@ -74,22 +74,26 @@ interface AppState {
   approveBookingLPF: (
     bookingId: string,
     notes?: string,
-    approverName?: string
+    approverName?: string,
+    applyToRecurringGroup?: boolean
   ) => Promise<void>;
   approveBookingYayasan: (
     bookingId: string,
     notes?: string,
-    approverName?: string
+    approverName?: string,
+    applyToRecurringGroup?: boolean
   ) => Promise<void>;
   rejectBooking: (
     bookingId: string,
     reason: string,
-    rejectedBy?: string
+    rejectedBy?: string,
+    applyToRecurringGroup?: boolean
   ) => Promise<void>;
   returnBooking: (
     bookingId: string,
     notes: string,
-    returnedBy?: string
+    returnedBy?: string,
+    applyToRecurringGroup?: boolean
   ) => Promise<void>;
 
   // Academic bulk blocker actions
@@ -254,6 +258,7 @@ export const useAppStore = create<AppState>()(
               activityType: (bookingData.category || 'SEMINAR').toUpperCase(),
               startTime: startIso,
               endTime: endIso,
+              dates: bookingData.dates,
               additionalFacilities,
               logistik,
               notes: bookingData.description,
@@ -271,167 +276,283 @@ export const useAppStore = create<AppState>()(
           return created;
         } catch (err: any) {
           const currentRoom = get().rooms.find((r) => r.id === bookingData.roomId);
-          const localBooking: Booking = {
-            id: `bk-${Date.now()}`,
+          const recurringDates = bookingData.dates && bookingData.dates.length > 0
+            ? bookingData.dates
+            : [bookingData.date];
+
+          const newLocalBookings: Booking[] = recurringDates.map((d, index) => ({
+            ...bookingData,
+            id: `bk-${Date.now()}-${index}`,
             bookingCode: `YARSI-BK-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
             createdAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
             qrCodeToken: `QR-YARSI-BK-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
             status: 'PENDING' as BookingStatus,
-            roomName: currentRoom?.name || 'Ruangan Kampus',
-            building: currentRoom?.building || '',
-            floor: currentRoom?.floor || 1,
-            requiresYayasanApproval: currentRoom?.requiresYayasanApproval ?? false,
-            ...bookingData,
-          };
+            roomName: bookingData.roomName || currentRoom?.name || 'Ruangan Kampus',
+            building: bookingData.building || currentRoom?.building || '',
+            floor: bookingData.floor ?? currentRoom?.floor ?? 1,
+            requiresYayasanApproval: bookingData.requiresYayasanApproval ?? currentRoom?.requiresYayasanApproval ?? false,
+            date: d,
+          }));
+
           set((state) => ({
-            bookings: [localBooking, ...state.bookings],
+            bookings: [...newLocalBookings, ...state.bookings],
             isLoading: false,
             error: null,
           }));
-          return localBooking;
+          return newLocalBookings[0];
         }
       },
 
-      cancelBooking: async (bookingId, reason) => {
+      cancelBooking: async (bookingId, reason, applyToRecurringGroup = true) => {
         set({ isSyncing: true });
+        const booking = get().bookings.find((b) => b.id === bookingId);
+        let relatedIds = [bookingId];
+        if (applyToRecurringGroup && booking) {
+          if (booking.bulkGroupId) {
+            relatedIds = get().bookings
+              .filter((b) => b.bulkGroupId === booking.bulkGroupId && b.status === booking.status)
+              .map((b) => b.id);
+          } else if (isRecurringBooking(booking)) {
+            relatedIds = get().bookings
+              .filter(
+                (b) =>
+                  b.userId === booking.userId &&
+                  b.roomId === booking.roomId &&
+                  b.title === booking.title &&
+                  b.status === booking.status &&
+                  isRecurringBooking(b)
+              )
+              .map((b) => b.id);
+          }
+        }
+        if (relatedIds.length === 0) relatedIds = [bookingId];
+
         try {
-          const updated = await bookingsApi.cancel(bookingId, reason);
-          set((state) => ({
-            bookings: state.bookings.map((b) => (b.id === bookingId ? updated : b)),
-            isSyncing: false,
-          }));
+          if (relatedIds.length > 1) {
+            await bookingsApi.updateBatchStatus(relatedIds, 'CANCELLED', reason);
+          } else {
+            await bookingsApi.cancel(bookingId, reason);
+          }
         } catch (err: any) {
           // Client-side fallback
-          set((state) => ({
-            bookings: state.bookings.map((b) =>
-              b.id === bookingId ? { ...b, status: 'CANCELLED' as BookingStatus } : b
-            ),
-            isSyncing: false,
-          }));
         }
+
+        set((state) => ({
+          bookings: state.bookings.map((b) =>
+            relatedIds.includes(b.id)
+              ? { ...b, status: 'CANCELLED' as BookingStatus, rejectionReason: reason }
+              : b
+          ),
+          isSyncing: false,
+        }));
       },
 
-      approveBookingLPF: async (bookingId, notes, approverName) => {
+      approveBookingLPF: async (bookingId, notes, approverName, applyToRecurringGroup = true) => {
         set({ isSyncing: true });
-        try {
-          const booking = get().bookings.find((b) => b.id === bookingId);
-          const targetStatus = booking?.requiresYayasanApproval
-            ? 'RECOMMENDED'
-            : 'APPROVED';
+        const booking = get().bookings.find((b) => b.id === bookingId);
+        const targetStatus = booking?.requiresYayasanApproval ? 'RECOMMENDED' : 'APPROVED';
+        const frontendTargetStatus = booking?.requiresYayasanApproval ? 'RECOMMENDED_YAYASAN' : 'APPROVED';
 
-          const updated = await bookingsApi.updateStatus(bookingId, targetStatus, notes);
-          set((state) => ({
-            bookings: state.bookings.map((b) => (b.id === bookingId ? updated : b)),
-            isSyncing: false,
-          }));
+        let relatedIds = [bookingId];
+        if (applyToRecurringGroup && booking) {
+          if (booking.bulkGroupId) {
+            relatedIds = get().bookings
+              .filter((b) => b.bulkGroupId === booking.bulkGroupId && b.status === 'PENDING_LPF')
+              .map((b) => b.id);
+          } else if (isRecurringBooking(booking)) {
+            relatedIds = get().bookings
+              .filter(
+                (b) =>
+                  b.userId === booking.userId &&
+                  b.roomId === booking.roomId &&
+                  b.title === booking.title &&
+                  b.status === 'PENDING_LPF' &&
+                  isRecurringBooking(b)
+              )
+              .map((b) => b.id);
+          }
+        }
+        if (relatedIds.length === 0) relatedIds = [bookingId];
+
+        try {
+          if (relatedIds.length > 1) {
+            await bookingsApi.updateBatchStatus(relatedIds, targetStatus, notes);
+          } else {
+            await bookingsApi.updateStatus(bookingId, targetStatus, notes, applyToRecurringGroup);
+          }
         } catch (err: any) {
-          // Client-side optimistic update fallback
-          const now = new Date().toLocaleString('id-ID');
-          const approver = approverName || 'Bambang Sudibyo (LPF)';
-          set((state) => ({
-            bookings: state.bookings.map((b) => {
-              if (b.id === bookingId) {
-                if (b.requiresYayasanApproval) {
-                  return {
-                    ...b,
-                    status: 'RECOMMENDED_YAYASAN' as BookingStatus,
-                    lpfNotes: notes || 'Diverifikasi LPF & Direkomendasikan ke Yayasan',
-                    lpfApprovedAt: now,
-                    lpfApprovedBy: approver,
-                  };
-                } else {
-                  return {
-                    ...b,
-                    status: 'APPROVED' as BookingStatus,
-                    lpfNotes: notes || 'Disetujui oleh LPF',
-                    lpfApprovedAt: now,
-                    lpfApprovedBy: approver,
-                  };
+          // Fallback to client-side optimistic update
+        }
+
+        const now = new Date().toLocaleString('id-ID');
+        const approver = approverName || 'Bambang Sudibyo (LPF)';
+        set((state) => ({
+          bookings: state.bookings.map((b) =>
+            relatedIds.includes(b.id)
+              ? {
+                  ...b,
+                  status: frontendTargetStatus as BookingStatus,
+                  lpfNotes: notes || (booking?.requiresYayasanApproval ? 'Diverifikasi LPF & Direkomendasikan ke Yayasan' : 'Disetujui oleh LPF'),
+                  lpfApprovedAt: now,
+                  lpfApprovedBy: approver,
                 }
-              }
-              return b;
-            }),
-            isSyncing: false,
-          }));
-        }
+              : b
+          ),
+          isSyncing: false,
+        }));
       },
 
-      approveBookingYayasan: async (bookingId, notes, approverName) => {
+      approveBookingYayasan: async (bookingId, notes, approverName, applyToRecurringGroup = true) => {
         set({ isSyncing: true });
-        try {
-          const updated = await bookingsApi.updateStatus(bookingId, 'APPROVED', notes);
-          set((state) => ({
-            bookings: state.bookings.map((b) => (b.id === bookingId ? updated : b)),
-            isSyncing: false,
-          }));
-        } catch (err: any) {
-          const now = new Date().toLocaleString('id-ID');
-          const approver = approverName || 'Drs. H. M. Shadiq (Yayasan YARSI)';
-          set((state) => ({
-            bookings: state.bookings.map((b) =>
-              b.id === bookingId
-                ? {
-                    ...b,
-                    status: 'APPROVED' as BookingStatus,
-                    yayasanNotes: notes || 'Disetujui oleh Sekretariat Yayasan YARSI',
-                    yayasanApprovedAt: now,
-                    yayasanApprovedBy: approver,
-                  }
-                : b
-            ),
-            isSyncing: false,
-          }));
+        const booking = get().bookings.find((b) => b.id === bookingId);
+
+        let relatedIds = [bookingId];
+        if (applyToRecurringGroup && booking) {
+          if (booking.bulkGroupId) {
+            relatedIds = get().bookings
+              .filter((b) => b.bulkGroupId === booking.bulkGroupId && b.status === 'RECOMMENDED_YAYASAN')
+              .map((b) => b.id);
+          } else if (isRecurringBooking(booking)) {
+            relatedIds = get().bookings
+              .filter(
+                (b) =>
+                  b.userId === booking.userId &&
+                  b.roomId === booking.roomId &&
+                  b.title === booking.title &&
+                  b.status === 'RECOMMENDED_YAYASAN' &&
+                  isRecurringBooking(b)
+              )
+              .map((b) => b.id);
+          }
         }
+        if (relatedIds.length === 0) relatedIds = [bookingId];
+
+        try {
+          if (relatedIds.length > 1) {
+            await bookingsApi.updateBatchStatus(relatedIds, 'APPROVED', notes);
+          } else {
+            await bookingsApi.updateStatus(bookingId, 'APPROVED', notes, applyToRecurringGroup);
+          }
+        } catch (err: any) {
+          // Client-side fallback
+        }
+
+        const now = new Date().toLocaleString('id-ID');
+        const approver = approverName || 'Drs. H. M. Shadiq (Yayasan YARSI)';
+        set((state) => ({
+          bookings: state.bookings.map((b) =>
+            relatedIds.includes(b.id)
+              ? {
+                  ...b,
+                  status: 'APPROVED' as BookingStatus,
+                  yayasanNotes: notes || 'Disetujui oleh Sekretariat Yayasan YARSI',
+                  yayasanApprovedAt: now,
+                  yayasanApprovedBy: approver,
+                }
+              : b
+          ),
+          isSyncing: false,
+        }));
       },
 
-      rejectBooking: async (bookingId, reason, rejectedBy) => {
+      rejectBooking: async (bookingId, reason, rejectedBy, applyToRecurringGroup = true) => {
         set({ isSyncing: true });
-        try {
-          const updated = await bookingsApi.updateStatus(bookingId, 'REJECTED', reason);
-          set((state) => ({
-            bookings: state.bookings.map((b) => (b.id === bookingId ? updated : b)),
-            isSyncing: false,
-          }));
-        } catch (err: any) {
-          set((state) => ({
-            bookings: state.bookings.map((b) =>
-              b.id === bookingId
-                ? {
-                    ...b,
-                    status: 'REJECTED' as BookingStatus,
-                    rejectionReason: reason,
-                    lpfNotes: `Ditolak oleh ${rejectedBy || 'Admin'}: ${reason}`,
-                  }
-                : b
-            ),
-            isSyncing: false,
-          }));
+        const booking = get().bookings.find((b) => b.id === bookingId);
+
+        let relatedIds = [bookingId];
+        if (applyToRecurringGroup && booking) {
+          if (booking.bulkGroupId) {
+            relatedIds = get().bookings
+              .filter((b) => b.bulkGroupId === booking.bulkGroupId && b.status === booking.status)
+              .map((b) => b.id);
+          } else if (isRecurringBooking(booking)) {
+            relatedIds = get().bookings
+              .filter(
+                (b) =>
+                  b.userId === booking.userId &&
+                  b.roomId === booking.roomId &&
+                  b.title === booking.title &&
+                  b.status === booking.status &&
+                  isRecurringBooking(b)
+              )
+              .map((b) => b.id);
+          }
         }
+        if (relatedIds.length === 0) relatedIds = [bookingId];
+
+        try {
+          if (relatedIds.length > 1) {
+            await bookingsApi.updateBatchStatus(relatedIds, 'REJECTED', reason);
+          } else {
+            await bookingsApi.updateStatus(bookingId, 'REJECTED', reason, applyToRecurringGroup);
+          }
+        } catch (err: any) {
+          // Client-side fallback
+        }
+
+        set((state) => ({
+          bookings: state.bookings.map((b) =>
+            relatedIds.includes(b.id)
+              ? {
+                  ...b,
+                  status: 'REJECTED' as BookingStatus,
+                  rejectionReason: reason,
+                  lpfNotes: `Ditolak oleh ${rejectedBy || 'Admin'}: ${reason}`,
+                }
+              : b
+          ),
+          isSyncing: false,
+        }));
       },
 
-      returnBooking: async (bookingId, notes, returnedBy) => {
+      returnBooking: async (bookingId, notes, returnedBy, applyToRecurringGroup = true) => {
         set({ isSyncing: true });
-        try {
-          const updated = await bookingsApi.updateStatus(bookingId, 'RETURNED', notes);
-          set((state) => ({
-            bookings: state.bookings.map((b) => (b.id === bookingId ? updated : b)),
-            isSyncing: false,
-          }));
-        } catch (err: any) {
-          set((state) => ({
-            bookings: state.bookings.map((b) =>
-              b.id === bookingId
-                ? {
-                    ...b,
-                    status: 'RETURNED' as BookingStatus,
-                    rejectionReason: notes,
-                    lpfNotes: `Dikembalikan oleh ${returnedBy || 'Admin'}: ${notes}`,
-                  }
-                : b
-            ),
-            isSyncing: false,
-          }));
+        const booking = get().bookings.find((b) => b.id === bookingId);
+
+        let relatedIds = [bookingId];
+        if (applyToRecurringGroup && booking) {
+          if (booking.bulkGroupId) {
+            relatedIds = get().bookings
+              .filter((b) => b.bulkGroupId === booking.bulkGroupId && b.status === booking.status)
+              .map((b) => b.id);
+          } else if (isRecurringBooking(booking)) {
+            relatedIds = get().bookings
+              .filter(
+                (b) =>
+                  b.userId === booking.userId &&
+                  b.roomId === booking.roomId &&
+                  b.title === booking.title &&
+                  b.status === booking.status &&
+                  isRecurringBooking(b)
+              )
+              .map((b) => b.id);
+          }
         }
+        if (relatedIds.length === 0) relatedIds = [bookingId];
+
+        try {
+          if (relatedIds.length > 1) {
+            await bookingsApi.updateBatchStatus(relatedIds, 'RETURNED', notes);
+          } else {
+            await bookingsApi.updateStatus(bookingId, 'RETURNED', notes, applyToRecurringGroup);
+          }
+        } catch (err: any) {
+          // Client-side fallback
+        }
+
+        set((state) => ({
+          bookings: state.bookings.map((b) =>
+            relatedIds.includes(b.id)
+              ? {
+                  ...b,
+                  status: 'RETURNED' as BookingStatus,
+                  rejectionReason: notes,
+                  lpfNotes: `Dikembalikan oleh ${returnedBy || 'Admin'}: ${notes}`,
+                }
+              : b
+          ),
+          isSyncing: false,
+        }));
       },
 
       addAcademicBlock: async (blockData) => {

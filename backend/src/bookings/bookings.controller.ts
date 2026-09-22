@@ -18,6 +18,7 @@ import { BookingsService } from './bookings.service';
 import {
   CreateBookingDto,
   UpdateBookingStatusDto,
+  UpdateBatchStatusDto,
   QueryBookingDto,
 } from './dto/create-booking.dto';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
@@ -101,6 +102,15 @@ export class BookingsController {
   @Get(':id')
   async findOne(@Param('id') id: string) {
     return this.bookingsService.findOne(id);
+  }
+
+  @Patch('batch-status')
+  @UseGuards(RolesGuard)
+  async updateBatchStatus(
+    @CurrentUser() currentUser: { id: string; role: Role; fullName: string },
+    @Body() dto: UpdateBatchStatusDto,
+  ) {
+    return this.bookingsService.updateBatchStatus(currentUser, dto);
   }
 
   @Patch(':id/status')

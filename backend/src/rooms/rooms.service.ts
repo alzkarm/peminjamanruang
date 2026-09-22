@@ -122,13 +122,13 @@ export class RoomsService {
           { startTime: { lt: endTime } },
           { endTime: { gt: startTime } },
           {
-            OR: [
-              { status: BookingStatus.APPROVED },
-              {
-                status: BookingStatus.PENDING,
-                createdAt: { gte: twoHoursAgo },
-              },
-            ],
+            status: {
+              in: [
+                BookingStatus.APPROVED,
+                BookingStatus.RECOMMENDED,
+                BookingStatus.PENDING,
+              ],
+            },
           },
         ],
       },

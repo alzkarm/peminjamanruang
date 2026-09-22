@@ -13,12 +13,14 @@ import {
   Users,
 } from 'lucide-react';
 
+import { countUniqueBookingApplications } from '@/lib/utils';
+
 export function AdminSidebar() {
   const pathname = usePathname();
   const { bookings, currentUser, logout } = useAppStore();
 
-  const pendingLPFCount = bookings.filter((b) => b.status === 'PENDING_LPF').length;
-  const pendingYayasanCount = bookings.filter((b) => b.status === 'RECOMMENDED_YAYASAN').length;
+  const pendingLPFCount = countUniqueBookingApplications(bookings.filter((b) => b.status === 'PENDING_LPF'));
+  const pendingYayasanCount = countUniqueBookingApplications(bookings.filter((b) => b.status === 'RECOMMENDED_YAYASAN'));
 
   const navItems = [
     {

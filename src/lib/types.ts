@@ -3,6 +3,8 @@ export type Role = 'mahasiswa' | 'dosen' | 'tendik' | 'admin_lpf' | 'admin_yayas
 export type RoomType = 'auditorium' | 'classroom' | 'lab' | 'meeting' | 'studio' | 'hall';
 
 export type BookingStatus =
+  | 'PENDING'
+  | 'RECOMMENDED'
   | 'PENDING_LPF'
   | 'RECOMMENDED_YAYASAN'
   | 'APPROVED'
@@ -124,6 +126,9 @@ export interface Booking {
   isLeaderApproved?: boolean;
   isPerSemester?: boolean;
   semester?: string;
+  tenggatPelaksanaan?: string;
+  dates?: string[];
+  bulkGroupId?: string;
   equipments: BookingEquipment[];
   logistik?: BookingLogistikItem[];
   documentUrl?: string;
@@ -136,6 +141,7 @@ export interface Booking {
   yayasanApprovedAt?: string;
   yayasanApprovedBy?: string;
   rejectionReason?: string;
+  notes?: string;
   catatan?: string;
   approvalLogs?: ApprovalLogEntry[];
   qrCodeToken: string;

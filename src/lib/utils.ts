@@ -56,7 +56,8 @@ export function getDayOfWeekNumber(dateStr: string): number {
 }
 
 export function timeToMinutes(timeStr: string): number {
-  const [hours, minutes] = timeStr.split(":").map(Number);
+  if (!timeStr) return 0;
+  const [hours, minutes] = timeStr.replace('.', ':').split(':').map(Number);
   return (hours || 0) * 60 + (minutes || 0);
 }
 
@@ -316,6 +317,55 @@ export function getPrevWorkingDay(dateStr: string): string {
     dt = new Date(py, pm - 1, pd, 12, 0, 0);
   }
   return prevDateStr;
+}
+
+export function isRecurringBooking(booking?: Booking | null): boolean {
+  if (!booking) return false;
+  if (booking.isPerSemester || booking.bulkGroupId || booking.semester) return true;
+  const rawNotes = (booking.notes || booking.catatan || booking.description || '').toLowerCase();
+  return (
+    rawNotes.includes('rutin semester') ||
+    rawNotes.includes('peminjaman rutin') ||
+    rawNotes.includes('pengulangan') ||
+    rawNotes.includes('setiap hari') ||
+    rawNotes.includes('setiap senin')
+  );
+}
+
+export function getRecurringScheduleLabel(booking?: Booking | null): string {
+  if (!booking) return '';
+
+  if (booking.semester) {
+    return booking.semester.replace(/^\[?Rutin Semester:\s*/i, '').replace(/\]$/, '');
+  }
+
+  const rawNotes = booking.notes || booking.catatan || booking.description || '';
+  const match = rawNotes.match(/\[?(Rutin Semester:[^\]\n]+|Peminjaman Rutin:[^\]\n]+|Pengulangan:[^\]\n]+)\]?/i);
+  if (match) {
+    return match[1].replace(/^(Rutin Semester|Peminjaman Rutin|Pengulangan):\s*/i, '').trim();
+  }
+
+  if (booking.tenggatPelaksanaan) {
+    return `Setiap minggu pada jam yang sama (s.d. ${formatDateIndo(booking.tenggatPelaksanaan)})`;
+  }
+
+  return 'Setiap minggu pada hari dan jam yang sama selama 1 semester akademik';
+}
+
+export function countUniqueBookingApplications(bookingsList: Booking[]): number {
+  if (!bookingsList || bookingsList.length === 0) return 0;
+  const groupKeys = new Set<string>();
+  for (const b of bookingsList) {
+    if (b.bulkGroupId) {
+      groupKeys.add(`bulk_${b.bulkGroupId}_${b.status}`);
+    } else if (isRecurringBooking(b)) {
+      const userKey = b.userId || b.userNimNidn || (b as any).userEmail || b.userName || 'user';
+      groupKeys.add(`recur_${userKey}_${b.roomId}_${b.title}_${b.status}`);
+    } else {
+      groupKeys.add(`single_${b.id}`);
+    }
+  }
+  return groupKeys.size;
 }
 
 

@@ -78,6 +78,11 @@ export class CreateBookingDto {
   @IsBoolean()
   @Type(() => Boolean)
   isLeaderApproved?: boolean;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  dates?: string[];
 }
 
 export class UpdateBookingStatusDto {
@@ -93,6 +98,29 @@ export class UpdateBookingStatusDto {
   @ValidateIf((o) => (o.status === BookingStatus.REJECTED || o.status === BookingStatus.RETURNED) && !o.notes)
   @IsNotEmpty({ message: 'Catatan/alasan wajib diisi ketika status ditolak atau dikembalikan untuk revisi.' })
   @IsString({ message: 'Catatan harus berupa teks.' })
+  catatan?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  @Type(() => Boolean)
+  applyToRecurringGroup?: boolean;
+}
+
+export class UpdateBatchStatusDto {
+  @IsArray({ message: 'Daftar ID booking harus berupa array.' })
+  @IsString({ each: true, message: 'Setiap ID booking harus berupa teks.' })
+  bookingIds: string[];
+
+  @IsNotEmpty({ message: 'Status baru wajib diisi.' })
+  @IsEnum(BookingStatus, { message: 'Status booking tidak valid.' })
+  status: BookingStatus;
+
+  @IsOptional()
+  @IsString()
+  notes?: string;
+
+  @IsOptional()
+  @IsString()
   catatan?: string;
 }
 

@@ -233,6 +233,27 @@ export function mapBackendBookingToFrontend(b: any): Booking {
       ? 'dosen'
       : 'mahasiswa';
 
+  const rawNotes = b.notes || b.catatan || '';
+  const hasRecurringNote =
+    rawNotes.toLowerCase().includes('rutin semester') ||
+    rawNotes.toLowerCase().includes('peminjaman rutin') ||
+    rawNotes.toLowerCase().includes('pengulangan');
+  const isPerSemester = !!b.bulkGroupId || hasRecurringNote || !!b.isAcademicBulk;
+  let semesterInfo: string | undefined = undefined;
+  if (rawNotes) {
+    const match = rawNotes.match(/\[?(Rutin Semester:[^\]\n]+|Peminjaman Rutin:[^\]\n]+|Pengulangan:[^\]\n]+)\]?/i);
+    if (match) {
+      semesterInfo = match[1].trim();
+    }
+  }
+  if (!semesterInfo && isPerSemester) {
+    semesterInfo = 'Peminjaman Rutin Per Semester';
+  }
+
+  const cleanDescription = rawNotes
+    ? rawNotes.replace(/\s*\[?(Rutin Semester:[^\]\n]+|Peminjaman Rutin:[^\]\n]+|Pengulangan:[^\]\n]+)\]?\s*/gi, '').trim() || rawNotes
+    : 'Permohonan peminjaman ruang kegiatan resmi.';
+
   return {
     id: b.id,
     bookingCode: `YARSI-BK-${b.id.slice(0, 8).toUpperCase()}`,
@@ -251,7 +272,7 @@ export function mapBackendBookingToFrontend(b: any): Booking {
     title: b.title,
     category: (b.activityType?.toLowerCase() as BookingCategory) || 'seminar',
     jenisKegiatan: b.activityType,
-    description: b.notes || 'Permohonan peminjaman ruang kegiatan resmi.',
+    description: cleanDescription,
     estimatedAttendees: b.room?.capacity ? Math.round(b.room.capacity * 0.8) : 50,
     date: dateStr,
     startTime: `${startHH}:${startMM}`,
@@ -259,6 +280,9 @@ export function mapBackendBookingToFrontend(b: any): Booking {
     status: mapBackendStatusToFrontend(b.status),
     requiresYayasanApproval: b.room?.isSpecialRoom ?? false,
     isLeaderApproved: b.isLeaderApproved ?? false,
+    isPerSemester,
+    semester: semesterInfo,
+    bulkGroupId: b.bulkGroupId,
     equipments,
     logistik,
     documentUrl: b.attachmentUrl || b.dokumenUrl,
@@ -271,6 +295,7 @@ export function mapBackendBookingToFrontend(b: any): Booking {
     yayasanApprovedAt: yayasanLog?.createdAt,
     yayasanApprovedBy: yayasanLog?.approverName,
     rejectionReason: rejectLog?.notes,
+    notes: b.notes,
     catatan: rejectLog?.notes || b.notes,
     approvalLogs,
     qrCodeToken: `QR-YARSI-BK-${b.id.slice(0, 6).toUpperCase()}-SEC`,
@@ -470,6 +495,7 @@ export const bookingsApi = {
       activityType: string;
       startTime: string; // ISO 8601 UTC string
       endTime: string; // ISO 8601 UTC string
+      dates?: string[];
       additionalFacilities?: string[];
       logistik?: BookingLogistikItem[];
       notes?: string;
@@ -486,6 +512,9 @@ export const bookingsApi = {
       formData.append('activityType', payload.activityType);
       formData.append('startTime', payload.startTime);
       formData.append('endTime', payload.endTime);
+      if (payload.dates && payload.dates.length > 0) {
+        payload.dates.forEach((d) => formData.append('dates[]', d));
+      }
       if (payload.notes) formData.append('notes', payload.notes);
       if (payload.isLeaderApproved !== undefined) {
         formData.append('isLeaderApproved', String(payload.isLeaderApproved));
@@ -514,7 +543,8 @@ export const bookingsApi = {
   async updateStatus(
     id: string,
     status: string,
-    notes?: string
+    notes?: string,
+    applyToRecurringGroup?: boolean
   ): Promise<Booking> {
     const backendStatus = mapFrontendStatusToBackend(status);
     const res = await request<any>(`/bookings/${id}/status`, {
@@ -523,9 +553,28 @@ export const bookingsApi = {
         status: backendStatus,
         notes: notes || undefined,
         catatan: notes || undefined,
+        applyToRecurringGroup: applyToRecurringGroup ?? undefined,
       }),
     });
     return mapBackendBookingToFrontend(res);
+  },
+
+  async updateBatchStatus(
+    bookingIds: string[],
+    status: string,
+    notes?: string
+  ): Promise<Booking[]> {
+    const backendStatus = mapFrontendStatusToBackend(status);
+    const res = await request<any[]>(`/bookings/batch-status`, {
+      method: 'PATCH',
+      body: JSON.stringify({
+        bookingIds,
+        status: backendStatus,
+        notes: notes || undefined,
+        catatan: notes || undefined,
+      }),
+    });
+    return Array.isArray(res) ? res.map(mapBackendBookingToFrontend) : [];
   },
 
   async cancel(id: string, reason?: string): Promise<Booking> {
