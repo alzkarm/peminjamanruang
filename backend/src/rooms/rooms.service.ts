@@ -114,7 +114,6 @@ export class RoomsService {
       throw new BadRequestException('Rentang waktu jadwal tidak valid.');
     }
 
-    const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
     const bookings = await this.prisma.booking.findMany({
       where: {
         ...(roomId ? { roomId } : {}),

@@ -154,6 +154,37 @@ export function mapFrontendStatusToBackend(frontendStatus: string): string {
   }
 }
 
+export function mapFrontendCategoryToBackendActivityType(category?: string): string {
+  if (!category) return 'SEMINAR';
+  const clean = category.toLowerCase().trim();
+  switch (clean) {
+    case 'seminar':
+      return 'SEMINAR';
+    case 'workshop':
+      return 'WORKSHOP';
+    case 'pelatihan':
+      return 'PELATIHAN';
+    case 'rapat':
+      return 'RAPAT';
+    case 'kunjungan':
+      return 'KUNJUNGAN';
+    case 'kuliah_tamu':
+      return 'KULIAH_TAMU';
+    case 'kuliah':
+      return 'KULIAH';
+    case 'ujian':
+    case 'ujian_cbt':
+      return 'UJIAN_CBT';
+    case 'akreditasi':
+      return 'AKREDITASI';
+    case 'kemahasiswaan':
+    case 'yayasan':
+    case 'lainnya':
+    default:
+      return 'LAINNYA';
+  }
+}
+
 export function mapBackendBookingToFrontend(b: any): Booking {
   const startDate = b.startTime ? new Date(b.startTime) : new Date();
   const endDate = b.endTime ? new Date(b.endTime) : new Date();
@@ -513,16 +544,18 @@ export const bookingsApi = {
       formData.append('startTime', payload.startTime);
       formData.append('endTime', payload.endTime);
       if (payload.dates && payload.dates.length > 0) {
-        payload.dates.forEach((d) => formData.append('dates[]', d));
+        formData.append('dates', JSON.stringify(payload.dates));
       }
       if (payload.notes) formData.append('notes', payload.notes);
+      if (payload.catatan) formData.append('catatan', payload.catatan);
       if (payload.isLeaderApproved !== undefined) {
         formData.append('isLeaderApproved', String(payload.isLeaderApproved));
       }
-      if (payload.additionalFacilities) {
-        payload.additionalFacilities.forEach((fac) =>
-          formData.append('additionalFacilities[]', fac)
-        );
+      if (payload.additionalFacilities && payload.additionalFacilities.length > 0) {
+        formData.append('additionalFacilities', JSON.stringify(payload.additionalFacilities));
+      }
+      if (payload.logistik && payload.logistik.length > 0) {
+        formData.append('logistik', JSON.stringify(payload.logistik));
       }
       formData.append('attachment', fileAttachment);
 

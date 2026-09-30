@@ -33,6 +33,9 @@ import { Response } from 'express';
 
 const ALLOWED_UPLOADS: Record<string, string[]> = {
   '.pdf': ['application/pdf'],
+  '.png': ['image/png'],
+  '.jpg': ['image/jpeg', 'image/pjpeg'],
+  '.jpeg': ['image/jpeg', 'image/pjpeg'],
   '.doc': ['application/msword'],
   '.docx': ['application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
   '.xls': ['application/vnd.ms-excel'],
@@ -138,6 +141,8 @@ async function hasExpectedFileSignature(file: Express.Multer.File) {
   const header = await fs.readFile(file.path).then((data) => data.subarray(0, 8));
   const extension = extname(file.filename).toLowerCase();
   if (extension === '.pdf') return header.subarray(0, 5).toString() === '%PDF-';
+  if (extension === '.png') return header.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
+  if (extension === '.jpg' || extension === '.jpeg') return header.subarray(0, 3).equals(Buffer.from([0xff, 0xd8, 0xff]));
   if (extension === '.doc') return header.subarray(0, 4).equals(Buffer.from([0xd0, 0xcf, 0x11, 0xe0]));
   return header.subarray(0, 2).equals(Buffer.from('PK'));
 }

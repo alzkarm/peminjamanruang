@@ -197,7 +197,7 @@ export function EventDetailModal({
           <div>
             <div className="flex items-center gap-2">
               <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                Kategori: {booking.category.toUpperCase()}
+                Kategori: {booking.category ? booking.category.toUpperCase() : (booking.jenisKegiatan ? booking.jenisKegiatan.toUpperCase() : '-')}
               </span>
               {isRecurringBooking(booking) && (
                 <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-teal-50 text-teal-800 border border-teal-300">

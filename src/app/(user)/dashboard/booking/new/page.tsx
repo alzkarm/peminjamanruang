@@ -200,7 +200,7 @@ function NewBookingForm() {
 
   // Document Upload
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [uploadedFileName, setUploadedFileName] = useState<string>('Proposal_Resmi_Kegiatan_2026.pdf');
+  const [uploadedFileName, setUploadedFileName] = useState<string>('');
 
   // Prioritas 5: Internal Approval Confirmation Checkbox
   const [isInternalApproved, setIsInternalApproved] = useState<boolean>(true);
@@ -531,7 +531,7 @@ function NewBookingForm() {
           isLeaderApproved: isInternalApproved,
           equipments: equipmentsList,
           logistik: combinedLogistik,
-          documentName: uploadedFileName,
+          documentName: uploadedFileName || undefined,
           dokumenUrl: selectedFile ? `/uploads/${uploadedFileName}` : undefined,
           documentUrl: selectedFile ? `/uploads/${uploadedFileName}` : undefined,
         },
@@ -1375,10 +1375,28 @@ function NewBookingForm() {
           <div className="border-2 border-dashed border-slate-200 rounded-2xl p-6 text-center space-y-3 bg-slate-50 hover:bg-slate-100/60 transition-colors">
             <FileText className="w-10 h-10 text-slate-400 mx-auto" />
             <div>
-              <p className="text-xs font-bold text-slate-700">
-                Berkas Terpilih: <span className="text-yarsi-primary">{uploadedFileName}</span>
-              </p>
-              <p className="text-[11px] text-slate-400 mt-0.5">
+              {uploadedFileName ? (
+                <div>
+                  <p className="text-xs font-bold text-slate-700">
+                    Berkas Terpilih: <span className="text-yarsi-primary font-mono">{uploadedFileName}</span>
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedFile(null);
+                      setUploadedFileName('');
+                    }}
+                    className="mt-1 text-[11px] font-bold text-rose-600 hover:text-rose-700 hover:underline"
+                  >
+                    Hapus / Ganti Berkas
+                  </button>
+                </div>
+              ) : (
+                <p className="text-xs font-bold text-slate-500">
+                  Belum ada berkas yang dipilih (opsional)
+                </p>
+              )}
+              <p className="text-[11px] text-slate-400 mt-1">
                 Format yang didukung: PDF, PNG, JPG, DOC, atau DOCX.
               </p>
             </div>

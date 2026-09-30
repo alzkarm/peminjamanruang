@@ -45,7 +45,9 @@ export function RoomCard({
 }: RoomCardProps) {
   const { currentUser } = useAppStore();
   const [authGateOpen, setAuthGateOpen] = useState(false);
+  const [imageError, setImageError] = useState(false);
   const isGuest = !currentUser || currentUser.role === 'guest';
+  const hasValidImage = Boolean(room.imageUrl && room.imageUrl.trim() !== '' && !imageError);
 
   const handlePinjamClick = (event: React.MouseEvent) => {
     if (onPinjamClick) {
@@ -64,20 +66,34 @@ export function RoomCard({
     return (
       <>
         <article className="group flex h-full min-h-[270px] flex-col overflow-hidden rounded-[13px_3px_13px_13px] border border-slate-200 bg-white shadow-sm card-hover">
-          <div className="relative h-[112px] w-full overflow-hidden bg-slate-100">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={room.imageUrl}
-              alt={`Tampilan ${room.name}`}
-              className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.035]"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/35 via-transparent to-slate-950/10" aria-hidden="true" />
-            <span className={`absolute right-2.5 top-2.5 inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[9px] font-extrabold shadow-sm backdrop-blur ${isAvailableToday ? 'bg-emerald-50/95 text-emerald-800' : 'bg-amber-50/95 text-amber-900'}`}>
+          <div className="relative h-[112px] w-full overflow-hidden bg-slate-900">
+            {hasValidImage ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={room.imageUrl}
+                alt={`Tampilan ${room.name}`}
+                onError={() => setImageError(true)}
+                className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.035]"
+              />
+            ) : (
+              <div className="relative flex h-full w-full flex-col justify-end overflow-hidden bg-gradient-to-br from-[#064e3b] via-[#043427] to-[#022c22] p-3 transition-transform duration-500 ease-out group-hover:scale-[1.02]">
+                <div className="absolute -right-4 -top-4 h-24 w-24 rounded-full bg-emerald-500/15 blur-xl" aria-hidden="true" />
+                <div className="absolute inset-0 bg-[radial-gradient(#10b981_1px,transparent_1px)] opacity-15 [background-size:10px_10px]" aria-hidden="true" />
+                <div className="relative z-0 flex items-center gap-1.5 text-emerald-300">
+                  <Building2 className="h-3.5 w-3.5 shrink-0 text-emerald-400" aria-hidden="true" />
+                  <span className="truncate text-[10px] font-bold text-emerald-100">
+                    {room.name}
+                  </span>
+                </div>
+              </div>
+            )}
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/45 via-transparent to-slate-950/15" aria-hidden="true" />
+            <span className={`absolute right-2.5 top-2.5 z-10 inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[9px] font-extrabold shadow-sm backdrop-blur ${isAvailableToday ? 'bg-emerald-50/95 text-emerald-800' : 'bg-amber-50/95 text-amber-900'}`}>
               <span className={`h-1.5 w-1.5 rounded-full ${isAvailableToday ? 'bg-emerald-500' : 'bg-amber-500'}`} aria-hidden="true" />
               {isAvailableToday ? 'Tersedia' : 'Terjadwal'}
             </span>
-            <span className="absolute bottom-2.5 left-2.5 bg-[#052f26]/90 px-2 py-1 font-mono text-[9px] font-bold tracking-wide text-white backdrop-blur">
-              {room.code}
+            <span className="absolute bottom-2.5 left-2.5 z-10 bg-[#052f26]/90 px-2 py-1 font-mono text-[9px] font-bold tracking-wide text-white backdrop-blur">
+              {room.code || (room.floorName ? `LT. ${room.floorName}` : `LT. ${room.floor}`)}
             </span>
           </div>
 
@@ -120,16 +136,33 @@ export function RoomCard({
   return (
     <>
       <article className="group flex h-full flex-col overflow-hidden rounded-[18px_4px_18px_18px] border border-slate-200/90 bg-white shadow-card card-hover">
-        <div className="relative h-48 w-full overflow-hidden bg-slate-100">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={room.imageUrl}
-            alt={`Tampilan ${room.name}`}
-            className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.035]"
-          />
+        <div className="relative h-48 w-full overflow-hidden bg-slate-900">
+          {hasValidImage ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={room.imageUrl}
+              alt={`Tampilan ${room.name}`}
+              onError={() => setImageError(true)}
+              className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.035]"
+            />
+          ) : (
+            <div className="relative flex h-full w-full flex-col justify-end overflow-hidden bg-gradient-to-br from-[#064e3b] via-[#043427] to-[#022c22] p-5 transition-transform duration-500 ease-out group-hover:scale-[1.02]">
+              <div className="absolute -right-6 -top-6 h-36 w-36 rounded-full bg-emerald-500/15 blur-2xl" aria-hidden="true" />
+              <div className="absolute inset-0 bg-[radial-gradient(#10b981_1px,transparent_1px)] opacity-20 [background-size:14px_14px]" aria-hidden="true" />
+              <Building2 className="absolute right-4 bottom-4 h-20 w-20 text-emerald-400/10" aria-hidden="true" />
+              <div className="relative z-0 space-y-1">
+                <span className="inline-block text-[11px] font-extrabold uppercase tracking-widest text-emerald-300">
+                  {room.floorName ? `Lantai ${room.floorName}` : `Lantai ${room.floor}`}
+                </span>
+                <h4 className="truncate text-base font-black text-white">
+                  {room.name}
+                </h4>
+              </div>
+            </div>
+          )}
           <div className="absolute inset-0 bg-gradient-to-t from-slate-950/55 via-transparent to-slate-950/20" aria-hidden="true" />
 
-          <div className="absolute left-3 top-3 flex items-center gap-2">
+          <div className="absolute left-3 top-3 z-10 flex items-center gap-2">
             <span className="border border-white/60 bg-white/90 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-yarsi-dark shadow-sm backdrop-blur">
               {roomTypeLabels[room.type]}
             </span>
@@ -140,8 +173,8 @@ export function RoomCard({
             )}
           </div>
 
-          <span className="absolute bottom-3 left-3 bg-[#052f26]/90 px-2.5 py-1 font-mono text-[10px] font-bold tracking-wide text-white backdrop-blur">
-            {room.code}
+          <span className="absolute bottom-3 left-3 z-10 bg-[#052f26]/90 px-2.5 py-1 font-mono text-[10px] font-bold tracking-wide text-white backdrop-blur">
+            {room.code || (room.floorName ? `LT. ${room.floorName}` : `LT. ${room.floor}`)}
           </span>
         </div>
 
@@ -180,7 +213,7 @@ export function RoomCard({
             ) : (
               <div className="flex items-start gap-2 text-xs font-bold text-amber-900">
                 <Clock3 className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" aria-hidden="true" />
-                <span className="line-clamp-1">{activeBookingTitle ? `Terjadwal: ${activeBookingTitle}` : 'Memiliki agenda aktif'}</span>
+                <span className="line-clamp-1">{activeBookingTitle ? `Terjadwal: ${activeBookingTitle}` : (activeTime ? `Terjadwal: ${activeTime}` : 'Memiliki agenda aktif')}</span>
               </div>
             )}
           </div>

@@ -33,40 +33,15 @@ export class SchedulingService {
       throw new NotFoundException('Ruangan tidak ditemukan atau tidak aktif.');
     }
 
-    // Otomatis batalkan booking pending yang sudah melewati batas waktu 2 jam
-    const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
-    try {
-      await executor.booking.updateMany({
-        where: {
-          status: BookingStatus.PENDING,
-          createdAt: { lt: twoHoursAgo },
-        },
-        data: {
-          status: BookingStatus.CANCELED,
-          notes: 'Kedaluwarsa otomatis: Melebihi batas waktu konfirmasi 2 jam.',
-        },
-      });
-    } catch {
-      // Abaikan jika update gagal (misal transaksi read-only)
-    }
-
-    // Cek konflik: APPROVED & RECOMMENDED selalu memblokir; PENDING memblokir hanya jika masih dalam batas 2 jam
+    // Cek konflik jadwal: PENDING, RECOMMENDED, dan APPROVED memblokir slot agar tidak terjadi bentrok
     const conflict = await executor.booking.findFirst({
       where: {
         roomId,
         ...(excludeBookingId ? { id: { not: excludeBookingId } } : {}),
+        status: { in: BLOCKING_BOOKING_STATUSES },
         AND: [
           { startTime: { lt: endTime } },
           { endTime: { gt: startTime } },
-          {
-            OR: [
-              { status: { in: [BookingStatus.APPROVED, BookingStatus.RECOMMENDED] } },
-              {
-                status: BookingStatus.PENDING,
-                createdAt: { gte: twoHoursAgo },
-              },
-            ],
-          },
         ],
       },
       orderBy: { startTime: 'asc' },

@@ -8,12 +8,15 @@ import {
   Calendar,
   CalendarDays,
   CheckCircle2,
+  Clock,
   Clock3,
   FileText,
   LayoutDashboard,
+  MapPin,
   Monitor,
   Search,
   ShieldCheck,
+  X,
 } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
 import { RoomCard } from '@/components/common/RoomCard';
@@ -27,8 +30,18 @@ import {
 import { Room } from '@/lib/types';
 import {
   addJakartaDays,
+  formatJakartaTime,
   usePublicSchedule,
 } from '@/lib/public-schedule';
+
+function formatFloorLabel(floorName?: string | null) {
+  if (!floorName) return 'Lantai Ruangan';
+  const trimmed = floorName.trim();
+  if (/^lantai/i.test(trimmed) || /^basement/i.test(trimmed)) {
+    return trimmed;
+  }
+  return `Lantai ${trimmed}`;
+}
 
 const roomTypeLabels: Record<Room['type'], string> = {
   auditorium: 'Auditorium',
@@ -118,9 +131,10 @@ function ProductPreview({ type }: { type: (typeof quickAccessItems)[number]['pre
 export default function HomePage() {
   const { currentUser, rooms } = useAppStore();
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedFloor, setSelectedFloor] = useState('all');
   const [selectedDateStr, setSelectedDateStr] = useState(getJakartaDateString);
   const [authGateOpen, setAuthGateOpen] = useState(false);
+  const [showFinishedToday, setShowFinishedToday] = useState(false);
   const todayDateStr = getJakartaDateString();
   const todaySchedule = usePublicSchedule(todayDateStr, addJakartaDays(todayDateStr, 1));
   const selectedDateSchedule = usePublicSchedule(
@@ -129,39 +143,77 @@ export default function HomePage() {
   );
 
   const isGuest = !currentUser || currentUser.role === 'guest';
-  const categories = useMemo(
-    () => Array.from(new Set(rooms.map((room) => room.type))),
-    [rooms]
-  );
+  const floors = useMemo(() => {
+    const floorMap = new Map<number, { level: number; label: string }>();
+    rooms.forEach((room) => {
+      const level = room.floor;
+      if (!floorMap.has(level)) {
+        let label = `Lantai ${level}`;
+        const nameUpper = (room.floorName || '').toUpperCase();
+        if (level === -1 || nameUpper === 'BASEMENT') {
+          label = 'Basement';
+        } else if (level === 0 || nameUpper === 'DASAR') {
+          label = 'Lantai Dasar';
+        } else if (room.floorName && !Number.isNaN(Number(room.floorName))) {
+          label = `Lantai ${room.floorName}`;
+        }
+        floorMap.set(level, { level, label });
+      }
+    });
+    return Array.from(floorMap.values()).sort((a, b) => a.level - b.level);
+  }, [rooms]);
 
   const activeBookingsForDate = selectedDateSchedule.events;
   const occupiedRoomIds = new Set(activeBookingsForDate.map((booking) => booking.roomId));
 
   const filteredRooms = rooms.filter((room) => {
     const query = searchQuery.trim().toLowerCase();
+    const typeLabel = (room.type && roomTypeLabels[room.type]) ? roomTypeLabels[room.type].toLowerCase() : '';
     const matchesQuery =
       !query ||
       room.name.toLowerCase().includes(query) ||
-      room.code.toLowerCase().includes(query);
-    const matchesCategory =
-      selectedCategory === 'all' || room.type === selectedCategory;
+      (room.code && room.code.toLowerCase().includes(query)) ||
+      (room.type && room.type.toLowerCase().includes(query)) ||
+      typeLabel.includes(query) ||
+      (room.description && room.description.toLowerCase().includes(query)) ||
+      (room.facilities && room.facilities.some((f) => f.toLowerCase().includes(query)));
+    const matchesFloor =
+      selectedFloor === 'all' || String(room.floor) === selectedFloor;
 
-    return matchesQuery && matchesCategory;
+    return matchesQuery && matchesFloor;
   });
 
   const availableRoomsCount = Math.max(rooms.length - occupiedRoomIds.size, 0);
   const scheduledCount = activeBookingsForDate.length;
   const currentTime = Date.now();
-  const todayUsedRooms = Array.from(new Set(
-    todaySchedule.events
-      .filter((event) => new Date(event.startTime).getTime() <= currentTime && new Date(event.endTime).getTime() > currentTime)
-      .map((event) => event.roomName),
-  ));
-  const todayBookedRooms = Array.from(new Set(
-    todaySchedule.events
-      .filter((event) => new Date(event.startTime).getTime() > currentTime)
-      .map((event) => event.roomName),
-  ));
+
+  const todayActiveEvents = useMemo(() => {
+    return todaySchedule.events
+      .filter((event) => {
+        const start = new Date(event.startTime).getTime();
+        const end = new Date(event.endTime).getTime();
+        return start <= currentTime && end > currentTime;
+      })
+      .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+  }, [todaySchedule.events, currentTime]);
+
+  const todayUpcomingEvents = useMemo(() => {
+    return todaySchedule.events
+      .filter((event) => {
+        const start = new Date(event.startTime).getTime();
+        return start > currentTime;
+      })
+      .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+  }, [todaySchedule.events, currentTime]);
+
+  const todayFinishedEvents = useMemo(() => {
+    return todaySchedule.events
+      .filter((event) => {
+        const end = new Date(event.endTime).getTime();
+        return end <= currentTime;
+      })
+      .sort((a, b) => new Date(b.endTime).getTime() - new Date(a.endTime).getTime());
+  }, [todaySchedule.events, currentTime]);
   const handleProtectedClick = (event: React.MouseEvent, requiresAuth = true) => {
     if (requiresAuth && isGuest) {
       event.preventDefault();
@@ -451,53 +503,239 @@ export default function HomePage() {
               <span className="sr-only">Memuat status ruangan</span>
             </div>
           ) : !todaySchedule.error || todaySchedule.events.length > 0 ? (
-            <div className="mt-5 grid gap-4 sm:grid-cols-2">
-              {[
-                { title: 'Sedang Digunakan', rooms: todayUsedRooms, empty: 'Tidak ada ruangan yang sedang digunakan', tone: 'emerald' },
-                { title: 'Sudah Dibooking', rooms: todayBookedRooms, empty: 'Tidak ada ruangan yang sudah dibooking', tone: 'amber' },
-              ].map((group) => (
-                <div key={group.title} className={`rounded-xl border p-4 ${group.tone === 'emerald' ? 'border-emerald-200 bg-emerald-50/60' : 'border-amber-200 bg-amber-50/65'}`}>
-                  <div className="flex items-center justify-between gap-3">
-                    <h3 className="text-sm font-black text-slate-950">{group.title}</h3>
-                    <span className="inline-flex h-8 min-w-8 items-center justify-center rounded-lg bg-white px-2 text-sm font-black text-slate-900 shadow-sm" aria-label={`${group.rooms.length} ruangan`}>
-                      {group.rooms.length}
+            <>
+              <div className="mt-5 grid gap-4 lg:grid-cols-2">
+                {[
+                  {
+                    title: 'Sedang Digunakan Saat Ini',
+                    events: todayActiveEvents,
+                    emptyTitle: 'Tidak ada ruangan yang sedang digunakan',
+                    emptySubtitle: 'Saat ini semua ruangan bebas dan tidak sedang ada agenda berlangsung.',
+                    tone: 'emerald' as const,
+                  },
+                  {
+                    title: 'Akan Datang / Terjadwal Hari Ini',
+                    events: todayUpcomingEvents,
+                    emptyTitle: 'Tidak ada jadwal berikutnya hari ini',
+                    emptySubtitle: 'Tidak ada agenda ruangan lainnya yang terjadwal untuk sisa hari ini.',
+                    tone: 'amber' as const,
+                  },
+                ].map((group) => {
+                  const isEmerald = group.tone === 'emerald';
+                  return (
+                    <div
+                      key={group.title}
+                      className={`rounded-2xl border p-4 sm:p-5 ${
+                        isEmerald
+                          ? 'border-emerald-200/90 bg-emerald-50/50'
+                          : 'border-amber-200/90 bg-amber-50/55'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between gap-3 border-b pb-3 border-slate-200/70">
+                        <div className="flex items-center gap-2">
+                          {isEmerald ? (
+                            <span className="relative flex h-2.5 w-2.5">
+                              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
+                              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-600" />
+                            </span>
+                          ) : (
+                            <Clock3 className="h-4 w-4 text-amber-600" aria-hidden="true" />
+                          )}
+                          <h3 className="text-sm font-black text-slate-950">{group.title}</h3>
+                        </div>
+                        <span
+                          className="inline-flex h-7 min-w-7 items-center justify-center rounded-lg bg-white px-2 text-xs font-black text-slate-800 shadow-xs border border-slate-200/60"
+                          aria-label={`${group.events.length} ruangan`}
+                        >
+                          {group.events.length}
+                        </span>
+                      </div>
+
+                      {group.events.length > 0 ? (
+                        <div className="mt-3.5 grid gap-3 sm:grid-cols-2">
+                          {group.events.map((event) => (
+                            <div
+                              key={event.id}
+                              className={`group flex flex-col justify-between gap-3 rounded-xl border bg-white p-3.5 shadow-xs transition hover:shadow-md ${
+                                isEmerald
+                                  ? 'border-emerald-200 hover:border-emerald-400'
+                                  : 'border-amber-200 hover:border-amber-400'
+                              }`}
+                            >
+                              <div>
+                                <div className="flex items-start justify-between gap-2">
+                                  <h4 className="truncate text-xs font-black text-slate-900 group-hover:text-yarsi-primary">
+                                    {event.roomName}
+                                  </h4>
+                                  <span
+                                    className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wider ${
+                                      isEmerald
+                                        ? 'bg-emerald-100 text-emerald-800'
+                                        : 'bg-amber-100 text-amber-800'
+                                    }`}
+                                  >
+                                    {isEmerald ? 'Aktif' : `Mulai ${formatJakartaTime(event.startTime)}`}
+                                  </span>
+                                </div>
+                                <p className="mt-1 flex items-center gap-1 text-[11px] font-medium text-slate-500">
+                                  <MapPin className="h-3 w-3 shrink-0 text-slate-400" aria-hidden="true" />
+                                  <span className="truncate">{formatFloorLabel(event.floorName)}</span>
+                                </p>
+                              </div>
+
+                              <div className="flex items-center justify-between border-t border-slate-100 pt-2.5">
+                                <div className="inline-flex items-center gap-1.5 text-[11px] font-bold text-slate-700">
+                                  <Clock className={`h-3 w-3 ${isEmerald ? 'text-emerald-600' : 'text-amber-600'}`} aria-hidden="true" />
+                                  <span>{formatJakartaTime(event.startTime)} – {formatJakartaTime(event.endTime)} WIB</span>
+                                </div>
+                                <Link
+                                  href={`/schedule?roomId=${event.roomId}&date=${todayDateStr}`}
+                                  className="inline-flex items-center gap-0.5 text-[10px] font-extrabold text-yarsi-primary hover:text-emerald-800 hover:underline"
+                                >
+                                  Jadwal <ArrowRight className="h-2.5 w-2.5" aria-hidden="true" />
+                                </Link>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="mt-3.5 flex items-start gap-3 rounded-xl border border-dashed border-slate-300/80 bg-white/70 p-3.5 text-slate-600">
+                          {isEmerald ? (
+                            <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 mt-0.5" aria-hidden="true" />
+                          ) : (
+                            <Clock3 className="h-4 w-4 shrink-0 text-amber-600 mt-0.5" aria-hidden="true" />
+                          )}
+                          <div>
+                            <p className="text-xs font-bold text-slate-800">{group.emptyTitle}</p>
+                            <p className="mt-0.5 text-[11px] text-slate-500">{group.emptySubtitle}</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {todayFinishedEvents.length > 0 && (
+                <div className="mt-4 border-t border-slate-200/80 pt-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowFinishedToday((prev) => !prev)}
+                    className="inline-flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition"
+                  >
+                    <Clock3 className="h-3.5 w-3.5 text-slate-400" aria-hidden="true" />
+                    <span>
+                      {showFinishedToday ? 'Sembunyikan' : 'Lihat'} {todayFinishedEvents.length} ruangan yang selesai digunakan hari ini
                     </span>
-                  </div>
-                  {group.rooms.length > 0 ? (
-                    <ul className="mt-3 grid gap-2 sm:grid-cols-2" aria-label={group.title}>
-                      {group.rooms.map((roomName) => <li key={roomName} className="rounded-lg border border-white/80 bg-white px-3 py-2 text-xs font-bold text-slate-800 shadow-sm">{roomName}</li>)}
-                    </ul>
-                  ) : (
-                    <p className="mt-3 text-xs font-medium text-slate-600">{group.empty}</p>
+                    <ArrowRight
+                      className={`h-3 w-3 text-slate-400 transition-transform ${showFinishedToday ? 'rotate-90' : ''}`}
+                      aria-hidden="true"
+                    />
+                  </button>
+                  {showFinishedToday && (
+                    <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                      {todayFinishedEvents.map((event) => (
+                        <div
+                          key={event.id}
+                          className="flex flex-col justify-between gap-2.5 rounded-xl border border-slate-200 bg-slate-50/80 p-3 text-xs opacity-85 hover:opacity-100 transition"
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0 flex-1">
+                              <h5 className="truncate font-bold text-slate-800">{event.roomName}</h5>
+                              <p className="mt-0.5 flex items-center gap-1 text-[11px] text-slate-500">
+                                <MapPin className="h-3 w-3 text-slate-400" aria-hidden="true" />
+                                <span className="truncate">{formatFloorLabel(event.floorName)}</span>
+                              </p>
+                            </div>
+                            <span className="inline-flex items-center rounded-md bg-slate-200/80 px-1.5 py-0.5 text-[10px] font-bold text-slate-600">
+                              Selesai
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between border-t border-slate-200/70 pt-2 text-[11px] text-slate-600">
+                            <span className="flex items-center gap-1 font-semibold">
+                              <Clock className="h-3 w-3 text-slate-400" aria-hidden="true" />
+                              {formatJakartaTime(event.startTime)} – {formatJakartaTime(event.endTime)} WIB
+                            </span>
+                            <Link
+                              href={`/schedule?roomId=${event.roomId}&date=${todayDateStr}`}
+                              className="font-bold text-yarsi-primary hover:underline"
+                            >
+                              Jadwal
+                            </Link>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </div>
-              ))}
-            </div>
+              )}
+            </>
           ) : null}
         </section>
 
-        <section className="rounded-[22px_6px_22px_22px] border border-slate-200/90 bg-white p-4 shadow-[0_28px_80px_-58px_rgba(3,47,37,0.5)] sm:p-6">
-          <div className="flex flex-col gap-5 border-b border-slate-200 pb-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <div className="flex flex-wrap items-baseline gap-3">
-                <h2 className="text-lg font-black tracking-tight text-slate-950 sm:text-xl">Kategori Ruangan</h2>
-                <span className="text-xs font-bold text-yarsi-primary">{filteredRooms.length} ditemukan</span>
+        <section id="catalog-section" className="rounded-[22px_6px_22px_22px] border border-slate-200/90 bg-white p-4 shadow-[0_28px_80px_-58px_rgba(3,47,37,0.5)] sm:p-6">
+          <div className="flex flex-col gap-5 border-b border-slate-200 pb-5">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <div className="flex flex-wrap items-baseline gap-3">
+                  <h2 className="text-lg font-black tracking-tight text-slate-950 sm:text-xl">Daftar Ruangan per Lantai</h2>
+                  <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-extrabold text-yarsi-primary ring-1 ring-inset ring-emerald-600/20">
+                    {filteredRooms.length} ruangan ditemukan
+                  </span>
+                </div>
+                <p className="mt-1 text-xs text-slate-500">Ketersediaan {formatShortDateIndo(selectedDateStr)}</p>
               </div>
-              <p className="mt-1 text-xs text-slate-500">Ketersediaan {formatShortDateIndo(selectedDateStr)}</p>
+
+              {/* Smart Search Bar */}
+              <div className="relative w-full sm:w-72 md:w-80">
+                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Cari nama, kode, lab, kelas..."
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/70 py-2 pl-9 pr-9 text-xs font-semibold text-slate-900 placeholder:text-slate-400 transition-all focus:border-yarsi-primary focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    aria-label="Bersihkan pencarian"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-full p-1 text-slate-400 hover:bg-slate-200/60 hover:text-slate-700 transition"
+                  >
+                    <X className="h-3.5 w-3.5" aria-hidden="true" />
+                  </button>
+                )}
+              </div>
             </div>
 
-            <div className="flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center">
-              <div className="flex max-w-full items-center gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Kategori ruangan">
-                <button type="button" role="tab" aria-selected={selectedCategory === 'all'} onClick={() => setSelectedCategory('all')} className={`room-filter-chip ${selectedCategory === 'all' ? 'room-filter-chip-active' : ''}`}>
+            {/* Floor Tabs with horizontal scroll */}
+            <div className="flex items-center justify-between gap-3 pt-1">
+              <div className="flex max-w-full items-center gap-2 overflow-x-auto pb-1 scrollbar-thin" role="tablist" aria-label="Filter lantai ruangan">
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={selectedFloor === 'all'}
+                  onClick={() => setSelectedFloor('all')}
+                  className={`room-filter-chip shrink-0 ${selectedFloor === 'all' ? 'room-filter-chip-active' : ''}`}
+                >
                   Semua
                 </button>
-                {categories.map((category) => (
-                  <button key={category} type="button" role="tab" aria-selected={selectedCategory === category} onClick={() => setSelectedCategory(category)} className={`room-filter-chip ${selectedCategory === category ? 'room-filter-chip-active' : ''}`}>
-                    {roomTypeLabels[category]}
+                {floors.map((fl) => (
+                  <button
+                    key={fl.level}
+                    type="button"
+                    role="tab"
+                    aria-selected={selectedFloor === String(fl.level)}
+                    onClick={() => setSelectedFloor(String(fl.level))}
+                    className={`room-filter-chip shrink-0 ${selectedFloor === String(fl.level) ? 'room-filter-chip-active' : ''}`}
+                  >
+                    {fl.label}
                   </button>
                 ))}
               </div>
-              <Link href={`/schedule?date=${selectedDateStr}`} className="inline-flex min-h-10 shrink-0 items-center gap-1.5 text-xs font-extrabold text-slate-700 hover:text-yarsi-primary">
+
+              <Link href={`/schedule?date=${selectedDateStr}`} className="hidden sm:inline-flex min-h-10 shrink-0 items-center gap-1.5 text-xs font-extrabold text-slate-700 hover:text-yarsi-primary transition">
                 Lihat kalender <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
               </Link>
             </div>
@@ -505,11 +743,23 @@ export default function HomePage() {
 
           {filteredRooms.length === 0 ? (
             <div className="py-14 text-center">
-              <Building2 className="mx-auto h-9 w-9 text-slate-300" aria-hidden="true" />
-              <h3 className="mt-4 text-sm font-bold text-slate-800">Tidak ada ruangan yang sesuai</h3>
-              <p className="mt-1 text-xs text-slate-500">Ubah kata kunci atau kategori untuk melihat pilihan lain.</p>
-              <button type="button" onClick={() => { setSearchQuery(''); setSelectedCategory('all'); }} className="mt-4 min-h-11 px-4 text-sm font-bold text-yarsi-primary hover:bg-emerald-50">
-                Atur ulang pencarian
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
+                <Building2 className="h-7 w-7" aria-hidden="true" />
+              </div>
+              <h3 className="mt-4 text-sm font-bold text-slate-800">
+                {searchQuery ? `Tidak ada ruangan dengan kata kunci "${searchQuery}"` : 'Tidak ada ruangan pada filter ini'}
+              </h3>
+              <p className="mt-1 text-xs text-slate-500">
+                {searchQuery
+                  ? 'Coba gunakan kata kunci lain (misal: "lab", "auditorium", kode ruang) atau atur ulang pencarian.'
+                  : 'Pilih lantai lain atau tampilkan "Semua" untuk melihat ruangan yang tersedia.'}
+              </p>
+              <button
+                type="button"
+                onClick={() => { setSearchQuery(''); setSelectedFloor('all'); }}
+                className="mt-4 inline-flex min-h-10 items-center gap-2 rounded-xl bg-emerald-50 px-4 py-2 text-xs font-bold text-yarsi-primary hover:bg-emerald-100 transition"
+              >
+                Atur ulang pencarian & lantai
               </button>
             </div>
           ) : (
@@ -524,7 +774,7 @@ export default function HomePage() {
                       variant="compact"
                       isAvailableToday={!activeSchedule}
                       activeBookingTitle={undefined}
-                      activeTime={activeSchedule ? `${activeSchedule.startTime}–${activeSchedule.endTime}` : undefined}
+                      activeTime={activeSchedule ? `${formatJakartaTime(activeSchedule.startTime)} – ${formatJakartaTime(activeSchedule.endTime)} WIB` : undefined}
                     />
                   </div>
                 );

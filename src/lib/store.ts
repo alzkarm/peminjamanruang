@@ -16,6 +16,7 @@ import {
   bookingsApi,
   academicBulkApi,
   feedbacksApi,
+  mapFrontendCategoryToBackendActivityType,
   removeAuthToken,
   setAuthToken,
 } from './api';
@@ -255,7 +256,7 @@ export const useAppStore = create<AppState>()(
             {
               roomId: bookingData.roomId,
               title: bookingData.title,
-              activityType: (bookingData.category || 'SEMINAR').toUpperCase(),
+              activityType: mapFrontendCategoryToBackendActivityType(bookingData.category),
               startTime: startIso,
               endTime: endIso,
               dates: bookingData.dates,
@@ -275,31 +276,11 @@ export const useAppStore = create<AppState>()(
 
           return created;
         } catch (err: any) {
-          const currentRoom = get().rooms.find((r) => r.id === bookingData.roomId);
-          const recurringDates = bookingData.dates && bookingData.dates.length > 0
-            ? bookingData.dates
-            : [bookingData.date];
-
-          const newLocalBookings: Booking[] = recurringDates.map((d, index) => ({
-            ...bookingData,
-            id: `bk-${Date.now()}-${index}`,
-            bookingCode: `YARSI-BK-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`,
-            createdAt: new Date().toISOString().replace('T', ' ').substring(0, 16),
-            qrCodeToken: `QR-YARSI-BK-${Math.random().toString(36).substring(2, 8).toUpperCase()}`,
-            status: 'PENDING' as BookingStatus,
-            roomName: bookingData.roomName || currentRoom?.name || 'Ruangan Kampus',
-            building: bookingData.building || currentRoom?.building || '',
-            floor: bookingData.floor ?? currentRoom?.floor ?? 1,
-            requiresYayasanApproval: bookingData.requiresYayasanApproval ?? currentRoom?.requiresYayasanApproval ?? false,
-            date: d,
-          }));
-
-          set((state) => ({
-            bookings: [...newLocalBookings, ...state.bookings],
+          set({
             isLoading: false,
-            error: null,
-          }));
-          return newLocalBookings[0];
+            error: err?.message || 'Gagal mengajukan permohonan peminjaman ruangan.',
+          });
+          throw err;
         }
       },
 
