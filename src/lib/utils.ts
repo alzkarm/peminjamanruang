@@ -155,10 +155,17 @@ export function getStatusBadgeConfig(status: BookingStatus) {
     case "PENDING_LPF":
     case "PENDING" as any:
       return {
-        label: "Menunggu LPF",
+        label: "Menunggu Verifikasi",
         bg: "bg-amber-50 text-amber-800 border-amber-300 ring-amber-500/20",
         dot: "bg-amber-500",
         iconName: "Clock",
+      };
+    case "VERIFIED":
+      return {
+        label: "Terverifikasi (Admin)",
+        bg: "bg-indigo-50 text-indigo-800 border-indigo-300 ring-indigo-500/20",
+        dot: "bg-indigo-500",
+        iconName: "ShieldCheck",
       };
     case "RECOMMENDED_YAYASAN":
     case "RECOMMENDED" as any:

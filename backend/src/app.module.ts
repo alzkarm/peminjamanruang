@@ -8,18 +8,22 @@ import { AcademicBulkModule } from './academic-bulk/academic-bulk.module';
 import { ReportsModule } from './reports/reports.module';
 import { FeedbacksModule } from './feedbacks/feedbacks.module';
 import { CbtRoomModule } from './cbt-room/cbt-room.module';
+import { UsersModule } from './users/users.module';
+import { FacultiesModule } from './faculties/faculties.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     PrismaModule,
     AuthModule,
+    UsersModule,
     RoomsModule,
     BookingsModule,
     AcademicBulkModule,
     ReportsModule,
     FeedbacksModule,
     CbtRoomModule,
+    FacultiesModule,
   ],
 })
 export class AppModule {}

@@ -99,13 +99,19 @@ export class BookingsController {
   }
 
   @Get()
-  async findAll(@Query() query: QueryBookingDto) {
-    return this.bookingsService.findAll(query);
+  async findAll(
+    @Query() query: QueryBookingDto,
+    @CurrentUser() currentUser: { id: string; role: Role },
+  ) {
+    return this.bookingsService.findAll(query, currentUser);
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string) {
-    return this.bookingsService.findOne(id);
+  async findOne(
+    @Param('id') id: string,
+    @CurrentUser() currentUser: { id: string; role: Role },
+  ) {
+    return this.bookingsService.findOne(id, currentUser);
   }
 
   @Patch('batch-status')

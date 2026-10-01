@@ -324,14 +324,30 @@ export const useAppStore = create<AppState>()(
       approveBookingLPF: async (bookingId, notes, approverName, applyToRecurringGroup = true) => {
         set({ isSyncing: true });
         const booking = get().bookings.find((b) => b.id === bookingId);
-        const targetStatus = booking?.requiresYayasanApproval ? 'RECOMMENDED' : 'APPROVED';
-        const frontendTargetStatus = booking?.requiresYayasanApproval ? 'RECOMMENDED_YAYASAN' : 'APPROVED';
+        const currentUserRole = get().currentUser?.role;
+        let targetStatus: 'VERIFIED' | 'RECOMMENDED' | 'APPROVED' = 'APPROVED';
+        let frontendTargetStatus: BookingStatus = 'APPROVED';
+
+        if (booking?.requiresYayasanApproval) {
+          targetStatus = 'RECOMMENDED';
+          frontendTargetStatus = 'RECOMMENDED_YAYASAN';
+        } else {
+          // Ruangan Umum: Admin Umum memverifikasi -> VERIFIED; Superadmin menyetujui -> APPROVED
+          if (currentUserRole === 'admin_umum') {
+            targetStatus = 'VERIFIED';
+            frontendTargetStatus = 'VERIFIED';
+          } else {
+            targetStatus = 'APPROVED';
+            frontendTargetStatus = 'APPROVED';
+          }
+        }
 
         let relatedIds = [bookingId];
         if (applyToRecurringGroup && booking) {
+          const matchStatus = booking.status;
           if (booking.bulkGroupId) {
             relatedIds = get().bookings
-              .filter((b) => b.bulkGroupId === booking.bulkGroupId && b.status === 'PENDING_LPF')
+              .filter((b) => b.bulkGroupId === booking.bulkGroupId && b.status === matchStatus)
               .map((b) => b.id);
           } else if (isRecurringBooking(booking)) {
             relatedIds = get().bookings
@@ -340,7 +356,7 @@ export const useAppStore = create<AppState>()(
                   b.userId === booking.userId &&
                   b.roomId === booking.roomId &&
                   b.title === booking.title &&
-                  b.status === 'PENDING_LPF' &&
+                  b.status === matchStatus &&
                   isRecurringBooking(b)
               )
               .map((b) => b.id);

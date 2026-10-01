@@ -11,6 +11,8 @@ import {
   ArrowLeft,
   GraduationCap,
   Users,
+  CalendarDays,
+  Monitor,
 } from 'lucide-react';
 
 import { countUniqueBookingApplications } from '@/lib/utils';
@@ -19,39 +21,114 @@ export function AdminSidebar() {
   const pathname = usePathname();
   const { bookings, currentUser, logout } = useAppStore();
 
-  const pendingLPFCount = countUniqueBookingApplications(bookings.filter((b) => b.status === 'PENDING_LPF'));
-  const pendingYayasanCount = countUniqueBookingApplications(bookings.filter((b) => b.status === 'RECOMMENDED_YAYASAN'));
+  const role = currentUser?.role;
+  const isSuperadmin = role === 'superadmin';
+  const isAdminUmum = role === 'admin_umum';
+  const isAdminLPF = role === 'admin_lpf';
+  const isYayasan = role === 'admin_yayasan';
 
-  const navItems = [
-    {
+  const pendingGeneralCount = countUniqueBookingApplications(
+    bookings.filter((b) => (b.status === 'PENDING_LPF' || b.status === 'VERIFIED') && !b.requiresYayasanApproval)
+  );
+  const pendingLPFCount = countUniqueBookingApplications(
+    bookings.filter((b) => b.status === 'PENDING_LPF' && b.requiresYayasanApproval)
+  );
+  const pendingYayasanCount = countUniqueBookingApplications(
+    bookings.filter((b) => b.status === 'RECOMMENDED_YAYASAN')
+  );
+
+  const navItems = [];
+
+  // 1. Approval Items:
+  if (isAdminUmum) {
+    navItems.push({
+      href: '/admin/approvals',
+      label: 'Verifikasi Ruang Umum',
+      description: 'Verifikasi pengajuan ruang reguler',
+      icon: ShieldCheck,
+      badge: pendingGeneralCount,
+      badgeColor: 'bg-indigo-500',
+    });
+  } else if (isAdminLPF) {
+    navItems.push({
       href: '/admin/approvals',
       label: 'Persetujuan LPF',
-      description: 'Tinjau permohonan ruang reguler',
+      description: 'Rekomendasi permohonan Yayasan',
       icon: ShieldCheck,
       badge: pendingLPFCount,
       badgeColor: 'bg-amber-500',
-    },
-    {
+    });
+  } else if (isSuperadmin) {
+    navItems.push(
+      {
+        href: '/admin/approvals',
+        label: 'Persetujuan Ruang Umum',
+        description: 'Approval akhir ruang kuliah & lab',
+        icon: ShieldCheck,
+        badge: pendingGeneralCount,
+        badgeColor: 'bg-indigo-500',
+      },
+      {
+        href: '/admin/approvals/yayasan',
+        label: 'Persetujuan Yayasan',
+        description: 'Auditorium Ar-Rahman & R. Senat',
+        icon: Building2,
+        badge: pendingYayasanCount,
+        badgeColor: 'bg-sky-500',
+      }
+    );
+  } else if (isYayasan) {
+    navItems.push({
       href: '/admin/approvals/yayasan',
       label: 'Persetujuan Yayasan',
       description: 'Auditorium Ar-Rahman & R. Senat',
       icon: Building2,
       badge: pendingYayasanCount,
       badgeColor: 'bg-sky-500',
-    },
-    {
+    });
+  }
+
+  // 2. Academic schedule: Superadmin, Admin Umum, Admin LPF
+  if (isSuperadmin || isAdminUmum || isAdminLPF) {
+    navItems.push({
       href: '/admin/academic-bulk',
       label: 'Jadwal Akademik',
       description: 'Kelola penggunaan ruang semester',
       icon: GraduationCap,
-    },
-    {
-      href: '/admin/reports',
-      label: 'Laporan & Ekspor',
-      description: 'Rekap pemanfaatan ruang',
-      icon: BarChart3,
-    },
-  ];
+    });
+  }
+
+  // 3. Reports: all admin roles
+  navItems.push({
+    href: '/admin/reports',
+    label: 'Laporan & Ekspor',
+    description: 'Rekap pemanfaatan ruang',
+    icon: BarChart3,
+  });
+
+  // 4. Superadmin only menus
+  if (isSuperadmin) {
+    navItems.push(
+      {
+        href: '/admin/users',
+        label: 'Manajemen Pengguna',
+        description: 'Whitelist & invite multi-role',
+        icon: Users,
+      },
+      {
+        href: '/admin/rooms',
+        label: 'Master Ruangan',
+        description: 'Kelola & ketersediaan ruangan',
+        icon: Building2,
+      },
+      {
+        href: '/admin/faculties',
+        label: 'Master Fakultas',
+        description: 'Kelola daftar fakultas & warna',
+        icon: GraduationCap,
+      }
+    );
+  }
 
   return (
     <aside className="w-full space-y-6 rounded-[16px_4px_16px_16px] border border-slate-200/90 bg-white p-4 shadow-sm lg:sticky lg:top-[104px] lg:w-72 lg:self-start">
@@ -114,7 +191,7 @@ export function AdminSidebar() {
       <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-200 text-xs space-y-2">
         <p className="font-bold text-slate-700 flex items-center gap-1.5">
           <Users className="w-3.5 h-3.5 text-yarsi-primary" />
-          <span>Admin Terverifikasi SSO</span>
+          <span>Role Aktif</span>
         </p>
         <div className="bg-white p-2.5 rounded-lg border border-slate-200 space-y-1">
           <p className="font-bold text-slate-800">{currentUser?.name?.split(',')[0] || 'Administrator'}</p>
@@ -123,21 +200,49 @@ export function AdminSidebar() {
           </p>
           <div className="pt-1">
             <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-900 border border-emerald-300">
-              {currentUser?.role === 'admin_yayasan' ? 'Pengurus Yayasan' : 'Admin LPF'}
+              {isSuperadmin
+                ? 'Superadmin'
+                : isAdminUmum
+                ? 'Admin Ruang Umum'
+                : isAdminLPF
+                ? 'Admin LPF'
+                : 'Pengurus Yayasan'}
             </span>
           </div>
         </div>
       </div>
 
       {/* Return to Public Portal */}
-      <div className="pt-2">
+      <div className="pt-2 border-t border-slate-100 space-y-2">
+        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-1">
+          Navigasi Halaman Publik
+        </p>
         <Link
           href="/"
-          className="flex items-center justify-center gap-2 p-2.5 text-xs font-semibold text-slate-600 hover:text-yarsi-primary hover:bg-slate-50 rounded-xl border border-slate-200 transition-colors"
+          className="flex items-center justify-between p-2.5 text-xs font-bold text-slate-700 hover:text-yarsi-primary hover:bg-emerald-50 rounded-xl border border-slate-200 transition-all group"
         >
-          <ArrowLeft className="w-4 h-4" />
-          <span>Kembali ke Beranda Publik</span>
+          <div className="flex items-center gap-2">
+            <ArrowLeft className="w-4 h-4 text-slate-400 group-hover:text-yarsi-primary transition-colors" />
+            <span>Kembali ke Beranda</span>
+          </div>
+          <span className="text-[10px] text-slate-400 font-normal">Publik</span>
         </Link>
+        <div className="grid grid-cols-2 gap-1.5">
+          <Link
+            href="/schedule"
+            className="flex items-center justify-center gap-1.5 p-2 text-[11px] font-medium text-slate-600 hover:text-yarsi-primary hover:bg-slate-50 rounded-lg border border-slate-200 transition-colors"
+          >
+            <CalendarDays className="w-3.5 h-3.5 text-slate-400" />
+            <span>Kalender</span>
+          </Link>
+          <Link
+            href="/cbt-room"
+            className="flex items-center justify-center gap-1.5 p-2 text-[11px] font-medium text-slate-600 hover:text-yarsi-primary hover:bg-slate-50 rounded-lg border border-slate-200 transition-colors"
+          >
+            <Monitor className="w-3.5 h-3.5 text-slate-400" />
+            <span>Ruang CBT</span>
+          </Link>
+        </div>
       </div>
     </aside>
   );

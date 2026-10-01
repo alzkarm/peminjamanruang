@@ -12,7 +12,11 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const { currentUser } = useAppStore();
-  const isAdmin = currentUser?.role === 'admin_lpf' || currentUser?.role === 'admin_yayasan';
+  const isAdmin =
+    currentUser?.role === 'admin_lpf' ||
+    currentUser?.role === 'admin_yayasan' ||
+    currentUser?.role === 'admin_umum' ||
+    currentUser?.role === 'superadmin';
 
   if (!isAdmin) {
     return (

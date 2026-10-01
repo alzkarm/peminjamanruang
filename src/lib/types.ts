@@ -1,9 +1,19 @@
-export type Role = 'mahasiswa' | 'dosen' | 'tendik' | 'admin_lpf' | 'admin_yayasan' | 'guest' | 'security_cs';
+export type Role =
+  | 'mahasiswa'
+  | 'dosen'
+  | 'tendik'
+  | 'admin_umum'
+  | 'admin_lpf'
+  | 'admin_yayasan'
+  | 'superadmin'
+  | 'guest'
+  | 'security_cs';
 
 export type RoomType = 'auditorium' | 'classroom' | 'lab' | 'meeting' | 'studio' | 'hall';
 
 export type BookingStatus =
   | 'PENDING'
+  | 'VERIFIED'
   | 'RECOMMENDED'
   | 'PENDING_LPF'
   | 'RECOMMENDED_YAYASAN'
@@ -13,6 +23,18 @@ export type BookingStatus =
   | 'CANCELLED'
   | 'ACADEMIC_BLOCKED'
   | 'COMPLETED';
+
+export interface Faculty {
+  id: string;
+  code: string;
+  name: string;
+  colorBg?: string;
+  colorBorder?: string;
+  colorText?: string;
+  isActive: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
 
 export type BookingCategory =
   | 'seminar'
@@ -200,8 +222,22 @@ export interface UserSession {
 
 export type CbtFaculty = 'FEB' | 'FH' | 'FTI' | 'FK' | 'FKG' | 'FP';
 
+export type CbtBookingStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+
+export type CbtRoomId = 'cbt-a' | 'cbt-b';
+export type CbtRoomCode = 'A' | 'B';
+
+export function getCbtRoomCode(roomId: CbtRoomId): CbtRoomCode {
+  return roomId === 'cbt-b' ? 'B' : 'A';
+}
+
+export function isCbtRoomId(value: string | null): value is CbtRoomId {
+  return value === 'cbt-a' || value === 'cbt-b';
+}
+
 export interface CbtSeatBooking {
   id: string;
+  roomId?: CbtRoomCode;
   userId: string;
   faculty: CbtFaculty;
   title: string;
@@ -209,6 +245,7 @@ export interface CbtSeatBooking {
   seatEnd: number;
   startTime: string;
   endTime: string;
+  status?: CbtBookingStatus;
   notes?: string;
   createdAt: string;
   user?: {
@@ -217,3 +254,22 @@ export interface CbtSeatBooking {
     unitName: string;
   };
 }
+
+export interface RecentSubmission {
+  id: string;
+  title: string;
+  roomId: string;
+  roomName: string;
+  roomCode: string;
+  floorLevel: number;
+  floorName: string;
+  capacity: number;
+  status: string;
+  startTime: string;
+  endTime: string;
+  activityType: string;
+  applicantName: string;
+  unitName: string;
+  createdAt: string;
+}
+

@@ -1,8 +1,7 @@
-'use client';
-
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { CbtFaculty, CbtSeatBooking } from '@/lib/types';
 import { FACULTY_COLORS, formatSeatList } from './CbtSeatMap';
+import { facultiesApi } from '@/lib/api';
 import {
   Calendar,
   FileText,
@@ -13,7 +12,7 @@ import {
   Trash2,
 } from 'lucide-react';
 
-const FACULTIES: { code: CbtFaculty; label: string }[] = [
+const DEFAULT_FACULTIES: { code: string; label: string }[] = [
   { code: 'FEB', label: 'FEB — Fakultas Ekonomi & Bisnis' },
   { code: 'FH',  label: 'FH — Fakultas Hukum' },
   { code: 'FTI', label: 'FTI — Fakultas Teknologi Informasi' },
@@ -29,6 +28,7 @@ interface CbtBookingFormProps {
   faculty: CbtFaculty | '';
   onFacultyChange: (f: CbtFaculty | '') => void;
   capacity: number;
+  maxCapacity?: number;
   onCapacityChange: (cap: number) => void;
   notes: string;
   onNotesChange: (n: string) => void;
@@ -42,9 +42,11 @@ interface CbtBookingFormProps {
 
   // Date & Time
   selectedDate: string;
+  selectedEndDate: string;
   selectedStartTime: string;
   selectedEndTime: string;
   onDateChange: (date: string) => void;
+  onEndDateChange: (date: string) => void;
   onStartTimeChange: (time: string) => void;
   onEndTimeChange: (time: string) => void;
 
@@ -61,15 +63,18 @@ export default function CbtBookingForm({
   faculty,
   onFacultyChange,
   capacity,
+  maxCapacity = 200,
   onCapacityChange,
   notes,
   onNotesChange,
   selectedSeats,
   onClearSelection,
   selectedDate,
+  selectedEndDate,
   selectedStartTime,
   selectedEndTime,
   onDateChange,
+  onEndDateChange,
   onStartTimeChange,
   onEndTimeChange,
   onSubmit,
@@ -77,6 +82,24 @@ export default function CbtBookingForm({
   error,
   successMessage,
 }: CbtBookingFormProps) {
+  const [facultyOptions, setFacultyOptions] = useState<{ code: string; label: string }[]>(DEFAULT_FACULTIES);
+
+  useEffect(() => {
+    facultiesApi
+      .getAll(true)
+      .then((data) => {
+        if (data && data.length > 0) {
+          setFacultyOptions(
+            data.map((f) => ({
+              code: f.code,
+              label: `${f.code} — ${f.name}`,
+            }))
+          );
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   const facultyColor = faculty ? FACULTY_COLORS[faculty as CbtFaculty] : null;
 
   const countMatches = capacity > 0 && selectedSeats.length === capacity;
@@ -86,9 +109,10 @@ export default function CbtBookingForm({
     Boolean(faculty) &&
     Boolean(title.trim()) &&
     capacity > 0 &&
-    capacity <= 200 &&
+    capacity <= maxCapacity &&
     selectedSeats.length === capacity &&
     Boolean(selectedDate) &&
+    Boolean(selectedEndDate) &&
     Boolean(selectedStartTime) &&
     Boolean(selectedEndTime);
 
@@ -110,15 +134,16 @@ export default function CbtBookingForm({
         </div>
       )}
 
-      {/* Time Slot Section */}
+      {/* Time Slot Section — Vertical Hierarchy */}
       <div className="space-y-3">
         <h3 className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
           <Calendar className="w-3.5 h-3.5 text-emerald-600" />
           Slot Waktu Ujian
         </h3>
 
+        {/* 1. Tanggal Mulai */}
         <div>
-          <label className="block text-xs font-medium text-slate-500 mb-1">Tanggal</label>
+          <label className="block text-xs font-medium text-slate-500 mb-1">Tanggal Mulai</label>
           <input
             type="date"
             value={selectedDate}
@@ -127,25 +152,37 @@ export default function CbtBookingForm({
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="block text-xs font-medium text-slate-500 mb-1">Mulai</label>
-            <input
-              type="time"
-              value={selectedStartTime}
-              onChange={(e) => onStartTimeChange(e.target.value)}
-              className="w-full rounded-lg border border-slate-300 dark:border-slate-700 px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-600"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-slate-500 mb-1">Selesai</label>
-            <input
-              type="time"
-              value={selectedEndTime}
-              onChange={(e) => onEndTimeChange(e.target.value)}
-              className="w-full rounded-lg border border-slate-300 dark:border-slate-700 px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-600"
-            />
-          </div>
+        {/* 2. Jam Mulai */}
+        <div>
+          <label className="block text-xs font-medium text-slate-500 mb-1">Jam Mulai</label>
+          <input
+            type="time"
+            value={selectedStartTime}
+            onChange={(e) => onStartTimeChange(e.target.value)}
+            className="w-full rounded-lg border border-slate-300 dark:border-slate-700 px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-600"
+          />
+        </div>
+
+        {/* 3. Tanggal Selesai */}
+        <div>
+          <label className="block text-xs font-medium text-slate-500 mb-1">Tanggal Selesai</label>
+          <input
+            type="date"
+            value={selectedEndDate}
+            onChange={(e) => onEndDateChange(e.target.value)}
+            className="w-full rounded-lg border border-slate-300 dark:border-slate-700 px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-600"
+          />
+        </div>
+
+        {/* 4. Jam Selesai */}
+        <div>
+          <label className="block text-xs font-medium text-slate-500 mb-1">Jam Selesai</label>
+          <input
+            type="time"
+            value={selectedEndTime}
+            onChange={(e) => onEndTimeChange(e.target.value)}
+            className="w-full rounded-lg border border-slate-300 dark:border-slate-700 px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-600"
+          />
         </div>
       </div>
 
@@ -175,7 +212,7 @@ export default function CbtBookingForm({
             <option value="" className="bg-white dark:bg-slate-800 text-slate-900 dark:text-white">
               Pilih Fakultas...
             </option>
-            {FACULTIES.map((f) => (
+            {facultyOptions.map((f) => (
               <option
                 key={f.code}
                 value={f.code}
@@ -205,13 +242,13 @@ export default function CbtBookingForm({
             <label className="block text-xs font-medium text-slate-700 dark:text-slate-300">
               Kapasitas (Jumlah Kursi)
             </label>
-            <span className="text-[10px] text-slate-400">Maks. 200 kursi</span>
+            <span className="text-[10px] text-slate-400">Maks. {maxCapacity} kursi</span>
           </div>
           <div className="relative">
             <input
               type="number"
               min="1"
-              max="200"
+              max={maxCapacity}
               value={capacity > 0 ? capacity : ''}
               onChange={(e) => onCapacityChange(Math.max(0, parseInt(e.target.value) || 0))}
               placeholder="Ketik jumlah kursi yang dibutuhkan (misal: 30)"

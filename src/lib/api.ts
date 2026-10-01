@@ -18,6 +18,8 @@ import {
   CbtSeatBooking,
   PublicScheduleEvent,
   RoomAvailabilityResponse,
+  Faculty,
+  RecentSubmission,
 } from './types';
 
 const API_BASE_URL =
@@ -118,9 +120,11 @@ async function request<T>(
 export function mapBackendStatusToFrontend(backendStatus: string): BookingStatus {
   switch (backendStatus) {
     case 'PENDING':
-      return 'PENDING_LPF';
+      return 'PENDING';
+    case 'VERIFIED':
+      return 'VERIFIED';
     case 'RECOMMENDED':
-      return 'RECOMMENDED_YAYASAN';
+      return 'RECOMMENDED';
     case 'APPROVED':
       return 'APPROVED';
     case 'REJECTED':
@@ -131,14 +135,18 @@ export function mapBackendStatusToFrontend(backendStatus: string): BookingStatus
     case 'CANCELLED':
       return 'CANCELLED';
     default:
-      return (backendStatus as BookingStatus) || 'PENDING_LPF';
+      return (backendStatus as BookingStatus) || 'PENDING';
   }
 }
 
 export function mapFrontendStatusToBackend(frontendStatus: string): string {
   switch (frontendStatus) {
+    case 'PENDING':
     case 'PENDING_LPF':
       return 'PENDING';
+    case 'VERIFIED':
+      return 'VERIFIED';
+    case 'RECOMMENDED':
     case 'RECOMMENDED_YAYASAN':
       return 'RECOMMENDED';
     case 'APPROVED':
@@ -148,6 +156,7 @@ export function mapFrontendStatusToBackend(frontendStatus: string): string {
     case 'RETURNED':
       return 'RETURNED';
     case 'CANCELLED':
+    case 'CANCELED':
       return 'CANCELED';
     default:
       return frontendStatus;
@@ -256,9 +265,13 @@ export function mapBackendBookingToFrontend(b: any): Booking {
   const buildingName = '';
 
   const userRole: Role =
-    b.user?.role === 'ADMIN_YAYASAN'
+    b.user?.role === 'SUPERADMIN'
+      ? 'superadmin'
+      : b.user?.role === 'ADMIN_UMUM'
+      ? 'admin_umum'
+      : b.user?.role === 'ADMIN_YAYASAN' || b.user?.role === 'YAYASAN'
       ? 'admin_yayasan'
-      : b.user?.role === 'ADMIN_UNIV'
+      : b.user?.role === 'ADMIN_UNIV' || b.user?.role === 'ADMIN_LPF'
       ? 'admin_lpf'
       : b.user?.username?.startsWith('03')
       ? 'dosen'
@@ -396,21 +409,32 @@ export const authApi = {
     }
 
     const roleMap: Record<string, Role> = {
+      SUPERADMIN: 'superadmin',
+      superadmin: 'superadmin',
+      ADMIN_UMUM: 'admin_umum',
+      admin_umum: 'admin_umum',
       ADMIN_YAYASAN: 'admin_yayasan',
+      YAYASAN: 'admin_yayasan',
+      admin_yayasan: 'admin_yayasan',
       ADMIN_UNIV: 'admin_lpf',
+      ADMIN_LPF: 'admin_lpf',
+      admin_lpf: 'admin_lpf',
+      dosen: 'dosen',
+      tendik: 'tendik',
+      mahasiswa: 'mahasiswa',
       USER: username.startsWith('03') ? 'dosen' : 'mahasiswa',
       GUEST: 'guest',
     };
 
     const user: UserSession = {
       id: data.user.id,
-      name: data.user.fullName,
-      identifier: data.user.username,
-      role: roleMap[data.user.role] || 'mahasiswa',
-      email: data.user.email || `${data.user.username}@yarsi.ac.id`,
-      department: data.user.unitName,
-      organization: data.user.unitName,
-      phone: '0812-9876-5432',
+      name: data.user.fullName || data.user.name,
+      identifier: data.user.username || data.user.identifier,
+      role: (roleMap[data.user.role] || data.user.role || (username.startsWith('03') ? 'dosen' : 'mahasiswa')) as Role,
+      email: data.user.email || `${data.user.username || username}@yarsi.ac.id`,
+      department: data.user.unitName || data.user.department,
+      organization: data.user.unitName || data.user.department,
+      phone: data.user.phone || '0812-9876-5432',
       token: data.accessToken,
     };
 
@@ -424,8 +448,16 @@ export const authApi = {
   async getProfile(): Promise<UserSession> {
     const data = await request<any>('/auth/profile');
     const roleMap: Record<string, Role> = {
+      SUPERADMIN: 'superadmin',
+      superadmin: 'superadmin',
+      ADMIN_UMUM: 'admin_umum',
+      admin_umum: 'admin_umum',
       ADMIN_YAYASAN: 'admin_yayasan',
+      YAYASAN: 'admin_yayasan',
+      admin_yayasan: 'admin_yayasan',
       ADMIN_UNIV: 'admin_lpf',
+      ADMIN_LPF: 'admin_lpf',
+      admin_lpf: 'admin_lpf',
       USER: data.username?.startsWith('03') ? 'dosen' : 'mahasiswa',
       GUEST: 'guest',
     };
@@ -480,9 +512,108 @@ export const roomsApi = {
     return request(`/rooms/schedule?${params.toString()}`);
   },
 
+  async getRecentSubmissions(limit = 5): Promise<RecentSubmission[]> {
+    return request<RecentSubmission[]>(`/rooms/recent-submissions?limit=${limit}`);
+  },
+
   async getById(id: string): Promise<Room> {
     const data = await request<any>(`/rooms/${id}`);
     return mapBackendRoomToFrontend(data);
+  },
+
+  async create(payload: {
+    name: string;
+    floorId: number;
+    capacity: number;
+    isSpecialRoom?: boolean;
+    isActive?: boolean;
+  }): Promise<Room> {
+    const res = await request<any>('/rooms', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+    return mapBackendRoomToFrontend(res);
+  },
+
+  async update(
+    id: string,
+    payload: {
+      name?: string;
+      floorId?: number;
+      building?: string;
+      capacity?: number;
+      isSpecialRoom?: boolean;
+      isActive?: boolean;
+    }
+  ): Promise<Room> {
+    const res = await request<any>(`/rooms/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    });
+    return mapBackendRoomToFrontend(res);
+  },
+
+  async delete(id: string): Promise<{ message: string }> {
+    return request<{ message: string }>(`/rooms/${id}`, {
+      method: 'DELETE',
+    });
+  },
+
+  async toggleStatus(id: string): Promise<{ message: string; room: Room }> {
+    const res = await request<any>(`/rooms/${id}/toggle-status`, {
+      method: 'PATCH',
+    });
+    return {
+      message: res.message,
+      room: mapBackendRoomToFrontend(res.room),
+    };
+  },
+};
+
+export const facultiesApi = {
+  async getAll(onlyActive: boolean = false): Promise<Faculty[]> {
+    return request<Faculty[]>(`/faculties${onlyActive ? '?onlyActive=true' : ''}`);
+  },
+
+  async getById(id: string): Promise<Faculty> {
+    return request<Faculty>(`/faculties/${id}`);
+  },
+
+  async create(payload: {
+    code: string;
+    name: string;
+    colorBg?: string;
+    colorBorder?: string;
+    colorText?: string;
+    isActive?: boolean;
+  }): Promise<Faculty> {
+    return request<Faculty>('/faculties', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  },
+
+  async update(
+    id: string,
+    payload: {
+      code?: string;
+      name?: string;
+      colorBg?: string;
+      colorBorder?: string;
+      colorText?: string;
+      isActive?: boolean;
+    }
+  ): Promise<Faculty> {
+    return request<Faculty>(`/faculties/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    });
+  },
+
+  async delete(id: string): Promise<{ message: string }> {
+    return request<{ message: string }>(`/faculties/${id}`, {
+      method: 'DELETE',
+    });
   },
 };
 
@@ -730,8 +861,9 @@ export const reportsApi = {
 };
 
 export const cbtRoomApi = {
-  async getSeats(startTime: string, endTime: string): Promise<CbtSeatBooking[]> {
-    const params = new URLSearchParams({ startTime, endTime });
+  async getSeats(startTime: string, endTime: string, roomId: string = 'A'): Promise<CbtSeatBooking[]> {
+    const backendRoomId = roomId.toUpperCase().includes('B') ? 'B' : 'A';
+    const params = new URLSearchParams({ startTime, endTime, roomId: backendRoomId });
     return request<CbtSeatBooking[]>(`/cbt-room/seats?${params.toString()}`);
   },
 
@@ -752,5 +884,52 @@ export const cbtRoomApi = {
 
   async getAllBookings(): Promise<CbtSeatBooking[]> {
     return request<CbtSeatBooking[]>('/cbt-room/bookings');
+  },
+
+  async updateBookingStatus(id: string, status: 'APPROVED' | 'REJECTED' | 'PENDING'): Promise<CbtSeatBooking> {
+    return request<CbtSeatBooking>(`/cbt-room/bookings/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    });
+  },
+};
+
+export interface WhitelistUser {
+  id: string;
+  username: string;
+  fullName: string;
+  email: string;
+  unitName: string;
+  role: string;
+  rawRole: string;
+  hasLocalPassword: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface InviteUserPayload {
+  identifier: string;
+  fullName?: string;
+  role?: string;
+  unitName?: string;
+  password?: string;
+}
+
+export const usersApi = {
+  async getAll(): Promise<WhitelistUser[]> {
+    return request<WhitelistUser[]>('/users');
+  },
+
+  async invite(payload: InviteUserPayload): Promise<{ message: string; user: WhitelistUser }> {
+    return request<{ message: string; user: WhitelistUser }>('/users/invite', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  },
+
+  async remove(id: string): Promise<{ message: string }> {
+    return request<{ message: string }>(`/users/${id}`, {
+      method: 'DELETE',
+    });
   },
 };

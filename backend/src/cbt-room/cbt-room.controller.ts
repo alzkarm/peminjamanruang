@@ -2,9 +2,12 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
+  Param,
   Body,
   Query,
   UseGuards,
+  BadRequestException,
 } from '@nestjs/common';
 import { CbtRoomService } from './cbt-room.service';
 import { CreateCbtBookingDto, QueryCbtSeatsDto } from './dto/cbt-room.dto';
@@ -45,5 +48,21 @@ export class CbtRoomController {
   @UseGuards(JwtAuthGuard)
   async getAllBookings() {
     return this.cbtRoomService.getAllBookings();
+  }
+
+  /**
+   * PATCH /api/cbt-room/bookings/:id/status
+   * Authenticated — approve or reject a CBT booking.
+   */
+  @Patch('bookings/:id/status')
+  @UseGuards(JwtAuthGuard)
+  async updateBookingStatus(
+    @Param('id') id: string,
+    @Body('status') status: 'APPROVED' | 'REJECTED' | 'PENDING',
+  ) {
+    if (!['APPROVED', 'REJECTED', 'PENDING'].includes(status)) {
+      throw new BadRequestException('Status tidak valid. Harus APPROVED, REJECTED, atau PENDING.');
+    }
+    return this.cbtRoomService.updateBookingStatus(id, status);
   }
 }

@@ -48,3 +48,33 @@ export class QueryRoomDto {
   @IsString()
   search?: string;
 }
+
+export class UpdateRoomDto {
+  @IsOptional()
+  @IsString()
+  name?: string;
+
+  @IsOptional()
+  @IsInt()
+  @Type(() => Number)
+  floorId?: number;
+
+  @IsOptional()
+  @IsString()
+  building?: string;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Type(() => Number)
+  capacity?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  isSpecialRoom?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  isActive?: boolean;
+}
+

@@ -54,7 +54,13 @@ export default function LpfApprovalsPage() {
     fetchRooms().catch(() => undefined);
   }, [fetchBookings, fetchRooms]);
 
-  const [activeFilter, setActiveFilter] = useState<'pending' | 'yayasan' | 'all'>('pending');
+  const role = currentUser?.role;
+  const isSuperadmin = role === 'superadmin';
+  const isAdminUmum = role === 'admin_umum';
+  const isAdminLPF = role === 'admin_lpf';
+
+  const defaultFilter = isSuperadmin ? 'verified' : 'pending';
+  const [activeFilter, setActiveFilter] = useState<'pending' | 'verified' | 'yayasan' | 'all'>(defaultFilter);
   const [searchQuery, setSearchQuery] = useState('');
   const [isGroupRecurring, setIsGroupRecurring] = useState(true);
   const [expandedGroupIds, setExpandedGroupIds] = useState<string[]>([]);
@@ -77,8 +83,12 @@ export default function LpfApprovalsPage() {
   // Bulk selection
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
-  // Filter bookings
+  // Filter bookings with strict role isolation
   const lpfQueue = bookings.filter((b) => {
+    // Client-side isolation safeguard
+    if (isAdminUmum && b.requiresYayasanApproval) return false;
+    if (isAdminLPF && !b.requiresYayasanApproval) return false;
+
     // search
     if (
       searchQuery &&
@@ -91,13 +101,35 @@ export default function LpfApprovalsPage() {
     }
 
     if (activeFilter === 'pending') return b.status === 'PENDING_LPF';
+    if (activeFilter === 'verified') return b.status === 'VERIFIED';
     if (activeFilter === 'yayasan') return b.status === 'RECOMMENDED_YAYASAN';
     return true; // all
   });
 
-  const pendingCount = countUniqueBookingApplications(bookings.filter((b) => b.status === 'PENDING_LPF'));
-  const yayasanCount = countUniqueBookingApplications(bookings.filter((b) => b.status === 'RECOMMENDED_YAYASAN'));
-  const totalCount = countUniqueBookingApplications(bookings);
+  const pendingCount = countUniqueBookingApplications(
+    bookings.filter((b) => {
+      if (isAdminUmum && b.requiresYayasanApproval) return false;
+      if (isAdminLPF && !b.requiresYayasanApproval) return false;
+      return b.status === 'PENDING_LPF';
+    })
+  );
+  const verifiedCount = countUniqueBookingApplications(
+    bookings.filter((b) => {
+      if (isAdminUmum && b.requiresYayasanApproval) return false;
+      if (isAdminLPF && !b.requiresYayasanApproval) return false;
+      return b.status === 'VERIFIED';
+    })
+  );
+  const yayasanCount = countUniqueBookingApplications(
+    bookings.filter((b) => b.status === 'RECOMMENDED_YAYASAN')
+  );
+  const totalCount = countUniqueBookingApplications(
+    bookings.filter((b) => {
+      if (isAdminUmum && b.requiresYayasanApproval) return false;
+      if (isAdminLPF && !b.requiresYayasanApproval) return false;
+      return true;
+    })
+  );
 
   // Conflict detector between pending bookings in the same room/time
   const getSimultaneousClash = (targetBooking: Booking) => {
@@ -288,13 +320,27 @@ export default function LpfApprovalsPage() {
         <div>
           <div className="mb-2 inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-yarsi-primary">
             <ShieldCheck className="w-4 h-4 text-yarsi-primary" />
-            <span>Biro Layanan Pengelolaan Fasilitas (LPF Univ)</span>
+            <span>
+              {isAdminUmum
+                ? 'Verifikator Ruang Umum'
+                : isSuperadmin
+                ? 'Superadmin Portal'
+                : 'Biro Layanan Pengelolaan Fasilitas (LPF Univ)'}
+            </span>
           </div>
           <h1 className="text-2xl font-black text-slate-900">
-            Antrean persetujuan LPF
+            {isAdminUmum
+              ? 'Verifikasi Peminjaman Ruang Umum'
+              : isSuperadmin
+              ? 'Persetujuan Akhir Ruang Umum & Rekap'
+              : 'Antrean Persetujuan LPF'}
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-            Kelola verifikasi ruang kuliah, lab, aula, dan alur rekomendasi Auditorium ke Yayasan.
+            {isAdminUmum
+              ? 'Verifikasi kelengkapan pengajuan ruang kuliah reguler, laboratorium, dan CBT.'
+              : isSuperadmin
+              ? 'Approval akhir pengajuan ruang umum yang telah diverifikasi oleh Admin Umum.'
+              : 'Kelola verifikasi kesiapan fasilitas dan alur rekomendasi Auditorium ke Yayasan.'}
           </p>
         </div>
 
@@ -308,7 +354,7 @@ export default function LpfApprovalsPage() {
               onClick={handleBulkApprove}
               className="min-h-10 rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-emerald-700"
             >
-              Setujui Semua Terpilih
+              {isAdminUmum ? 'Verifikasi Semua Terpilih' : 'Setujui Semua Terpilih'}
             </button>
           </div>
         )}
@@ -317,37 +363,56 @@ export default function LpfApprovalsPage() {
       {/* Filter Tabs, Grouping Toggle & Search */}
       <div className="sticky top-[104px] z-20 flex flex-col justify-between gap-3 rounded-[14px_3px_14px_14px] border border-slate-200/80 bg-white/95 p-3 shadow-[0_14px_30px_-24px_rgba(15,23,42,0.5)] backdrop-blur sm:flex-row sm:items-center sm:p-4">
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+          {/* Verified Tab: for Superadmin and Admin Umum */}
+          {(isSuperadmin || isAdminUmum) && (
+            <button
+              type="button"
+              onClick={() => setActiveFilter('verified')}
+              aria-pressed={activeFilter === 'verified'}
+              className={`min-h-11 whitespace-nowrap border px-3.5 py-2 text-xs font-bold rounded-lg ${
+                activeFilter === 'verified'
+                  ? 'bg-yarsi-primary text-white border-yarsi-primary shadow-sm'
+                  : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+              }`}
+            >
+              {isSuperadmin ? 'Siap Disetujui (Verified)' : 'Terverifikasi'} ({verifiedCount})
+            </button>
+          )}
+
           <button
             type="button"
             onClick={() => setActiveFilter('pending')}
             aria-pressed={activeFilter === 'pending'}
-            className={`min-h-11 whitespace-nowrap border px-3.5 py-2 text-xs font-bold ${
+            className={`min-h-11 whitespace-nowrap border px-3.5 py-2 text-xs font-bold rounded-lg ${
               activeFilter === 'pending'
                 ? 'bg-yarsi-primary text-white border-yarsi-primary shadow-sm'
                 : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
             }`}
           >
-            Antrean Baru LPF ({pendingCount})
+            {isAdminUmum ? 'Menunggu Verifikasi' : 'Antrean Baru'} ({pendingCount})
           </button>
 
-          <button
-            type="button"
-            onClick={() => setActiveFilter('yayasan')}
-            aria-pressed={activeFilter === 'yayasan'}
-            className={`min-h-11 whitespace-nowrap border px-3.5 py-2 text-xs font-bold ${
-              activeFilter === 'yayasan'
-                ? 'bg-yarsi-primary text-white border-yarsi-primary shadow-sm'
-                : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
-            }`}
-          >
-            Direkomendasikan ke Yayasan ({yayasanCount})
-          </button>
+          {/* Yayasan tab for LPF / Superadmin */}
+          {(isAdminLPF || isSuperadmin) && (
+            <button
+              type="button"
+              onClick={() => setActiveFilter('yayasan')}
+              aria-pressed={activeFilter === 'yayasan'}
+              className={`min-h-11 whitespace-nowrap border px-3.5 py-2 text-xs font-bold rounded-lg ${
+                activeFilter === 'yayasan'
+                  ? 'bg-yarsi-primary text-white border-yarsi-primary shadow-sm'
+                  : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+              }`}
+            >
+              Rekomendasi Yayasan ({yayasanCount})
+            </button>
+          )}
 
           <button
             type="button"
             onClick={() => setActiveFilter('all')}
             aria-pressed={activeFilter === 'all'}
-            className={`min-h-11 whitespace-nowrap border px-3.5 py-2 text-xs font-bold ${
+            className={`min-h-11 whitespace-nowrap border px-3.5 py-2 text-xs font-bold rounded-lg ${
               activeFilter === 'all'
                 ? 'bg-yarsi-primary text-white border-yarsi-primary shadow-sm'
                 : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
@@ -614,7 +679,54 @@ export default function LpfApprovalsPage() {
                     </div>
 
                     {/* Action Buttons */}
-                    {booking.status === 'PENDING_LPF' ? (
+                    {booking.status === 'VERIFIED' ? (
+                      <div className="space-y-2 pt-2 border-t border-slate-200">
+                        {isSuperadmin ? (
+                          <>
+                            <div className="p-2 bg-indigo-50 border border-indigo-200 rounded-xl text-[11px] text-indigo-900 font-medium">
+                              ✓ Telah diverifikasi oleh Admin Umum. Menunggu approval akhir Superadmin.
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setApprovalTarget(booking);
+                                setApprovalNotes(
+                                  isGroup
+                                    ? `Disetujui secara definitif oleh Superadmin untuk seluruh ${group.totalSessions} sesi pertemuan.`
+                                    : 'Disetujui secara definitif oleh Superadmin (Approval Akhir).'
+                                );
+                                setApplyApprovalToGroup(true);
+                              }}
+                              className="flex min-h-11 w-full items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-emerald-700 transition-all"
+                            >
+                              <CheckCircle2 className="w-4 h-4" />
+                              <span>
+                                {isGroup
+                                  ? 'Setujui Akhir Seluruh Sesi'
+                                  : 'Setujui Permohonan (Final)'}
+                              </span>
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setRejectionTarget(booking);
+                                setRejectionReason('');
+                                setApplyRejectionToGroup(true);
+                              }}
+                              className="w-full py-1.5 px-2 bg-white hover:bg-rose-50 text-rose-600 border border-rose-200 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1"
+                            >
+                              <XCircle className="w-3.5 h-3.5" />
+                              <span>Tolak Pengajuan</span>
+                            </button>
+                          </>
+                        ) : (
+                          <div className="p-2.5 bg-indigo-50 border border-indigo-200 rounded-xl text-xs text-indigo-900 font-semibold text-center">
+                            ✓ Telah Diverifikasi Admin Umum (Menunggu Approval Akhir Superadmin)
+                          </div>
+                        )}
+                      </div>
+                    ) : booking.status === 'PENDING_LPF' ? (
                       <div className="space-y-2 pt-2 border-t border-slate-200">
                         {booking.requiresYayasanApproval ? (
                           <button
@@ -637,6 +749,27 @@ export default function LpfApprovalsPage() {
                                 : 'Rekomendasikan ke Yayasan'}
                             </span>
                           </button>
+                        ) : isAdminUmum ? (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setApprovalTarget(booking);
+                              setApprovalNotes(
+                                isGroup
+                                  ? `Diverifikasi lengkap oleh Admin Umum untuk seluruh ${group.totalSessions} sesi pertemuan. Diteruskan ke Superadmin untuk approval akhir.`
+                                  : 'Diverifikasi lengkap oleh Admin Umum. Diteruskan ke Superadmin untuk approval akhir.'
+                              );
+                              setApplyApprovalToGroup(true);
+                            }}
+                            className="flex min-h-11 w-full items-center justify-center gap-1.5 rounded-xl bg-indigo-600 px-3 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-indigo-700 transition-all"
+                          >
+                            <ShieldCheck className="w-4 h-4" />
+                            <span>
+                              {isGroup
+                                ? 'Verifikasi Seluruh Sesi Rutin'
+                                : 'Verifikasi Pengajuan'}
+                            </span>
+                          </button>
                         ) : (
                           <button
                             type="button"
@@ -644,8 +777,8 @@ export default function LpfApprovalsPage() {
                               setApprovalTarget(booking);
                               setApprovalNotes(
                                 isGroup
-                                  ? `Disetujui secara resmi oleh Biro Layanan Pengelolaan Fasilitas (LPF) untuk seluruh ${group.totalSessions} sesi pertemuan rutin.`
-                                  : 'Disetujui secara resmi oleh Biro Layanan Pengelolaan Fasilitas (LPF).'
+                                  ? `Disetujui secara resmi untuk seluruh ${group.totalSessions} sesi pertemuan rutin.`
+                                  : 'Disetujui secara resmi.'
                               );
                               setApplyApprovalToGroup(true);
                             }}
@@ -709,7 +842,9 @@ export default function LpfApprovalsPage() {
           title={
             approvalTarget.requiresYayasanApproval
               ? 'Rekomendasikan ke Yayasan YARSI'
-              : 'Konfirmasi Persetujuan LPF'
+              : isAdminUmum
+              ? 'Verifikasi Pengajuan (Admin Umum)'
+              : 'Konfirmasi Persetujuan Akhir (Superadmin)'
           }
           subtitle={
             applyApprovalToGroup && targetGroupBookings.length > 1
@@ -748,7 +883,7 @@ export default function LpfApprovalsPage() {
 
             <div>
               <label className="block text-xs font-bold text-slate-700 mb-1">
-                Catatan Verifikasi LPF:
+                {isAdminUmum ? 'Catatan Verifikasi Admin Umum:' : 'Catatan Persetujuan:'}
               </label>
               <textarea
                 rows={3}
@@ -775,9 +910,13 @@ export default function LpfApprovalsPage() {
                   ? applyApprovalToGroup && targetGroupBookings.length > 1
                     ? `Kirim Rekomendasi Seluruh ${targetGroupBookings.length} Sesi`
                     : 'Kirim Rekomendasi ke Yayasan'
+                  : isAdminUmum
+                  ? applyApprovalToGroup && targetGroupBookings.length > 1
+                    ? `Verifikasi Seluruh ${targetGroupBookings.length} Sesi`
+                    : 'Verifikasi Pengajuan'
                   : applyApprovalToGroup && targetGroupBookings.length > 1
-                  ? `Setujui Seluruh ${targetGroupBookings.length} Sesi & Terbitkan Tiket`
-                  : 'Setujui & Terbitkan Tiket'}
+                  ? `Setujui Seluruh ${targetGroupBookings.length} Sesi (Final)`
+                  : 'Setujui Permohonan (Final)'}
               </button>
             </div>
           </div>

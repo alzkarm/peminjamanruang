@@ -164,6 +164,21 @@ export async function seedDatabase(prisma: SeedPrisma, passwordHash: string) {
       update: {},
       create: { username: 'yayasan.admin', fullName: 'Drs. H. Muhammad Shadiq, M.M.', email: 'sekretariat.yayasan@yarsi.ac.id', unitName: 'Biro Sekretariat & Aset Yayasan YARSI', passwordHash, role: 'ADMIN_YAYASAN' },
     }),
+    admin: await prisma.user.upsert({
+      where: { username: 'admin' },
+      update: {},
+      create: { username: 'admin', fullName: 'Administrator Umum Kampus', email: 'admin@yarsi.ac.id', unitName: 'Bagian Administrasi Umum Kampus', passwordHash, role: 'ADMIN_UMUM' },
+    }),
+    adminUmum: await prisma.user.upsert({
+      where: { username: 'admin.umum' },
+      update: {},
+      create: { username: 'admin.umum', fullName: 'Budi Santoso, S.Kom (Admin Umum)', email: 'admin.umum@yarsi.ac.id', unitName: 'Bagian Administrasi Umum Kampus', passwordHash, role: 'ADMIN_UMUM' },
+    }),
+    superadmin: await prisma.user.upsert({
+      where: { username: 'superadmin' },
+      update: {},
+      create: { username: 'superadmin', fullName: 'Super Administrator YARSI', email: 'superadmin@yarsi.ac.id', unitName: 'Pusat Data dan Informasi (PUSDATIN)', passwordHash, role: 'SUPERADMIN' },
+    }),
   };
 
   const legacyRooms = await Promise.all(

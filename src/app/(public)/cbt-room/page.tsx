@@ -4,8 +4,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAppStore } from '@/lib/store';
 import { CbtSeatBooking, CbtFaculty } from '@/lib/types';
 import { cbtRoomApi } from '@/lib/api';
-import CbtSeatMap, { FACULTY_COLORS, formatSeatList } from '@/components/cbt/CbtSeatMap';
+import CbtSeatMap, { FACULTY_COLORS, formatSeatList, CBT_ROOMS } from '@/components/cbt/CbtSeatMap';
 import CbtBookingForm from '@/components/cbt/CbtBookingForm';
+import { CbtRoomId } from '@/lib/types';
 import { AuthGateModal } from '@/components/common/AuthGateModal';
 import {
   Monitor,
@@ -30,6 +31,7 @@ const INITIAL_CBT_BOOKINGS: CbtSeatBooking[] = [
     seatEnd: 50,
     startTime: new Date(new Date().setHours(8, 0, 0, 0)).toISOString(),
     endTime: new Date(new Date().setHours(12, 0, 0, 0)).toISOString(),
+    status: 'APPROVED',
     notes: 'Lab Komputer A, B, C',
     createdAt: new Date().toISOString(),
     user: {
@@ -47,6 +49,7 @@ const INITIAL_CBT_BOOKINGS: CbtSeatBooking[] = [
     seatEnd: 110,
     startTime: new Date(new Date().setHours(8, 0, 0, 0)).toISOString(),
     endTime: new Date(new Date().setHours(12, 0, 0, 0)).toISOString(),
+    status: 'PENDING',
     notes: 'Kandidat Ujian Dokter',
     createdAt: new Date().toISOString(),
     user: {
@@ -62,8 +65,15 @@ const LOCAL_STORAGE_KEY = 'siperu_cbt_seat_bookings_v1';
 export default function CbtRoomPage() {
   const { currentUser } = useAppStore();
 
+  // Active CBT Room selection (A or B)
+  const [selectedRoomId, setSelectedRoomId] = useState<CbtRoomId>('cbt-a');
+  const activeRoomConfig = CBT_ROOMS[selectedRoomId];
+
   // Date and Time Filter
   const [selectedDate, setSelectedDate] = useState<string>(() => {
+    return new Date().toISOString().split('T')[0];
+  });
+  const [selectedEndDate, setSelectedEndDate] = useState<string>(() => {
     return new Date().toISOString().split('T')[0];
   });
   const [selectedStartTime, setSelectedStartTime] = useState('08:00');
@@ -79,7 +89,7 @@ export default function CbtRoomPage() {
   const [selectedSeats, setSelectedSeats] = useState<number[]>([]);
 
   // Bookings state
-  const [bookings, setBookings] = useState<CbtSeatBooking[]>([]);
+  const [bookings, setBookings] = useState<CbtSeatBooking[]>(INITIAL_CBT_BOOKINGS);
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -94,6 +104,16 @@ export default function CbtRoomPage() {
     if (newCap > 0 && selectedSeats.length > newCap) {
       setSelectedSeats((prev) => prev.slice(0, newCap));
     }
+  };
+
+  // Switch room: clear seats + capacity when user switches between CBT A / CBT B
+  const handleRoomSwitch = (roomId: CbtRoomId) => {
+    if (roomId === selectedRoomId) return;
+    setSelectedRoomId(roomId);
+    setSelectedSeats([]);
+    setCapacity(0);
+    setError(null);
+    setSuccessMessage(null);
   };
 
   // Helper to get local stored bookings
@@ -127,11 +147,12 @@ export default function CbtRoomPage() {
     setError(null);
 
     const startISO = new Date(`${selectedDate}T${selectedStartTime}:00+07:00`).toISOString();
-    const endISO = new Date(`${selectedDate}T${selectedEndTime}:00+07:00`).toISOString();
+    const endISO = new Date(`${selectedEndDate}T${selectedEndTime}:00+07:00`).toISOString();
 
     try {
-      // Try backend API first
-      const data = await cbtRoomApi.getSeats(startISO, endISO);
+      // Try backend API first for selected room ('A' or 'B')
+      const backendRoomCode = selectedRoomId === 'cbt-b' ? 'B' : 'A';
+      const data = await cbtRoomApi.getSeats(startISO, endISO, backendRoomCode);
       setBookings(data);
     } catch (err: any) {
       // Fallback to local storage for robust offline demonstration
@@ -149,7 +170,7 @@ export default function CbtRoomPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [selectedDate, selectedStartTime, selectedEndTime, getStoredLocalBookings]);
+  }, [selectedDate, selectedEndDate, selectedStartTime, selectedEndTime, selectedRoomId, getStoredLocalBookings]);
 
   useEffect(() => {
     fetchSlotBookings();
@@ -170,7 +191,7 @@ export default function CbtRoomPage() {
     setSuccessMessage(null);
 
     const startISO = new Date(`${selectedDate}T${selectedStartTime}:00+07:00`).toISOString();
-    const endISO = new Date(`${selectedDate}T${selectedEndTime}:00+07:00`).toISOString();
+    const endISO = new Date(`${selectedEndDate}T${selectedEndTime}:00+07:00`).toISOString();
 
     const minSeat = Math.min(...selectedSeats);
     const maxSeat = Math.max(...selectedSeats);
@@ -246,6 +267,7 @@ export default function CbtRoomPage() {
           seatEnd: bookingPayload.seatEnd,
           startTime: bookingPayload.startTime,
           endTime: bookingPayload.endTime,
+          status: 'PENDING',
           notes: bookingPayload.notes,
           createdAt: new Date().toISOString(),
           user: {
@@ -284,22 +306,45 @@ export default function CbtRoomPage() {
     }
   };
 
+  const handleUpdateStatus = async (bookingId: string, newStatus: 'APPROVED' | 'REJECTED' | 'PENDING') => {
+    try {
+      try {
+        await cbtRoomApi.updateBookingStatus(bookingId, newStatus);
+      } catch {
+        // Fallback local storage
+      }
+      const localList = getStoredLocalBookings();
+      const updatedList = localList.map((b) => (b.id === bookingId ? { ...b, status: newStatus } : b));
+      saveLocalBookings(updatedList);
+
+      setBookings((prev) => prev.map((b) => (b.id === bookingId ? { ...b, status: newStatus } : b)));
+
+      if (newStatus === 'APPROVED') {
+        setSuccessMessage(`Booking berhasil di-ACC! Kursi sekarang berubah menjadi warna fakultas.`);
+      } else {
+        setSuccessMessage(`Status booking diubah menjadi ${newStatus}. Kursi kembali berwarna kuning.`);
+      }
+    } catch (err: any) {
+      setError(err?.message || 'Gagal memperbarui status');
+    }
+  };
+
   return (
-    <div className="mx-auto min-w-0 max-w-7xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
-      {/* Top Banner - 'Cubicle' removed from title */}
-      <div className="bg-gradient-to-r from-emerald-900 via-teal-900 to-cyan-950 text-white rounded-3xl p-6 sm:p-8 shadow-xl border border-emerald-500/20 relative overflow-hidden">
+    <div className="mx-auto min-w-0 max-w-7xl space-y-8 px-4 pt-10 pb-12 sm:px-6 sm:pt-12 sm:pb-16 lg:px-8">
+      {/* Top Banner - adjusted spacing & margins */}
+      <div className="mt-4 sm:mt-6 bg-gradient-to-r from-emerald-900 via-teal-900 to-cyan-950 text-white rounded-3xl p-6 sm:p-8 shadow-xl border border-emerald-500/20 relative overflow-hidden">
         <div className="absolute -right-10 -bottom-10 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-400/15 border border-emerald-400/30 text-emerald-300 text-xs font-semibold">
               <Monitor className="w-3.5 h-3.5" />
-              <span>Smart CBT Center • Kapasitas 200 Kursi</span>
+              <span>Smart CBT Center • {activeRoomConfig.name} ({activeRoomConfig.totalSeats} Kursi)</span>
             </div>
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight">
               Pemesanan Ruang CBT Multi-Tenant
             </h1>
             <p className="text-xs sm:text-sm text-emerald-100/80 max-w-2xl leading-relaxed">
-              Fasilitas laboratorium Computer-Based Test terpusat berkapasitas 200 kursi. Mendukung peminjaman bersama (multi-tenant) antar-fakultas secara simultan dengan alokasi rentang nomor kursi yang terisolasi.
+              Fasilitas laboratorium Computer-Based Test terpusat ({activeRoomConfig.name}: {activeRoomConfig.totalSeats} kursi). Mendukung peminjaman bersama (multi-tenant) antar-fakultas secara simultan dengan alokasi rentang nomor kursi yang terisolasi.
             </p>
           </div>
 
@@ -320,13 +365,42 @@ export default function CbtRoomPage() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* Left: Seat Map */}
         <div className="min-w-0 space-y-6 lg:col-span-8">
-          {/* Seat Map Card - 'Cubicle' removed from title */}
+          {/* Seat Map Card */}
           <div className="min-w-0 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 sm:p-6">
+            {/* Room Selector Tabs */}
+            <div className="flex items-center gap-2 mb-4 pb-4 border-b border-slate-100 dark:border-slate-800">
+              {(Object.values(CBT_ROOMS) as (typeof CBT_ROOMS)[keyof typeof CBT_ROOMS][]).map((room) => (
+                <button
+                  key={room.id}
+                  type="button"
+                  onClick={() => handleRoomSwitch(room.id)}
+                  className={[
+                    'flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all duration-150 border',
+                    selectedRoomId === room.id
+                      ? 'bg-emerald-600 text-white border-emerald-700 shadow-sm shadow-emerald-600/25'
+                      : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300',
+                  ].join(' ')}
+                >
+                  <Monitor className="w-3.5 h-3.5" />
+                  <span>{room.name}</span>
+                  <span className={[
+                    'text-[10px] px-1.5 py-0.5 rounded font-mono',
+                    selectedRoomId === room.id
+                      ? 'bg-white/20 text-white'
+                      : 'bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400',
+                  ].join(' ')}>
+                    {room.totalSeats} kursi
+                  </span>
+                </button>
+              ))}
+            </div>
+
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100 dark:border-slate-800">
               <div>
                 <h2 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
                   <Monitor className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-                  Denah Kursi CBT (Kursi 001 - 200)
+                  Denah Kursi {activeRoomConfig.name}
+                  <span className="text-sm font-normal text-slate-400">({activeRoomConfig.totalSeats} kursi total)</span>
                 </h2>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                   Setiap kotak merepresentasikan 1 unit PC CBT. Kursi terpilih ditandai outline biru terang.
@@ -353,6 +427,7 @@ export default function CbtRoomPage() {
             <div className="min-w-0 pt-4">
               <CbtSeatMap
                 bookings={bookings}
+                roomId={selectedRoomId}
                 faculty={faculty}
                 capacity={capacity}
                 selectedSeats={selectedSeats}
@@ -370,7 +445,7 @@ export default function CbtRoomPage() {
 
             {bookings.length === 0 ? (
               <div className="text-center py-8 text-slate-500 text-sm">
-                Belum ada pemesanan kursi pada slot waktu ini. Seluruh 200 kursi tersedia.
+                Belum ada pemesanan kursi pada slot waktu ini. Seluruh {activeRoomConfig.totalSeats} kursi tersedia.
               </div>
             ) : (
               <div className="overflow-x-auto">
@@ -381,29 +456,49 @@ export default function CbtRoomPage() {
                       <th className="px-3 py-2.5">Nama Kegiatan / Ujian</th>
                       <th className="px-3 py-2.5">Rentang Kursi</th>
                       <th className="px-3 py-2.5">Total Kursi</th>
-                      <th className="px-3 py-2.5 rounded-r-lg">Pemohon</th>
+                      <th className="px-3 py-2.5">Status</th>
+                      <th className="px-3 py-2.5">Pemohon</th>
+                      <th className="px-3 py-2.5 rounded-r-lg text-right">Aksi Admin</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                     {bookings.map((b) => {
                       const fColor = FACULTY_COLORS[b.faculty];
                       const count = b.seatEnd - b.seatStart + 1;
+                      const bStatus = b.status || 'PENDING';
+                      const isApproved = bStatus === 'APPROVED';
+                      const isAdmin =
+                        currentUser?.role === 'admin_umum' ||
+                        currentUser?.role === 'superadmin' ||
+                        (currentUser?.role as string) === 'admin';
+                      const isOwner = Boolean(currentUser?.id && b.userId === currentUser.id);
+                      const canViewDetails = isAdmin || isOwner;
+
                       return (
                         <tr key={b.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40">
                           <td className="px-3 py-3 font-semibold">
-                            <span
-                              className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold border"
-                              style={{
-                                backgroundColor: fColor?.bg || '#E2E8F0',
-                                color: fColor?.text || '#1E293B',
-                                borderColor: fColor?.border || '#CBD5E1',
-                              }}
-                            >
-                              {b.faculty}
-                            </span>
+                            {isApproved ? (
+                              <span
+                                className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold border"
+                                style={{
+                                  backgroundColor: fColor?.bg || '#93C5FD',
+                                  color: fColor?.text || '#1E3A5F',
+                                  borderColor: fColor?.border || '#60A5FA',
+                                }}
+                              >
+                                {b.faculty}
+                              </span>
+                            ) : (
+                              <span
+                                className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold border bg-yellow-100 text-amber-900 border-amber-300 shadow-xs"
+                                title="Menunggu ACC (Belum menggunakan warna fakultas)"
+                              >
+                                {b.faculty} • Pending
+                              </span>
+                            )}
                           </td>
                           <td className="px-3 py-3 font-medium text-slate-900 dark:text-white">
-                            {b.title}
+                            {canViewDetails ? b.title : `Kegiatan / Ujian Terjadwal (${b.faculty})`}
                           </td>
                           <td className="px-3 py-3 font-mono font-bold text-slate-700 dark:text-slate-200">
                             #{String(b.seatStart).padStart(3, '0')} – #{String(b.seatEnd).padStart(3, '0')}
@@ -411,8 +506,45 @@ export default function CbtRoomPage() {
                           <td className="px-3 py-3 font-semibold text-emerald-600 dark:text-emerald-400">
                             {count} Kursi
                           </td>
+                          <td className="px-3 py-3">
+                            {isApproved ? (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                ✓ Sudah di-ACC
+                              </span>
+                            ) : bStatus === 'REJECTED' ? (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-700 border border-red-300">
+                                ✗ Ditolak
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-yellow-100 text-amber-900 border border-amber-300 shadow-xs">
+                                ⏳ Belum di-ACC (Kuning)
+                              </span>
+                            )}
+                          </td>
                           <td className="px-3 py-3 text-slate-500">
-                            {b.user?.fullName || 'Pengguna Terdaftar'}
+                            {canViewDetails ? (b.user?.fullName || 'Pengguna Terdaftar') : 'Identitas Terproteksi'}
+                          </td>
+                          <td className="px-3 py-3 text-right">
+                            {!isApproved ? (
+                              <button
+                                type="button"
+                                onClick={() => handleUpdateStatus(b.id, 'APPROVED')}
+                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[10.5px] font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs transition active:scale-95"
+                                title="Setujui permohonan ini agar warna kursi berubah menjadi warna fakultas"
+                              >
+                                <CheckCircle2 className="w-3 h-3" />
+                                <span>ACC / Setujui</span>
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={() => handleUpdateStatus(b.id, 'PENDING')}
+                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold text-slate-500 hover:text-amber-800 hover:bg-amber-50 border border-slate-200 transition"
+                                title="Kembalikan status ke Pending (Kuning)"
+                              >
+                                <span>Batal ACC</span>
+                              </button>
+                            )}
                           </td>
                         </tr>
                       );
@@ -443,6 +575,7 @@ export default function CbtRoomPage() {
               faculty={faculty}
               onFacultyChange={setFaculty}
               capacity={capacity}
+              maxCapacity={activeRoomConfig.totalSeats}
               onCapacityChange={handleCapacityChange}
               notes={notes}
               onNotesChange={setNotes}
@@ -450,9 +583,11 @@ export default function CbtRoomPage() {
               onClearSelection={() => setSelectedSeats([])}
               bookings={bookings}
               selectedDate={selectedDate}
+              selectedEndDate={selectedEndDate}
               selectedStartTime={selectedStartTime}
               selectedEndTime={selectedEndTime}
               onDateChange={setSelectedDate}
+              onEndDateChange={setSelectedEndDate}
               onStartTimeChange={setSelectedStartTime}
               onEndTimeChange={setSelectedEndTime}
               onSubmit={handleBookingSubmit}

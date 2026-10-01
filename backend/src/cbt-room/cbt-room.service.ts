@@ -2,13 +2,17 @@ import {
   Injectable,
   ConflictException,
   BadRequestException,
+  NotFoundException,
   Logger,
 } from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
 import { Prisma } from '@prisma/client';
-import { CreateCbtBookingDto, QueryCbtSeatsDto } from './dto/cbt-room.dto';
+import { CreateCbtBookingDto, QueryCbtSeatsDto, getCbtRoomCapacity } from './dto/cbt-room.dto';
 
-const CBT_MAX_SEATS = 200;
+const CBT_ROOM_CAPACITIES = {
+  A: 196,
+  B: 159,
+} as const;
 
 @Injectable()
 export class CbtRoomService {
@@ -17,7 +21,7 @@ export class CbtRoomService {
   constructor(private readonly prisma: PrismaService) {}
 
   /**
-   * Get all CBT seat bookings overlapping a given time slot.
+   * Get all CBT seat bookings overlapping a given time slot for a specific room.
    * Used by the frontend to render the seat map.
    */
   async getSeatsForTimeSlot(query: QueryCbtSeatsDto) {
@@ -30,6 +34,8 @@ export class CbtRoomService {
 
     return this.prisma.cbtSeatBooking.findMany({
       where: {
+        roomId: query.roomId,
+        status: { not: 'REJECTED' },
         AND: [
           { startTime: { lt: endTime } },
           { endTime: { gt: startTime } },
@@ -45,7 +51,7 @@ export class CbtRoomService {
   }
 
   /**
-   * Atomic multi-tenant seat booking with overlap & capacity checks.
+   * Atomic multi-tenant seat booking with overlap & capacity checks per room.
    * Uses SERIALIZABLE isolation to prevent race conditions.
    */
   async bookSeats(userId: string, dto: CreateCbtBookingDto) {
@@ -62,13 +68,28 @@ export class CbtRoomService {
       );
     }
 
+    // Validate seat range against room capacity
+    const roomCapacity = CBT_ROOM_CAPACITIES[dto.roomId];
+    if (dto.seatStart < 1 || dto.seatStart > roomCapacity) {
+      throw new BadRequestException(
+        `Nomor kursi awal harus antara 1 dan ${roomCapacity} untuk Ruang CBT ${dto.roomId}.`,
+      );
+    }
+    if (dto.seatEnd < 1 || dto.seatEnd > roomCapacity) {
+      throw new BadRequestException(
+        `Nomor kursi akhir harus antara 1 dan ${roomCapacity} untuk Ruang CBT ${dto.roomId}.`,
+      );
+    }
+
     const requestedCount = dto.seatEnd - dto.seatStart + 1;
 
     return this.prisma.$transaction(
       async (tx) => {
-        // Fetch all existing bookings overlapping this time slot
+        // Fetch all existing bookings overlapping this time slot for the specific room
         const existingBookings = await tx.cbtSeatBooking.findMany({
           where: {
+            roomId: dto.roomId,
+            status: { not: 'REJECTED' },
             AND: [
               { startTime: { lt: endTime } },
               { endTime: { gt: startTime } },
@@ -104,17 +125,18 @@ export class CbtRoomService {
           });
         }
 
-        // Check remaining capacity
+        // Check remaining capacity for this room
         const totalBooked = bookedSeats.size;
-        const remaining = CBT_MAX_SEATS - totalBooked;
+        const remaining = roomCapacity - totalBooked;
 
         if (requestedCount > remaining) {
           throw new ConflictException({
             code: 'CAPACITY_EXCEEDED',
-            message: `Kursi yang diminta (${requestedCount} kursi) melebihi sisa kapasitas. Hanya tersisa ${remaining} kursi dari total ${CBT_MAX_SEATS} kursi.`,
+            message: `Kursi yang diminta (${requestedCount} kursi) melebihi sisa kapasitas Ruang CBT ${dto.roomId}. Hanya tersisa ${remaining} kursi dari total ${roomCapacity} kursi.`,
             requested: requestedCount,
             remaining,
-            totalCapacity: CBT_MAX_SEATS,
+            totalCapacity: roomCapacity,
+            roomId: dto.roomId,
           });
         }
 
@@ -122,6 +144,7 @@ export class CbtRoomService {
         const newBooking = await tx.cbtSeatBooking.create({
           data: {
             userId,
+            roomId: dto.roomId,
             faculty: dto.faculty,
             title: dto.title,
             seatStart: dto.seatStart,
@@ -138,7 +161,7 @@ export class CbtRoomService {
         });
 
         this.logger.log(
-          `CBT Booking created: ${dto.faculty} | seats ${dto.seatStart}-${dto.seatEnd} (${requestedCount} kursi) | ${dto.title}`,
+          `CBT Booking created: Ruang CBT ${dto.roomId} | ${dto.faculty} | seats ${dto.seatStart}-${dto.seatEnd} (${requestedCount} kursi) | ${dto.title}`,
         );
 
         return newBooking;
@@ -150,10 +173,11 @@ export class CbtRoomService {
   }
 
   /**
-   * Get all CBT bookings (admin/overview).
+   * Get all CBT bookings (admin/overview) with optional room filter.
    */
-  async getAllBookings() {
+  async getAllBookings(roomId?: 'A' | 'B') {
     return this.prisma.cbtSeatBooking.findMany({
+      where: roomId ? { roomId } : {},
       orderBy: { createdAt: 'desc' },
       include: {
         user: {
@@ -161,5 +185,34 @@ export class CbtRoomService {
         },
       },
     });
+  }
+
+  /**
+   * Update CBT booking status (APPROVE / REJECT / PENDING).
+   */
+  async updateBookingStatus(id: string, status: 'APPROVED' | 'REJECTED' | 'PENDING') {
+    const booking = await this.prisma.cbtSeatBooking.findUnique({
+      where: { id },
+    });
+
+    if (!booking) {
+      throw new NotFoundException(`Pemesanan CBT dengan ID "${id}" tidak ditemukan.`);
+    }
+
+    const updated = await this.prisma.cbtSeatBooking.update({
+      where: { id },
+      data: { status },
+      include: {
+        user: {
+          select: { id: true, fullName: true, unitName: true },
+        },
+      },
+    });
+
+    this.logger.log(
+      `CBT Booking ${id} status updated to ${status} (Ruang CBT ${updated.roomId}, seats ${updated.seatStart}-${updated.seatEnd})`,
+    );
+
+    return updated;
   }
 }

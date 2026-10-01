@@ -12,10 +12,15 @@ enum Role {
   USER
   ADMIN_UNIV
   ADMIN_YAYASAN
+  ADMIN_UMUM
+  ADMIN_LPF
+  YAYASAN
+  SUPERADMIN
 }
 
 enum BookingStatus {
   PENDING
+  VERIFIED
   RECOMMENDED
   APPROVED
   REJECTED
@@ -160,20 +165,63 @@ model Feedback {
   @@map("feedbacks")
 }
 
+enum CbtRoomType {
+  A
+  B
+}
+
+enum CbtBookingStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model CbtRoom {
+  id        CbtRoomType @id @default(A)
+  name      String
+  capacity  Int
+  isActive  Boolean     @default(true)
+  createdAt DateTime    @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime    @updatedAt @db.Timestamptz(3)
+
+  seatBookings CbtSeatBooking[]
+
+  @@map("cbt_rooms")
+}
+
 model CbtSeatBooking {
-  id        String   @id @default(uuid()) @db.Uuid
-  userId    String   @db.Uuid
+  id        String           @id @default(uuid()) @db.Uuid
+  userId    String           @db.Uuid
+  roomId    CbtRoomType      @default(A)
   faculty   String
   title     String
   seatStart Int
   seatEnd   Int
-  startTime DateTime @db.Timestamptz(3)
-  endTime   DateTime @db.Timestamptz(3)
+  startTime DateTime         @db.Timestamptz(3)
+  endTime   DateTime         @db.Timestamptz(3)
+  status    CbtBookingStatus @default(PENDING)
   notes     String?
-  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  createdAt DateTime         @default(now()) @db.Timestamptz(3)
 
-  user User @relation(fields: [userId], references: [id])
+  user  User     @relation(fields: [userId], references: [id])
+  room  CbtRoom  @relation(fields: [roomId], references: [id])
 
+  @@index([roomId, startTime, endTime])
   @@index([startTime, endTime])
+  @@index([status])
   @@map("cbt_seat_bookings")
+}
+
+model Faculty {
+  id          String   @id @default(uuid()) @db.Uuid
+  code        String   @unique
+  name        String
+  colorBg     String?  @default("#3B82F6")
+  colorText   String?  @default("#FFFFFF")
+  colorBorder String?  @default("#2563EB")
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime @updatedAt @db.Timestamptz(3)
+
+  @@map("faculties")
 }

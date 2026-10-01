@@ -2,6 +2,8 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
+  Delete,
   Body,
   Param,
   Query,
@@ -54,6 +56,12 @@ export class RoomsController {
     );
   }
 
+  @Get('recent-submissions')
+  async getRecentSubmissions(@Query('limit') limit?: string) {
+    const parsedLimit = limit ? Math.min(Math.max(parseInt(limit, 10) || 5, 1), 20) : 5;
+    return this.roomsService.getRecentSubmissions(parsedLimit);
+  }
+
   @Get(':id')
   async findOne(@Param('id') id: string) {
     return this.roomsService.findOne(id);
@@ -61,8 +69,32 @@ export class RoomsController {
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN_UNIV, Role.ADMIN_YAYASAN)
+  @Roles(Role.SUPERADMIN, Role.ADMIN_UNIV, Role.ADMIN_YAYASAN)
   async create(@Body() dto: CreateRoomDto) {
     return this.roomsService.create(dto);
+  }
+
+  @Patch(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.SUPERADMIN, Role.ADMIN_UNIV, Role.ADMIN_YAYASAN)
+  async update(
+    @Param('id') id: string,
+    @Body() dto: import('./dto/create-room.dto').UpdateRoomDto,
+  ) {
+    return this.roomsService.update(id, dto);
+  }
+
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.SUPERADMIN)
+  async remove(@Param('id') id: string) {
+    return this.roomsService.remove(id);
+  }
+
+  @Patch(':id/toggle-status')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.SUPERADMIN, Role.ADMIN_UNIV, Role.ADMIN_YAYASAN)
+  async toggleStatus(@Param('id') id: string) {
+    return this.roomsService.toggleStatus(id);
   }
 }

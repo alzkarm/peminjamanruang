@@ -12,6 +12,7 @@ import {
   CheckCheck,
   GraduationCap,
   RotateCcw,
+  ShieldCheck,
 } from 'lucide-react';
 
 interface StatusBadgeProps {
@@ -46,6 +47,8 @@ export function StatusBadge({
     switch (status) {
       case 'PENDING_LPF':
         return <Clock className={iconClass} />;
+      case 'VERIFIED':
+        return <ShieldCheck className={iconClass} />;
       case 'RECOMMENDED_YAYASAN':
         return <Building2 className={iconClass} />;
       case 'APPROVED':

@@ -22,6 +22,7 @@ import { useAppStore } from '@/lib/store';
 import { RoomCard } from '@/components/common/RoomCard';
 import { AuthGateModal } from '@/components/common/AuthGateModal';
 import { InteractiveBuilding } from '@/components/home/InteractiveBuilding';
+import { CBTBannerSection } from '@/components/home/CBTBannerSection';
 import {
   formatDateIndo,
   formatShortDateIndo,
@@ -289,7 +290,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="relative mx-auto flex min-h-[300px] w-full min-w-0 max-w-[780px] items-center justify-center overflow-hidden rounded-[24px_6px_24px_24px] border border-emerald-200/15 bg-emerald-950/35 p-6 sm:min-h-[370px] lg:min-h-[420px]" aria-label="Layanan Peminjaman Ruangan SIPERU">
+          <div className="relative mx-auto flex min-h-[300px] w-full min-w-0 max-w-[780px] items-center justify-center overflow-visible sm:min-h-[370px] lg:min-h-[420px]" aria-label="Layanan Peminjaman Ruangan SIPERU">
             <InteractiveBuilding
               selectedDate={selectedDateStr}
               activeBookings={activeBookingsForDate}
@@ -338,140 +339,8 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* CBT ROOM SPOTLIGHT SECTION */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="rounded-3xl border border-emerald-500/20 bg-gradient-to-br from-emerald-900 via-teal-900 to-cyan-950 p-6 shadow-xl sm:p-8">
-          <div className="grid min-w-0 grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.8fr)]">
-            {/* Left: Text content */}
-            <div className="min-w-0 space-y-4">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-400/15 border border-emerald-400/30 text-emerald-300 text-xs font-bold">
-                <Monitor className="w-3.5 h-3.5" />
-                <span>Smart CBT Center — Fasilitas Eksklusif Kampus YARSI</span>
-              </div>
-
-              <div>
-                <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-                  Ruang CBT Multi-Tenant
-                  <span className="block text-emerald-300 text-lg sm:text-xl font-bold mt-0.5">200 Kursi Komputer • Alokasi Per-Fakultas</span>
-                </h2>
-                <p className="text-xs sm:text-sm text-emerald-100/80 leading-relaxed mt-2 max-w-xl">
-                  Satu ruangan, banyak fakultas — secara bersamaan. Sistem pemesanan kursi berbasis rentang nomor (contoh: kursi 1–50 untuk FK, kursi 51–120 untuk FTI) dengan validasi overlap real-time dan penolakan otomatis jika kapasitas habis.
-                </p>
-              </div>
-
-              {/* Faculty color legend */}
-              <div className="flex flex-wrap gap-2">
-                {([
-                  { code: 'FEB', color: '#93C5FD', text: '#1E3A5F' },
-                  { code: 'FH',  color: '#F87171', text: '#7F1D1D' },
-                  { code: 'FTI', color: '#FB923C', text: '#7C2D12' },
-                  { code: 'FK',  color: '#4ADE80', text: '#14532D' },
-                  { code: 'FKG', color: '#C4B5FD', text: '#3B0764' },
-                  { code: 'FP',  color: '#A855F7', text: '#FFFFFF' },
-                ] as const).map((f) => (
-                  <span
-                    key={f.code}
-                    className="px-2.5 py-1 rounded-lg text-[11px] font-bold border"
-                    style={{ backgroundColor: f.color, color: f.text, borderColor: f.color }}
-                  >
-                    {f.code}
-                  </span>
-                ))}
-                <span className="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-white/10 border border-white/20 text-white/70">
-                  Setiap warna = alokasi 1 fakultas
-                </span>
-              </div>
-
-              <Link
-                href="/cbt-room"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm bg-emerald-400 hover:bg-emerald-300 text-emerald-950 shadow-lg hover:shadow-emerald-400/30 transition-all"
-              >
-                <Monitor className="w-4 h-4" />
-                <span>Buka Denah &amp; Booking Kursi CBT</span>
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-            </div>
-
-            {/* Right: Mini seat map preview (visual representation of two-block layout) */}
-            <div className="shrink-0 w-full lg:w-72 xl:w-80">
-              <div className="bg-black/25 border border-white/10 rounded-2xl p-4 space-y-2">
-                <div className="flex items-center justify-between text-[10px] font-bold text-emerald-300/80 uppercase tracking-widest">
-                  <span>Blok Kiri (1–100)</span>
-                  <span>Blok Kanan (101–200)</span>
-                </div>
-                <div className="flex items-center justify-center gap-2">
-                  {/* Left Block: 1-100, 7 cols */}
-                  <div
-                    className="grid gap-0.5 flex-1"
-                    style={{ gridTemplateColumns: 'repeat(7, minmax(0, 1fr))' }}
-                  >
-                    {Array.from({ length: 100 }, (_, i) => {
-                      const s = i + 1;
-                      const bg =
-                        s <= 50 ? '#FB923C'
-                        : s <= 100 ? '#4ADE80'
-                        : 'rgba(255,255,255,0.15)';
-                      return (
-                        <div
-                          key={s}
-                          className="rounded-[1.5px] aspect-square"
-                          style={{ backgroundColor: bg }}
-                        />
-                      );
-                    })}
-                  </div>
-
-                  {/* Central Aisle */}
-                  <div className="flex flex-col items-center self-stretch justify-center px-1">
-                    <div className="w-0 border-l border-dashed border-emerald-400/40 h-full" />
-                  </div>
-
-                  {/* Right Block: 101-200, 7 cols */}
-                  <div
-                    className="grid gap-0.5 flex-1"
-                    style={{ gridTemplateColumns: 'repeat(7, minmax(0, 1fr))' }}
-                  >
-                    {Array.from({ length: 100 }, (_, i) => {
-                      const s = i + 101;
-                      const bg =
-                        s <= 110 ? '#4ADE80'
-                        : 'rgba(255,255,255,0.15)';
-                      return (
-                        <div
-                          key={s}
-                          className="rounded-[1.5px] aspect-square"
-                          style={{ backgroundColor: bg }}
-                        />
-                      );
-                    })}
-                  </div>
-                </div>
-                <div className="flex items-center justify-between text-[9px] text-white/60 pt-1">
-                  <span>7 Kursi / Baris</span>
-                  <span className="text-emerald-300 font-bold">90 Kursi Tersedia</span>
-                  <span>Lorong Tengah</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Bottom stats strip */}
-          <div className="mt-6 grid grid-cols-1 gap-3 border-t border-white/10 pt-6 sm:grid-cols-3">
-            <div className="text-center">
-              <p className="text-2xl font-black text-white">200</p>
-              <p className="text-[11px] text-emerald-300/80 font-medium">Total Kursi PC</p>
-            </div>
-            <div className="border-y border-white/10 py-3 text-center sm:border-x sm:border-y-0 sm:py-0">
-              <p className="text-2xl font-black text-white">10</p>
-              <p className="text-[11px] text-emerald-300/80 font-medium">Kolom per blok</p>
-            </div>
-            <div className="text-center">
-              <p className="text-2xl font-black text-white">2</p>
-              <p className="text-[11px] text-emerald-300/80 font-medium">Blok kursi</p>
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* CBT ROOM SPOTLIGHT SECTION (Interactive & Dynamic Multi-Tenant CBT Banner) */}
+      <CBTBannerSection />
 
       <main className="mx-auto max-w-[1376px] px-3 pt-10 sm:px-6 sm:pt-12 lg:px-8 lg:pt-20">
         <section aria-labelledby="status-ruangan-hari-ini" className="rounded-[22px_6px_22px_22px] border border-emerald-900/10 bg-white p-4 shadow-[0_28px_80px_-58px_rgba(3,47,37,0.5)] sm:p-6">

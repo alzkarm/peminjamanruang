@@ -1,7 +1,9 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import Link from 'next/link';
+import { QRCodeSVG } from 'qrcode.react';
+import { toPng } from 'html-to-image';
 import { useAppStore } from '@/lib/store';
 import { Booking, BookingStatus } from '@/lib/types';
 import { StatusBadge } from '@/components/common/StatusBadge';
@@ -34,6 +36,8 @@ import {
   ChevronDown,
   ChevronUp,
   CalendarRange,
+  Loader2,
+  ExternalLink,
 } from 'lucide-react';
 
 interface UserBookingGroup {
@@ -54,6 +58,35 @@ export default function UserDashboardPage() {
   const [cancelTargetId, setCancelTargetId] = useState<string | null>(null);
   const [cancelReason, setCancelReason] = useState<string>('');
   const [expandedGroupIds, setExpandedGroupIds] = useState<string[]>([]);
+  const ticketCardRef = useRef<HTMLDivElement>(null);
+  const [isDownloading, setIsDownloading] = useState<boolean>(false);
+
+  const getTicketVerificationUrl = (booking: Booking) => {
+    if (typeof window !== 'undefined' && window.location?.origin) {
+      return `${window.location.origin}/verify/${booking.bookingCode}`;
+    }
+    return `https://siperu.yarsi.ac.id/verify/${booking.bookingCode}`;
+  };
+
+  const handleDownloadTicketImage = async () => {
+    if (!ticketCardRef.current || !selectedTicket) return;
+    try {
+      setIsDownloading(true);
+      const dataUrl = await toPng(ticketCardRef.current, {
+        cacheBust: true,
+        pixelRatio: 2,
+      });
+      const link = document.createElement('a');
+      link.download = `E-Ticket-SIPERU-${selectedTicket.bookingCode}.png`;
+      link.href = dataUrl;
+      link.click();
+    } catch (err) {
+      console.error('Failed to capture ticket image:', err);
+      alert('Gagal mengunduh gambar E-Ticket. Silakan coba kembali.');
+    } finally {
+      setIsDownloading(false);
+    }
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -666,7 +699,10 @@ export default function UserDashboardPage() {
         >
           <div className="space-y-6">
             {/* Ticket Card Container */}
-            <div className="bg-gradient-to-br from-yarsi-dark via-yarsi-primary to-emerald-950 text-white rounded-2xl p-6 shadow-xl border border-emerald-800/30 relative overflow-hidden space-y-6">
+            <div
+              ref={ticketCardRef}
+              className="bg-gradient-to-br from-yarsi-dark via-yarsi-primary to-emerald-950 text-white rounded-2xl p-6 shadow-xl border border-emerald-800/30 relative overflow-hidden space-y-6"
+            >
 
               {/* Header */}
               <div className="flex items-center justify-between border-b border-white/20 pb-4">
@@ -688,16 +724,26 @@ export default function UserDashboardPage() {
 
               {/* QR Code Section */}
               <div className="bg-white text-slate-900 rounded-2xl p-4 flex flex-col sm:flex-row items-center gap-4 shadow-inner">
-                {/* Simulated QR Code Canvas */}
-                <div className="w-28 h-28 bg-slate-900 rounded-xl flex flex-col items-center justify-center p-2 text-white shrink-0 relative">
-                  <QrCode className="w-20 h-20 text-white" />
-                  <span className="text-[7px] font-mono text-emerald-300 mt-0.5">VERIFIED</span>
+                {/* Scannable Dynamic QR Code */}
+                <div className="w-28 h-28 bg-white p-2 rounded-xl flex flex-col items-center justify-center shrink-0 border border-slate-200 shadow-sm relative">
+                  <QRCodeSVG
+                    value={getTicketVerificationUrl(selectedTicket)}
+                    size={96}
+                    level="M"
+                    includeMargin={false}
+                    className="w-full h-full"
+                  />
                 </div>
 
                 <div className="space-y-1 text-center sm:text-left flex-1">
-                  <span className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider bg-emerald-100 px-2 py-0.5 rounded">
-                    Akses Resmi Terverifikasi
-                  </span>
+                  <div className="flex flex-wrap items-center justify-center sm:justify-start gap-1.5">
+                    <span className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider bg-emerald-100 px-2 py-0.5 rounded">
+                      Akses Resmi Terverifikasi
+                    </span>
+                    <span className="text-[9px] font-mono font-bold text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded">
+                      Scan via Kamera HP
+                    </span>
+                  </div>
                   <h4 className="text-sm font-bold text-slate-900 mt-1 line-clamp-2">
                     {selectedTicket.title}
                   </h4>
@@ -745,15 +791,31 @@ export default function UserDashboardPage() {
             </div>
 
             {/* Actions */}
-            <div className="flex items-center gap-3">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
               <button
                 type="button"
-                onClick={() => alert('Fitur Cetak / Simpan E-Ticket PDF berhasil disimulasikan!')}
-                className="flex-1 py-2.5 px-4 bg-yarsi-primary hover:bg-yarsi-dark text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition-all"
+                onClick={handleDownloadTicketImage}
+                disabled={isDownloading}
+                className="flex-1 py-2.5 px-4 bg-yarsi-primary hover:bg-yarsi-dark disabled:opacity-60 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition-all"
               >
-                <Download className="w-4 h-4" />
-                <span>Unduh E-Ticket (PDF)</span>
+                {isDownloading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Download className="w-4 h-4" />
+                )}
+                <span>{isDownloading ? 'Menyimpan Gambar...' : 'Unduh E-Ticket (Gambar)'}</span>
               </button>
+
+              <a
+                href={getTicketVerificationUrl(selectedTicket)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="py-2.5 px-4 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors"
+                title="Buka Halaman Bukti Verifikasi Resmi"
+              >
+                <ExternalLink className="w-4 h-4 text-emerald-600" />
+                <span>Uji Scan QR</span>
+              </a>
 
               <button
                 type="button"

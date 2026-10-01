@@ -89,6 +89,58 @@ export class RoomsService {
     });
   }
 
+  async update(id: string, dto: import('./dto/create-room.dto').UpdateRoomDto) {
+    await this.findOne(id);
+
+    return this.prisma.room.update({
+      where: { id },
+      data: {
+        ...(dto.name ? { name: dto.name.trim() } : {}),
+        ...(dto.floorId !== undefined ? { floorId: dto.floorId } : {}),
+        ...(dto.building !== undefined ? { building: dto.building.trim() } : {}),
+        ...(dto.capacity !== undefined ? { capacity: dto.capacity } : {}),
+        ...(dto.isSpecialRoom !== undefined ? { isSpecialRoom: dto.isSpecialRoom } : {}),
+        ...(dto.isActive !== undefined ? { isActive: dto.isActive } : {}),
+      },
+      include: { floor: true },
+    });
+  }
+
+  async remove(id: string) {
+    const room = await this.findOne(id);
+    
+    // Check if room has active bookings
+    const bookingsCount = await this.prisma.booking.count({
+      where: { roomId: id },
+    });
+
+    if (bookingsCount > 0) {
+      // Soft-delete to preserve booking history integrity
+      await this.prisma.room.update({
+        where: { id },
+        data: { isActive: false },
+      });
+      return { message: `Ruangan '${room.name}' memiliki riwayat booking, dinonaktifkan secara aman.` };
+    }
+
+    await this.prisma.room.delete({ where: { id } });
+    return { message: `Ruangan '${room.name}' berhasil dihapus secara permanen.` };
+  }
+
+  async toggleStatus(id: string) {
+    const room = await this.findOne(id);
+    const updated = await this.prisma.room.update({
+      where: { id },
+      data: { isActive: !room.isActive },
+      include: { floor: true },
+    });
+    return {
+      message: `Status ruangan '${updated.name}' berhasil diubah menjadi ${updated.isActive ? 'Aktif' : 'Nonaktif'}.`,
+      room: updated,
+    };
+  }
+
+
   async checkAvailability(roomId: string, startTime: Date, endTime: Date, excludeBookingId?: string) {
     const availability = await this.scheduling.checkAvailability(
       roomId,
@@ -149,5 +201,45 @@ export class RoomsService {
         status: booking.status,
       })),
     };
+  }
+
+  async getRecentSubmissions(limit = 5) {
+    const bookings = await this.prisma.booking.findMany({
+      take: limit,
+      orderBy: { createdAt: 'desc' },
+      include: {
+        room: {
+          include: {
+            floor: true,
+          },
+        },
+        user: {
+          select: {
+            id: true,
+            fullName: true,
+            role: true,
+            unitName: true,
+          },
+        },
+      },
+    });
+
+    return bookings.map((b) => ({
+      id: b.id,
+      title: b.title,
+      roomId: b.roomId,
+      roomName: b.room?.name || 'Ruangan Kampus',
+      roomCode: b.room?.code || '',
+      floorLevel: b.room?.floor?.level ?? 1,
+      floorName: b.room?.floor?.name || `Lantai ${b.room?.floor?.level ?? 1}`,
+      capacity: b.room?.capacity || 0,
+      status: b.status,
+      startTime: b.startTime,
+      endTime: b.endTime,
+      activityType: b.activityType,
+      applicantName: b.user?.fullName || 'Civitas YARSI',
+      unitName: b.user?.unitName || '',
+      createdAt: b.createdAt,
+    }));
   }
 }
