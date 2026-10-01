@@ -26,7 +26,7 @@ import { countUniqueBookingApplications } from '@/lib/utils';
 export function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { currentUser, logout, bookings } = useAppStore();
+  const { currentUser, logout, bookings, fetchInitialData } = useAppStore();
   const [mounted, setMounted] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -35,7 +35,8 @@ export function Navbar() {
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+    fetchInitialData();
+  }, [fetchInitialData]);
 
   useEffect(() => {
     setMobileMenuOpen(false);

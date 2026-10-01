@@ -61,6 +61,7 @@ export interface PublicScheduleEvent {
   roomId: string;
   roomName: string;
   floorName: string;
+  title?: string;
   startTime: string;
   endTime: string;
   status: string;

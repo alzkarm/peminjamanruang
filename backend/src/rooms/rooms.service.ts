@@ -143,6 +143,7 @@ export class RoomsService {
         roomId: booking.roomId,
         roomName: booking.room.name,
         floorName: booking.room.floor.name,
+        title: booking.title,
         startTime: booking.startTime,
         endTime: booking.endTime,
         status: booking.status,

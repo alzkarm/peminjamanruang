@@ -47,7 +47,12 @@ interface BookingGroup {
 }
 
 export default function LpfApprovalsPage() {
-  const { bookings, approveBookingLPF, rejectBooking, returnBooking, currentUser } = useAppStore();
+  const { bookings, approveBookingLPF, rejectBooking, returnBooking, currentUser, fetchBookings, fetchRooms } = useAppStore();
+
+  React.useEffect(() => {
+    fetchBookings().catch(() => undefined);
+    fetchRooms().catch(() => undefined);
+  }, [fetchBookings, fetchRooms]);
 
   const [activeFilter, setActiveFilter] = useState<'pending' | 'yayasan' | 'all'>('pending');
   const [searchQuery, setSearchQuery] = useState('');

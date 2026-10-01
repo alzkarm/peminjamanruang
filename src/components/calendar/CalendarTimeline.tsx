@@ -158,7 +158,7 @@ export function CalendarTimeline({
   viewMode: controlledViewMode,
   onViewModeChange,
 }: CalendarTimelineProps) {
-  const { currentUser } = useAppStore();
+  const { currentUser, bookings: storeBookings, academicBlocks: storeAcademicBlocks } = useAppStore();
   const isGuest = !currentUser || currentUser.role === 'guest';
   const todayDateStr = getJakartaDateString();
 
@@ -242,8 +242,18 @@ export function CalendarTimeline({
       ? addMonthsToDateStr(monthStart, 1)
       : addJakartaDays(currentDateStr, 1);
   const publicSchedule = usePublicSchedule(scheduleStartDate, scheduleEndDate);
-  const bookings = publicSchedule.events.map(mapPublicEventToBooking);
-  const academicBlocks: AcademicBlock[] = [];
+  const bookings = React.useMemo(() => {
+    const publicMapped = publicSchedule.events.map(mapPublicEventToBooking);
+    if (storeBookings && storeBookings.length > 0) {
+      const storeMap = new Map(storeBookings.map((b) => [b.id, b]));
+      const merged = publicMapped.map((pb) => storeMap.get(pb.id) || pb);
+      const mergedIds = new Set(merged.map((m) => m.id));
+      const additional = storeBookings.filter((b) => !mergedIds.has(b.id));
+      return [...merged, ...additional];
+    }
+    return publicMapped;
+  }, [storeBookings, publicSchedule.events]);
+  const academicBlocks: AcademicBlock[] = storeAcademicBlocks || [];
 
   // Modal detail
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);

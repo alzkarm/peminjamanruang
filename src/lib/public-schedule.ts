@@ -56,7 +56,7 @@ export function mapPublicEventToBooking(event: PublicScheduleEvent): Booking {
     userPhone: '',
     userOrganization: '',
     department: '',
-    title: '',
+    title: event.title || 'Kegiatan Kampus',
     category: 'lainnya',
     description: '',
     estimatedAttendees: 0,

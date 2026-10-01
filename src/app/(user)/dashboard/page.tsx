@@ -47,7 +47,7 @@ interface UserBookingGroup {
 }
 
 export default function UserDashboardPage() {
-  const { currentUser, bookings, cancelBooking, fetchBookings } = useAppStore();
+  const { currentUser, bookings, cancelBooking, fetchBookings, fetchRooms } = useAppStore();
   const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState<string>('all');
   const [selectedTicket, setSelectedTicket] = useState<Booking | null>(null);
@@ -58,7 +58,8 @@ export default function UserDashboardPage() {
   useEffect(() => {
     setMounted(true);
     fetchBookings().catch(() => undefined);
-  }, [fetchBookings]);
+    fetchRooms().catch(() => undefined);
+  }, [fetchBookings, fetchRooms]);
 
   // Filter user's bookings (or all if admin)
   const userBookings = bookings.filter((b) => {

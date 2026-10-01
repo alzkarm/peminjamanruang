@@ -45,7 +45,12 @@ interface BookingGroup {
 }
 
 export default function YayasanApprovalsPage() {
-  const { rooms, bookings, approveBookingYayasan, rejectBooking, returnBooking, currentUser } = useAppStore();
+  const { rooms, bookings, approveBookingYayasan, rejectBooking, returnBooking, currentUser, fetchBookings, fetchRooms } = useAppStore();
+
+  React.useEffect(() => {
+    fetchBookings().catch(() => undefined);
+    fetchRooms().catch(() => undefined);
+  }, [fetchBookings, fetchRooms]);
 
   const [isGroupRecurring, setIsGroupRecurring] = useState(true);
   const [expandedGroupIds, setExpandedGroupIds] = useState<string[]>([]);

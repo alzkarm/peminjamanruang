@@ -202,7 +202,7 @@ export function EventDetailModal({
               {isRecurringBooking(booking) && (
                 <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-teal-50 text-teal-800 border border-teal-300">
                   <Repeat className="w-3 h-3 text-teal-600" />
-                  <span>Rutin Per Semester</span>
+                  <span>{getRecurringScheduleLabel(booking) || 'Multi-Hari / Rutin'}</span>
                 </span>
               )}
             </div>

@@ -43,11 +43,11 @@ const ALLOWED_UPLOADS: Record<string, string[]> = {
 };
 
 @Controller('bookings')
-@UseGuards(JwtAuthGuard)
 export class BookingsController {
   constructor(private readonly bookingsService: BookingsService) {}
 
   @Post()
+  @UseGuards(JwtAuthGuard)
   @UseInterceptors(
     FileInterceptor('attachment', {
       storage: diskStorage({
@@ -82,6 +82,7 @@ export class BookingsController {
   }
 
   @Get(':id/attachment')
+  @UseGuards(JwtAuthGuard)
   async downloadAttachment(
     @Param('id') id: string,
     @CurrentUser() currentUser: { id: string; role: Role },
@@ -108,7 +109,7 @@ export class BookingsController {
   }
 
   @Patch('batch-status')
-  @UseGuards(RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   async updateBatchStatus(
     @CurrentUser() currentUser: { id: string; role: Role; fullName: string },
     @Body() dto: UpdateBatchStatusDto,
@@ -117,7 +118,7 @@ export class BookingsController {
   }
 
   @Patch(':id/status')
-  @UseGuards(RolesGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
   async updateStatus(
     @Param('id') id: string,
     @CurrentUser() currentUser: { id: string; role: Role; fullName: string },
@@ -127,6 +128,7 @@ export class BookingsController {
   }
 
   @Patch(':id/cancel')
+  @UseGuards(JwtAuthGuard)
   async cancel(
     @Param('id') id: string,
     @CurrentUser() currentUser: { id: string; role: Role; fullName: string },

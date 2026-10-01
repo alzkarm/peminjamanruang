@@ -268,21 +268,24 @@ export function mapBackendBookingToFrontend(b: any): Booking {
   const hasRecurringNote =
     rawNotes.toLowerCase().includes('rutin semester') ||
     rawNotes.toLowerCase().includes('peminjaman rutin') ||
-    rawNotes.toLowerCase().includes('pengulangan');
+    rawNotes.toLowerCase().includes('jadwal rutin') ||
+    rawNotes.toLowerCase().includes('pengulangan') ||
+    rawNotes.toLowerCase().includes('multi-hari') ||
+    rawNotes.toLowerCase().includes('pengulangan rutin');
   const isPerSemester = !!b.bulkGroupId || hasRecurringNote || !!b.isAcademicBulk;
   let semesterInfo: string | undefined = undefined;
   if (rawNotes) {
-    const match = rawNotes.match(/\[?(Rutin Semester:[^\]\n]+|Peminjaman Rutin:[^\]\n]+|Pengulangan:[^\]\n]+)\]?/i);
+    const match = rawNotes.match(/\[?(Rutin Semester:[^\]\n]+|Jadwal Rutin:[^\]\n]+|Peminjaman Rutin:[^\]\n]+|Pengulangan:[^\]\n]+|Multi-Hari:[^\]\n]+|Pengulangan Rutin:[^\]\n]+)\]?/i);
     if (match) {
       semesterInfo = match[1].trim();
     }
   }
   if (!semesterInfo && isPerSemester) {
-    semesterInfo = 'Peminjaman Rutin Per Semester';
+    semesterInfo = 'Peminjaman Multi-Hari / Berkala';
   }
 
   const cleanDescription = rawNotes
-    ? rawNotes.replace(/\s*\[?(Rutin Semester:[^\]\n]+|Peminjaman Rutin:[^\]\n]+|Pengulangan:[^\]\n]+)\]?\s*/gi, '').trim() || rawNotes
+    ? rawNotes.replace(/\s*\[?(Rutin Semester:[^\]\n]+|Jadwal Rutin:[^\]\n]+|Peminjaman Rutin:[^\]\n]+|Pengulangan:[^\]\n]+|Multi-Hari:[^\]\n]+|Pengulangan Rutin:[^\]\n]+)\]?\s*/gi, '').trim() || rawNotes
     : 'Permohonan peminjaman ruang kegiatan resmi.';
 
   return {

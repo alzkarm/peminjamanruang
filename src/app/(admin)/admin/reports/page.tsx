@@ -22,7 +22,12 @@ import {
 } from 'lucide-react';
 
 export default function ReportsAnalyticsPage() {
-  const { rooms, bookings, feedbacks } = useAppStore();
+  const { rooms, bookings, feedbacks, fetchInitialData } = useAppStore();
+
+  React.useEffect(() => {
+    fetchInitialData();
+  }, [fetchInitialData]);
+
   const todayStr = getJakartaDateString();
   const [currentYear, currentMonth] = todayStr.split('-').map(Number);
   const finalDay = new Date(Date.UTC(currentYear, currentMonth, 0)).getUTCDate();

@@ -129,12 +129,16 @@ function ProductPreview({ type }: { type: (typeof quickAccessItems)[number]['pre
 }
 
 export default function HomePage() {
-  const { currentUser, rooms } = useAppStore();
+  const { currentUser, rooms, fetchInitialData } = useAppStore();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFloor, setSelectedFloor] = useState('all');
   const [selectedDateStr, setSelectedDateStr] = useState(getJakartaDateString);
   const [authGateOpen, setAuthGateOpen] = useState(false);
   const [showFinishedToday, setShowFinishedToday] = useState(false);
+
+  React.useEffect(() => {
+    fetchInitialData();
+  }, [fetchInitialData]);
   const todayDateStr = getJakartaDateString();
   const todaySchedule = usePublicSchedule(todayDateStr, addJakartaDays(todayDateStr, 1));
   const selectedDateSchedule = usePublicSchedule(

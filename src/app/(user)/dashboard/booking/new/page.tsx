@@ -21,6 +21,8 @@ import {
   ChevronDown,
   Search,
   X,
+  Repeat,
+  CalendarRange,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -35,7 +37,17 @@ const STANDARD_EQUIPMENTS = [
   { id: 'eq-videotron', name: 'Videotron LED Display 8x4m (Khusus Auditorium)', category: 'audio_visual', isSpecial: true },
 ];
 
-const WEEKDAYS = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+const WEEKDAYS = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+
+const WEEKDAY_ITEMS = [
+  { id: 'Senin', short: 'Sen', full: 'Senin' },
+  { id: 'Selasa', short: 'Sel', full: 'Selasa' },
+  { id: 'Rabu', short: 'Rab', full: 'Rabu' },
+  { id: 'Kamis', short: 'Kam', full: 'Kamis' },
+  { id: 'Jumat', short: 'Jum', full: 'Jumat' },
+  { id: 'Sabtu', short: 'Sab', full: 'Sabtu' },
+  { id: 'Minggu', short: 'Min', full: 'Minggu' },
+];
 
 const INDO_DAYS_MAP: Record<number, string> = {
   1: 'Senin',
@@ -47,8 +59,30 @@ const INDO_DAYS_MAP: Record<number, string> = {
   0: 'Minggu',
 };
 
+function getConsecutiveDates(startDateStr: string, endDateStr: string): string[] {
+  const result: string[] = [];
+  if (!startDateStr || !endDateStr || endDateStr < startDateStr) return result;
+
+  const [sYear, sMonth, sDay] = startDateStr.split('-').map(Number);
+  const [eYear, eMonth, eDay] = endDateStr.split('-').map(Number);
+
+  const current = new Date(sYear, sMonth - 1, sDay, 12, 0, 0);
+  const end = new Date(eYear, eMonth - 1, eDay, 12, 0, 0);
+
+  while (current <= end) {
+    const y = current.getFullYear();
+    const m = String(current.getMonth() + 1).padStart(2, '0');
+    const d = String(current.getDate()).padStart(2, '0');
+    result.push(`${y}-${m}-${d}`);
+    current.setDate(current.getDate() + 1);
+  }
+  return result;
+}
+
 function getRecurringDates(startDateStr: string, endDateStr: string, days: string[]): string[] {
   const result: string[] = [];
+  if (!startDateStr || !endDateStr || endDateStr < startDateStr || days.length === 0) return result;
+
   const [sYear, sMonth, sDay] = startDateStr.split('-').map(Number);
   const [eYear, eMonth, eDay] = endDateStr.split('-').map(Number);
 
@@ -133,9 +167,21 @@ function NewBookingForm() {
   const [description, setDescription] = useState('');
   const [estimatedAttendees, setEstimatedAttendees] = useState(50);
   const [isPerSemester, setIsPerSemester] = useState(false);
+  const [repeatType, setRepeatType] = useState<'consecutive' | 'recurring'>('consecutive');
   const [tenggatPelaksanaan, setTenggatPelaksanaan] = useState('');
   const [selectedDays, setSelectedDays] = useState<string[]>(['Senin']);
   const [isDayDropdownOpen, setIsDayDropdownOpen] = useState(false);
+
+  const computedDates = useMemo(() => {
+    if (!isPerSemester || !date || !tenggatPelaksanaan || tenggatPelaksanaan < date) {
+      return date ? [date] : [];
+    }
+    if (repeatType === 'consecutive') {
+      return getConsecutiveDates(date, tenggatPelaksanaan);
+    } else {
+      return getRecurringDates(date, tenggatPelaksanaan, selectedDays);
+    }
+  }, [isPerSemester, date, tenggatPelaksanaan, repeatType, selectedDays]);
 
   useEffect(() => {
     if (date) {
@@ -424,20 +470,31 @@ function NewBookingForm() {
     }
 
     if (isPerSemester && !tenggatPelaksanaan) {
-      setErrorMessage('Tenggat pelaksanaan wajib diisi untuk peminjaman rutin per semester.');
+      setErrorMessage(
+        repeatType === 'consecutive'
+          ? 'Tanggal selesai pelaksanaan wajib diisi untuk peminjaman lebih dari 1 hari.'
+          : 'Tenggat pelaksanaan wajib diisi untuk peminjaman jadwal rutin berkala.'
+      );
       return;
     }
 
     if (isPerSemester && date && tenggatPelaksanaan < date) {
-      setErrorMessage('Tenggat pelaksanaan tidak boleh lebih awal dari tanggal pelaksanaan awal.');
+      setErrorMessage('Tanggal selesai/tenggat tidak boleh lebih awal dari tanggal pelaksanaan awal.');
       return;
     }
 
     let datesToBook: string[] | undefined = undefined;
     if (isPerSemester && tenggatPelaksanaan) {
-      datesToBook = getRecurringDates(date, tenggatPelaksanaan, selectedDays);
+      datesToBook = repeatType === 'consecutive'
+        ? getConsecutiveDates(date, tenggatPelaksanaan)
+        : getRecurringDates(date, tenggatPelaksanaan, selectedDays);
+
       if (datesToBook.length === 0) {
-        setErrorMessage('Tidak ada tanggal yang cocok antara tanggal pelaksanaan dan tenggat pelaksanaan untuk hari pengulangan yang dipilih.');
+        setErrorMessage(
+          repeatType === 'consecutive'
+            ? 'Tidak ada tanggal pelaksanaan yang valid dalam rentang hari yang dipilih.'
+            : 'Tidak ada tanggal yang cocok antara tanggal pelaksanaan dan tenggat pelaksanaan untuk hari yang dipilih.'
+        );
         return;
       }
     }
@@ -478,7 +535,9 @@ function NewBookingForm() {
     ];
 
     const recurringText = isPerSemester
-      ? `Rutin Semester: Setiap ${selectedDays.join(', ')}${tenggatPelaksanaan ? ` (s.d. ${formatDateIndo(tenggatPelaksanaan)})` : ' (1 Semester)'}`
+      ? repeatType === 'consecutive'
+        ? `Multi-Hari: ${formatDateIndo(date)} s.d. ${formatDateIndo(tenggatPelaksanaan)} (${datesToBook?.length || 0} hari)`
+        : `Jadwal Rutin: Setiap ${selectedDays.join(', ')} (s.d. ${formatDateIndo(tenggatPelaksanaan)}, ${datesToBook?.length || 0} sesi)`
       : undefined;
 
     const fullNotes = recurringText
@@ -942,8 +1001,8 @@ function NewBookingForm() {
                 </div>
               </div>
 
-              {/* Checkbox Peminjaman Rutin Per Semester */}
-              <div className="p-3.5 bg-slate-50 hover:bg-slate-100/70 border border-slate-200 rounded-2xl transition-all">
+              {/* Checkbox Peminjaman Lebih dari 1 Hari */}
+              <div className="p-3.5 sm:p-4 bg-slate-50 hover:bg-slate-100/70 border border-slate-200 rounded-2xl transition-all">
                 <label className="flex items-start gap-3 cursor-pointer select-none">
                   <input
                     type="checkbox"
@@ -951,117 +1010,241 @@ function NewBookingForm() {
                     onChange={(e) => setIsPerSemester(e.target.checked)}
                     className="mt-0.5 w-4 h-4 text-yarsi-primary rounded border-slate-300 focus:ring-yarsi-primary cursor-pointer accent-emerald-600"
                   />
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-slate-900">
-                        Peminjaman Rutin Per Semester
+                  <div className="space-y-1 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-xs sm:text-sm font-bold text-slate-900">
+                        Peminjaman Lebih dari 1 Hari
                       </span>
-                      <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
-                        1 Semester (16 Pertemuan)
-                      </span>
+                      {isPerSemester ? (
+                        repeatType === 'consecutive' ? (
+                          <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 border border-blue-200">
+                            {computedDates.length > 0 ? `${computedDates.length} Hari Berturut-turut` : 'Multi-Hari'}
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                            {computedDates.length > 0 ? `${computedDates.length} Sesi Terjadwal` : 'Jadwal Berkala'}
+                          </span>
+                        )
+                      ) : (
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-200/80 text-slate-600">
+                          Opsi Multi-Hari & Berkala
+                        </span>
+                      )}
                     </div>
                     <p className="text-[11px] text-slate-500 leading-relaxed">
-                      Centang jika ruangan dipinjam secara rutin setiap minggu pada hari dan jam yang sama selama satu semester akademik.
+                      Centang jika ruangan dipinjam untuk beberapa hari berturut-turut atau terjadwal secara rutin berkala.
                     </p>
                   </div>
                 </label>
 
                 {isPerSemester && (
-                  <div className="mt-3 pt-3 border-t border-slate-200 grid grid-cols-1 sm:grid-cols-2 gap-3 animate-fade-in">
+                  <div className="mt-4 pt-3.5 border-t border-slate-200/80 space-y-4 animate-fade-in">
+                    {/* Mode Selector (Tabs) */}
                     <div>
-                      <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                        Tenggat Pelaksanaan *
+                      <label className="block text-[11px] font-bold text-slate-700 mb-1.5">
+                        Pilih Tipe Durasi / Penjadwalan:
                       </label>
-                      <input
-                        type="date"
-                        required={isPerSemester}
-                        min={date || undefined}
-                        value={tenggatPelaksanaan}
-                        onChange={(e) => setTenggatPelaksanaan(e.target.value)}
-                        onClick={(e) => {
-                          try { e.currentTarget.showPicker?.(); } catch { }
-                        }}
-                        className="w-full px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yarsi-primary text-slate-800 font-semibold cursor-pointer"
-                      />
-                    </div>
-                    <div className="relative">
-                      <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                        Jadwal Pengulangan (Hari)
-                      </label>
-                      <button
-                        type="button"
-                        onClick={() => setIsDayDropdownOpen(!isDayDropdownOpen)}
-                        className="w-full px-3 py-2 text-xs bg-white border border-slate-200 hover:border-slate-300 rounded-xl text-slate-800 font-semibold flex items-center justify-between transition-colors shadow-xs cursor-pointer"
-                      >
-                        <span className="truncate">
-                          {selectedDays.length === WEEKDAYS.length
-                            ? 'Setiap Hari (Senin – Sabtu)'
-                            : selectedDays.length === 0
-                              ? 'Pilih hari...'
-                              : `Setiap ${selectedDays.join(', ')}`}
-                        </span>
-                        <ChevronDown
-                          className={`w-4 h-4 text-slate-400 transition-transform ${isDayDropdownOpen ? 'rotate-180 text-yarsi-primary' : ''
-                            }`}
-                        />
-                      </button>
+                      <div className="grid grid-cols-1 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setRepeatType('consecutive')}
+                          className={`w-full p-3 rounded-xl border text-left transition-all flex items-center justify-between gap-3 cursor-pointer ${
+                            repeatType === 'consecutive'
+                              ? 'bg-blue-50/90 border-blue-400 ring-2 ring-blue-400/20'
+                              : 'bg-white border-slate-200 hover:border-slate-300'
+                          }`}
+                        >
+                          <div className="flex items-start gap-2.5 min-w-0">
+                            <CalendarRange className={`w-4 h-4 mt-0.5 shrink-0 ${repeatType === 'consecutive' ? 'text-blue-600' : 'text-slate-400'}`} />
+                            <div>
+                              <div className={`text-xs font-bold ${repeatType === 'consecutive' ? 'text-blue-900' : 'text-slate-800'}`}>
+                                Hari Berturut-turut (Multi-Hari)
+                              </div>
+                              <div className="text-[10px] text-slate-500 mt-0.5 leading-snug">
+                                Peminjaman untuk beberapa hari berurutan (seminar, pelatihan, workshop, atau pameran).
+                              </div>
+                            </div>
+                          </div>
+                          <div className={`w-4 h-4 rounded-full border-2 shrink-0 flex items-center justify-center ${
+                            repeatType === 'consecutive' ? 'border-blue-600 bg-blue-600' : 'border-slate-300'
+                          }`}>
+                            {repeatType === 'consecutive' && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                          </div>
+                        </button>
 
-                      {isDayDropdownOpen && (
-                        <div className="absolute z-30 left-0 right-0 mt-1.5 p-3 bg-white border border-slate-200 rounded-2xl shadow-xl animate-fade-in space-y-2">
-                          <div className="flex items-center justify-between pb-2 border-b border-slate-100 text-[11px]">
-                            <span className="font-bold text-slate-700">Pilih Hari (Senin - Sabtu):</span>
-                            <button
-                              type="button"
-                              onClick={handleSelectAllWeekdays}
-                              className="text-yarsi-primary hover:underline font-bold text-[10px]"
-                            >
-                              {selectedDays.length === WEEKDAYS.length
-                                ? 'Pilih 1 Hari Saja'
-                                : 'Centang Semua (Senin - Sabtu)'}
-                            </button>
+                        <button
+                          type="button"
+                          onClick={() => setRepeatType('recurring')}
+                          className={`w-full p-3 rounded-xl border text-left transition-all flex items-center justify-between gap-3 cursor-pointer ${
+                            repeatType === 'recurring'
+                              ? 'bg-emerald-50/90 border-emerald-400 ring-2 ring-emerald-400/20'
+                              : 'bg-white border-slate-200 hover:border-slate-300'
+                          }`}
+                        >
+                          <div className="flex items-start gap-2.5 min-w-0">
+                            <Repeat className={`w-4 h-4 mt-0.5 shrink-0 ${repeatType === 'recurring' ? 'text-emerald-600' : 'text-slate-400'}`} />
+                            <div>
+                              <div className={`text-xs font-bold ${repeatType === 'recurring' ? 'text-emerald-900' : 'text-slate-800'}`}>
+                                Jadwal Rutin Berkala
+                              </div>
+                              <div className="text-[10px] text-slate-500 mt-0.5 leading-snug">
+                                Peminjaman berulang pada hari dan jam yang sama setiap minggu (jadwal kuliah, praktikum, atau rapat rutin).
+                              </div>
+                            </div>
+                          </div>
+                          <div className={`w-4 h-4 rounded-full border-2 shrink-0 flex items-center justify-center ${
+                            repeatType === 'recurring' ? 'border-emerald-600 bg-emerald-600' : 'border-slate-300'
+                          }`}>
+                            {repeatType === 'recurring' && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                          </div>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Mode Content */}
+                    {repeatType === 'consecutive' ? (
+                      <div className="bg-white p-3.5 rounded-xl border border-slate-200 space-y-1.5">
+                        <label className="block text-[11px] font-bold text-slate-700">
+                          Tanggal Selesai Pelaksanaan (Rentang Hari) *
+                        </label>
+                        <input
+                          type="date"
+                          required={isPerSemester && repeatType === 'consecutive'}
+                          min={date || undefined}
+                          value={tenggatPelaksanaan}
+                          onChange={(e) => setTenggatPelaksanaan(e.target.value)}
+                          onClick={(e) => {
+                            try { e.currentTarget.showPicker?.(); } catch { }
+                          }}
+                          className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 font-semibold cursor-pointer"
+                        />
+                        <p className="text-[10px] text-slate-400">
+                          Mulai dari <span className="font-semibold text-slate-600">{date ? formatDateIndo(date) : '(pilih tanggal pelaksanaan di atas)'}</span> hingga tanggal selesai yang dipilih.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3.5 bg-white p-3.5 rounded-xl border border-slate-200">
+                        <div>
+                          <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                            Tenggat Akhir Pelaksanaan *
+                          </label>
+                          <input
+                            type="date"
+                            required={isPerSemester && repeatType === 'recurring'}
+                            min={date || undefined}
+                            value={tenggatPelaksanaan}
+                            onChange={(e) => setTenggatPelaksanaan(e.target.value)}
+                            onClick={(e) => {
+                              try { e.currentTarget.showPicker?.(); } catch { }
+                            }}
+                            className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-800 font-semibold cursor-pointer"
+                          />
+                          <p className="text-[10px] text-slate-400 mt-1">
+                            Batas akhir periode jadwal berkala
+                          </p>
+                        </div>
+
+                        <div>
+                          <div className="flex flex-wrap items-center justify-between gap-1.5 mb-2">
+                            <label className="block text-[11px] font-bold text-slate-700">
+                              Pilih Hari Rutin:
+                            </label>
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() => setSelectedDays(['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'])}
+                                className="px-2 py-0.5 text-[10px] font-bold rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 transition-colors cursor-pointer"
+                              >
+                                Sen – Jum
+                              </button>
+                              <button
+                                type="button"
+                                onClick={handleSelectAllWeekdays}
+                                className="px-2 py-0.5 text-[10px] font-bold rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 transition-colors cursor-pointer"
+                              >
+                                {selectedDays.length === WEEKDAYS.length ? 'Reset 1 Hari' : 'Semua Hari'}
+                              </button>
+                            </div>
                           </div>
 
-                          <div className="space-y-1 pt-1">
-                            {WEEKDAYS.map((day) => {
-                              const isChecked = selectedDays.includes(day);
+                          <div className="grid grid-cols-7 gap-1 sm:gap-1.5">
+                            {WEEKDAY_ITEMS.map((item) => {
+                              const isChecked = selectedDays.includes(item.id);
                               return (
-                                <label
-                                  key={day}
-                                  className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition-colors ${isChecked
-                                      ? 'bg-emerald-50 text-emerald-950'
-                                      : 'hover:bg-slate-50 text-slate-700'
-                                    }`}
+                                <button
+                                  key={item.id}
+                                  type="button"
+                                  onClick={() => handleToggleDay(item.id)}
+                                  title={`Hari ${item.full}`}
+                                  className={`w-full py-2 sm:py-2.5 px-0.5 text-center rounded-xl border font-bold transition-all cursor-pointer select-none flex flex-col items-center justify-center ${
+                                    isChecked
+                                      ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs ring-2 ring-emerald-600/25'
+                                      : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100 hover:border-slate-300'
+                                  }`}
                                 >
-                                  <input
-                                    type="checkbox"
-                                    checked={isChecked}
-                                    onChange={() => handleToggleDay(day)}
-                                    className="w-4 h-4 text-yarsi-primary rounded border-slate-300 focus:ring-yarsi-primary accent-emerald-600 cursor-pointer"
-                                  />
-                                  <span>Hari {day}</span>
-                                  {isChecked && (
-                                    <span className="ml-auto text-[10px] text-emerald-600 font-bold">Terpilih</span>
-                                  )}
-                                </label>
+                                  <span className="text-xs sm:text-sm font-extrabold tracking-tight">{item.short}</span>
+                                </button>
                               );
                             })}
                           </div>
 
-                          <div className="pt-2 border-t border-slate-100 flex items-center justify-between">
-                            <span className="text-[10px] text-slate-400">
-                              {selectedDays.length} hari dipilih
+                          <div className="flex flex-wrap items-center justify-between gap-1 text-[11px] pt-2 px-0.5 text-slate-500">
+                            <span className="truncate">
+                              Hari aktif:{' '}
+                              <strong className="text-emerald-700 font-bold">
+                                {selectedDays.length === 7
+                                  ? 'Setiap Hari (Senin – Minggu)'
+                                  : selectedDays.join(', ')}
+                              </strong>
                             </span>
-                            <button
-                              type="button"
-                              onClick={() => setIsDayDropdownOpen(false)}
-                              className="px-3 py-1 bg-yarsi-primary text-white text-[10px] font-bold rounded-lg shadow-xs hover:bg-yarsi-dark transition-colors"
-                            >
-                              Simpan Pilihan
-                            </button>
+                            <span className="text-[10px] text-slate-400 shrink-0 font-medium">
+                              ({selectedDays.length} hari per minggu)
+                            </span>
                           </div>
                         </div>
-                      )}
-                    </div>
+                      </div>
+                    )}
+
+                    {/* Schedule Preview Bar */}
+                    {date && tenggatPelaksanaan && tenggatPelaksanaan >= date && (
+                      <div className="p-3 bg-emerald-50/70 border border-emerald-200/80 rounded-xl space-y-2">
+                        <div className="flex flex-wrap items-center justify-between gap-1 text-xs font-bold text-emerald-950">
+                          <span className="flex items-center gap-1.5">
+                            <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                            <span>
+                              {repeatType === 'consecutive'
+                                ? `Total ${computedDates.length} Hari Berturut-turut Terjadwal`
+                                : `Total ${computedDates.length} Sesi Pertemuan Terjadwal`}
+                            </span>
+                          </span>
+                          <span className="text-[11px] font-medium text-emerald-800">
+                            {startTime && endTime ? `${startTime} – ${endTime} WIB` : ''}
+                          </span>
+                        </div>
+
+                        {computedDates.length > 0 ? (
+                          <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                            {computedDates.slice(0, 6).map((d) => (
+                              <span
+                                key={d}
+                                className="text-[10px] font-semibold px-2 py-0.5 rounded-lg bg-white border border-emerald-200 text-emerald-900 shadow-2xs"
+                              >
+                                {formatDateIndo(d)}
+                              </span>
+                            ))}
+                            {computedDates.length > 6 && (
+                              <span className="text-[10px] font-bold text-emerald-700 px-1.5">
+                                + {computedDates.length - 6} sesi lainnya
+                              </span>
+                            )}
+                          </div>
+                        ) : (
+                          <p className="text-[11px] text-amber-700">
+                            Tidak ada tanggal yang cocok dengan jadwal hari yang dipilih pada rentang waktu ini.
+                          </p>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

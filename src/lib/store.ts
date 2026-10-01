@@ -136,26 +136,19 @@ export const useAppStore = create<AppState>()(
             academicBulkApi.getAll(),
           ]);
 
-          const currentBookings = get().bookings?.length ? get().bookings : INITIAL_BOOKINGS;
-          let mergedBookings = currentBookings;
-
-          if (bookingsData.status === 'fulfilled' && bookingsData.value?.length) {
-            const apiBookings = bookingsData.value;
-            const apiIds = new Set(apiBookings.map((b) => b.id));
-            const localOnly = currentBookings.filter((b) => !apiIds.has(b.id));
-            mergedBookings = [...apiBookings, ...localOnly];
-          }
-
           set({
             rooms:
               roomsData.status === 'fulfilled' && roomsData.value?.length
                 ? roomsData.value
-                : (get().rooms?.length ? get().rooms : INITIAL_ROOMS),
-            bookings: mergedBookings,
+                : (get().rooms?.length ? get().rooms : []),
+            bookings:
+              bookingsData.status === 'fulfilled'
+                ? bookingsData.value
+                : (get().bookings?.length ? get().bookings : []),
             academicBlocks:
-              academicData.status === 'fulfilled' && academicData.value?.length
+              academicData.status === 'fulfilled'
                 ? academicData.value
-                : (get().academicBlocks?.length ? get().academicBlocks : INITIAL_ACADEMIC_BLOCKS),
+                : (get().academicBlocks?.length ? get().academicBlocks : []),
             isSyncing: false,
           });
         } catch (err: any) {
@@ -681,12 +674,12 @@ export const useAppStore = create<AppState>()(
       },
     }),
     {
-      name: 'siperu_yarsi_app_storage_v2',
+      name: 'siperu_yarsi_app_storage_v4',
       storage: createJSONStorage(() => localStorage),
       onRehydrateStorage: () => (state) => {
         if (state) {
           state.hasHydrated = true;
-          // Trigger background fetch
+          // Trigger background fetch directly from DB
           state.fetchInitialData();
         }
       },

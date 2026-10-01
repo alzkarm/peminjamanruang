@@ -48,7 +48,9 @@ export class BookingsService {
       (finalNotes &&
         (finalNotes.toLowerCase().includes('rutin semester') ||
           finalNotes.toLowerCase().includes('peminjaman rutin') ||
-          finalNotes.toLowerCase().includes('pengulangan')));
+          finalNotes.toLowerCase().includes('pengulangan') ||
+          finalNotes.toLowerCase().includes('multi-hari') ||
+          finalNotes.toLowerCase().includes('pengulangan rutin')));
     const bulkGroupId = isRecurring ? `bulk-recur-${Date.now()}-${randomUUID().slice(0, 8)}` : null;
 
     return this.scheduling.inSerializableTransaction(async (tx) => {
@@ -115,7 +117,7 @@ export class BookingsService {
             fromStatus: PrismaBookingStatus.PENDING,
             toStatus: PrismaBookingStatus.PENDING,
             notes: isMultiple
-              ? `Permohonan peminjaman rutin per semester (${dateStr}) berhasil diajukan.`
+              ? `Permohonan peminjaman sesi (${dateStr}) berhasil diajukan.`
               : 'Permohonan peminjaman berhasil diajukan oleh pemohon.',
           },
         });
