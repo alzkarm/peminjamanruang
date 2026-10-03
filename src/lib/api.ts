@@ -19,6 +19,7 @@ import {
   PublicScheduleEvent,
   RoomAvailabilityResponse,
   Faculty,
+  Facility,
   RecentSubmission,
 } from './types';
 
@@ -612,6 +613,59 @@ export const facultiesApi = {
 
   async delete(id: string): Promise<{ message: string }> {
     return request<{ message: string }>(`/faculties/${id}`, {
+      method: 'DELETE',
+    });
+  },
+};
+
+export const facilitiesApi = {
+  async getAll(onlyActive: boolean = false): Promise<Facility[]> {
+    return request<Facility[]>(`/facilities${onlyActive ? '?onlyActive=true' : ''}`);
+  },
+
+  async getById(id: string): Promise<Facility> {
+    return request<Facility>(`/facilities/${id}`);
+  },
+
+  async create(payload: {
+    name: string;
+    category?: string;
+    description?: string;
+    icon?: string;
+    isSpecial?: boolean;
+    isActive?: boolean;
+  }): Promise<Facility> {
+    return request<Facility>('/facilities', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  },
+
+  async update(
+    id: string,
+    payload: {
+      name?: string;
+      category?: string;
+      description?: string;
+      icon?: string;
+      isSpecial?: boolean;
+      isActive?: boolean;
+    }
+  ): Promise<Facility> {
+    return request<Facility>(`/facilities/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(payload),
+    });
+  },
+
+  async toggleStatus(id: string): Promise<Facility> {
+    return request<Facility>(`/facilities/${id}/toggle-status`, {
+      method: 'PATCH',
+    });
+  },
+
+  async delete(id: string): Promise<{ message: string }> {
+    return request<{ message: string }>(`/facilities/${id}`, {
       method: 'DELETE',
     });
   },

@@ -3,8 +3,9 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAppStore } from '@/lib/store';
-import { ApiError, roomsApi } from '@/lib/api';
-import { BookingCategory, BookingEquipment, BookingLogistikItem, Room } from '@/lib/types';
+import { ApiError, roomsApi, facilitiesApi } from '@/lib/api';
+import { Booking, BookingCategory, BookingEquipment, BookingLogistikItem, Room, Facility } from '@/lib/types';
+import { BookingSuccessModal } from '@/components/booking/BookingSuccessModal';
 import { formatDateIndo, getJakartaDateTimeIso } from '@/lib/utils';
 import {
   Calendar,
@@ -26,7 +27,15 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 
-const STANDARD_EQUIPMENTS = [
+interface EquipmentItem {
+  id: string;
+  name: string;
+  category: string;
+  isSpecial?: boolean;
+  description?: string;
+}
+
+const STANDARD_EQUIPMENTS: EquipmentItem[] = [
   { id: 'eq-proj-laser', name: 'Laser Projector & Motorized Screen', category: 'audio_visual' },
   { id: 'eq-sound-mic', name: 'Wireless Microphone Set & Sound System', category: 'audio_visual' },
   { id: 'eq-hybrid-zoom', name: 'Hybrid Meeting / PTZ 4K Camera Kit', category: 'audio_visual' },
@@ -251,6 +260,14 @@ function NewBookingForm() {
   // Prioritas 5: Internal Approval Confirmation Checkbox
   const [isInternalApproved, setIsInternalApproved] = useState<boolean>(true);
 
+  // Dynamic Facilities from Superadmin Master Data
+  const [facilities, setFacilities] = useState<Facility[]>([]);
+  const [isLoadingFacilities, setIsLoadingFacilities] = useState(true);
+
+  // Success Modal State & Data
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
+  const [createdBooking, setCreatedBooking] = useState<Booking | null>(null);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -277,6 +294,35 @@ function NewBookingForm() {
   useEffect(() => {
     void loadRooms();
   }, [loadRooms]);
+
+  useEffect(() => {
+    async function loadFacilities() {
+      try {
+        const data = await facilitiesApi.getAll(true);
+        if (data && data.length > 0) {
+          setFacilities(data);
+        }
+      } catch (err) {
+        console.warn('Gagal memuat master fasilitas, fallback ke standar:', err);
+      } finally {
+        setIsLoadingFacilities(false);
+      }
+    }
+    loadFacilities();
+  }, []);
+
+  const dynamicEquipments = useMemo<EquipmentItem[]>(() => {
+    if (facilities.length > 0) {
+      return facilities.map((f) => ({
+        id: f.id,
+        name: f.name,
+        category: f.category,
+        isSpecial: f.isSpecial,
+        description: f.description,
+      }));
+    }
+    return STANDARD_EQUIPMENTS;
+  }, [facilities]);
 
   useEffect(() => {
     const closeMenu = (event: MouseEvent) => {
@@ -405,6 +451,72 @@ function NewBookingForm() {
     ? estimatedAttendees > selectedRoom.capacity
     : false;
 
+  // Validation State & Refs for Interactive Feedback & Auto-Scroll
+  const [fieldErrors, setFieldErrors] = useState<Record<string, boolean>>({});
+
+  const roomSearchInputRef = useRef<HTMLInputElement>(null);
+  const dateInputRef = useRef<HTMLInputElement>(null);
+  const startTimeInputRef = useRef<HTMLInputElement>(null);
+  const endTimeInputRef = useRef<HTMLInputElement>(null);
+  const tenggatInputRef = useRef<HTMLInputElement>(null);
+  const titleInputRef = useRef<HTMLInputElement>(null);
+  const attendeesInputRef = useRef<HTMLInputElement>(null);
+  const orgInputRef = useRef<HTMLInputElement>(null);
+  const descriptionInputRef = useRef<HTMLTextAreaElement>(null);
+  const internalApprovalRef = useRef<HTMLInputElement>(null);
+  const internalApprovalContainerRef = useRef<HTMLDivElement>(null);
+
+  const clearFieldError = useCallback((fieldName: string) => {
+    setFieldErrors((prev) => {
+      if (!prev[fieldName]) return prev;
+      const updated = { ...prev };
+      delete updated[fieldName];
+      return updated;
+    });
+    setErrorMessage('');
+  }, []);
+
+  // Real-time calculation of form validity
+  const isFormValid = useMemo(() => {
+    const isRoomValid = Boolean(selectedRoom && selectedRoomAvailability?.state === 'available');
+    const isDateValid = Boolean(date);
+    const isStartTimeValid = Boolean(startTime);
+    const isEndTimeValid = Boolean(endTime && (!startTime || endTime > startTime));
+    const isMultiDayValid = !isPerSemester || Boolean(tenggatPelaksanaan && (!date || tenggatPelaksanaan >= date));
+    const isTitleValid = Boolean(title.trim());
+    const isAttendeesValid = Number(estimatedAttendees) > 0 && !isCapacityExceeded;
+    const isOrgValid = Boolean(userOrganization.trim());
+    const isDescValid = Boolean(description.trim());
+    const isApprovalValid = Boolean(isInternalApproved);
+
+    return Boolean(
+      isRoomValid &&
+      isDateValid &&
+      isStartTimeValid &&
+      isEndTimeValid &&
+      isMultiDayValid &&
+      isTitleValid &&
+      isAttendeesValid &&
+      isOrgValid &&
+      isDescValid &&
+      isApprovalValid
+    );
+  }, [
+    selectedRoom,
+    selectedRoomAvailability,
+    date,
+    startTime,
+    endTime,
+    isPerSemester,
+    tenggatPelaksanaan,
+    title,
+    estimatedAttendees,
+    isCapacityExceeded,
+    userOrganization,
+    description,
+    isInternalApproved,
+  ]);
+
   const handleEquipmentToggle = (eqId: string) => {
     setSelectedEquipments((prev) => {
       const current = prev[eqId] || { selected: false, quantity: 1, notes: '' };
@@ -459,27 +571,134 @@ function NewBookingForm() {
     e.preventDefault();
     setErrorMessage('');
 
+    // Check all required fields in visual order and collect errors
+    const newErrors: Record<string, boolean> = {};
+    const emptyFields: { name: string; ref: React.RefObject<any>; message: string }[] = [];
+
+    // 1. Room
+    if (!selectedRoom || selectedRoomAvailability?.state !== 'available') {
+      newErrors.room = true;
+      emptyFields.push({
+        name: 'room',
+        ref: roomSearchInputRef,
+        message: !selectedRoom
+          ? 'Silakan pilih ruangan yang tersedia terlebih dahulu.'
+          : 'Ruangan yang dipilih sedang tidak tersedia atau dalam verifikasi.',
+      });
+    }
+
+    // 2. Date
+    if (!date) {
+      newErrors.date = true;
+      emptyFields.push({
+        name: 'date',
+        ref: dateInputRef,
+        message: 'Tanggal pelaksanaan kegiatan wajib diisi.',
+      });
+    }
+
+    // 3. Start Time
+    if (!startTime) {
+      newErrors.startTime = true;
+      emptyFields.push({
+        name: 'startTime',
+        ref: startTimeInputRef,
+        message: 'Jam mulai kegiatan wajib diisi.',
+      });
+    }
+
+    // 4. End Time
+    if (!endTime || (startTime && endTime <= startTime)) {
+      newErrors.endTime = true;
+      emptyFields.push({
+        name: 'endTime',
+        ref: endTimeInputRef,
+        message: !endTime
+          ? 'Jam selesai kegiatan wajib diisi.'
+          : 'Jam selesai harus lebih akhir dari jam mulai kegiatan.',
+      });
+    }
+
+    // 5. Tenggat Pelaksanaan (if Multi-Day / Per Semester)
+    if (isPerSemester && (!tenggatPelaksanaan || (date && tenggatPelaksanaan < date))) {
+      newErrors.tenggatPelaksanaan = true;
+      emptyFields.push({
+        name: 'tenggatPelaksanaan',
+        ref: tenggatInputRef,
+        message: !tenggatPelaksanaan
+          ? 'Tanggal selesai / tenggat pelaksanaan wajib diisi untuk peminjaman berturut-turut/berkala.'
+          : 'Tanggal selesai tidak boleh lebih awal dari tanggal mulai pelaksanaan.',
+      });
+    }
+
+    // 6. Title
+    if (!title.trim()) {
+      newErrors.title = true;
+      emptyFields.push({
+        name: 'title',
+        ref: titleInputRef,
+        message: 'Nama atau judul kegiatan wajib diisi.',
+      });
+    }
+
+    // 7. Estimated Attendees
+    if (!estimatedAttendees || Number(estimatedAttendees) <= 0 || isCapacityExceeded) {
+      newErrors.estimatedAttendees = true;
+      emptyFields.push({
+        name: 'estimatedAttendees',
+        ref: attendeesInputRef,
+        message: isCapacityExceeded
+          ? `Jumlah peserta (${estimatedAttendees}) melebihi kapasitas ruangan (${selectedRoom?.capacity ?? 0} orang).`
+          : 'Estimasi jumlah peserta wajib diisi lebih dari 0.',
+      });
+    }
+
+    // 8. Organization
+    if (!userOrganization.trim()) {
+      newErrors.userOrganization = true;
+      emptyFields.push({
+        name: 'userOrganization',
+        ref: orgInputRef,
+        message: 'Organisasi atau unit pengusul kegiatan wajib diisi.',
+      });
+    }
+
+    // 9. Description
+    if (!description.trim()) {
+      newErrors.description = true;
+      emptyFields.push({
+        name: 'description',
+        ref: descriptionInputRef,
+        message: 'Deskripsi singkat acara dan kebutuhan ruangan wajib diisi.',
+      });
+    }
+
+    // 10. Internal Approval Checkbox
     if (!isInternalApproved) {
-      setErrorMessage('Anda wajib mencentang konfirmasi persetujuan internal fakultas/kemahasiswaan sebelum mengajukan permohonan.');
-      return;
+      newErrors.isInternalApproved = true;
+      emptyFields.push({
+        name: 'isInternalApproved',
+        ref: internalApprovalRef,
+        message: 'Anda wajib mencentang konfirmasi persetujuan internal fakultas/kemahasiswaan sebelum mengajukan permohonan.',
+      });
     }
 
-    if (!hasCompleteSchedule || !scheduleRange) {
-      setErrorMessage('Pilih tanggal dan waktu yang valid untuk memeriksa ketersediaan ruangan.');
-      return;
-    }
+    // If any required field is invalid or missing: highlight and auto-scroll
+    if (emptyFields.length > 0) {
+      setFieldErrors(newErrors);
+      const firstEmpty = emptyFields[0];
+      setErrorMessage(firstEmpty.message);
 
-    if (isPerSemester && !tenggatPelaksanaan) {
-      setErrorMessage(
-        repeatType === 'consecutive'
-          ? 'Tanggal selesai pelaksanaan wajib diisi untuk peminjaman lebih dari 1 hari.'
-          : 'Tenggat pelaksanaan wajib diisi untuk peminjaman jadwal rutin berkala.'
-      );
-      return;
-    }
-
-    if (isPerSemester && date && tenggatPelaksanaan < date) {
-      setErrorMessage('Tanggal selesai/tenggat tidak boleh lebih awal dari tanggal pelaksanaan awal.');
+      if (firstEmpty.ref.current) {
+        firstEmpty.ref.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        setTimeout(() => {
+          try {
+            firstEmpty.ref.current?.focus?.();
+          } catch {
+            // ignore
+          }
+        }, 150);
+      }
       return;
     }
 
@@ -499,7 +718,7 @@ function NewBookingForm() {
       }
     }
 
-    if (!selectedRoom) {
+    if (!selectedRoom || !scheduleRange) {
       setErrorMessage('Pilih ruangan yang tersedia sebelum mengirim permohonan.');
       return;
     }
@@ -515,7 +734,7 @@ function NewBookingForm() {
     const equipmentsList: BookingEquipment[] = Object.entries(selectedEquipments)
       .filter(([_, val]) => val.selected)
       .map(([id, val]) => {
-        const eqObj = STANDARD_EQUIPMENTS.find((e) => e.id === id);
+        const eqObj = dynamicEquipments.find((e) => e.id === id);
         return {
           equipmentId: id,
           equipmentName: eqObj?.name || id,
@@ -558,7 +777,7 @@ function NewBookingForm() {
         return;
       }
 
-      await addBooking(
+      const created = await addBooking(
         {
           roomId: selectedRoom.id,
           roomName: selectedRoom.name,
@@ -599,10 +818,8 @@ function NewBookingForm() {
 
       setIsSubmitting(false);
       setSubmitSuccess(true);
-
-      setTimeout(() => {
-        router.push('/dashboard');
-      }, 1600);
+      setCreatedBooking(created as any);
+      setIsSuccessModalOpen(true);
     } catch (err: any) {
       setIsSubmitting(false);
       const isBookingConflict = err instanceof ApiError
@@ -738,7 +955,7 @@ function NewBookingForm() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-8">
+      <form onSubmit={handleSubmit} noValidate className="space-y-8">
         {/* STEP 1: ROOM & TIME SELECTION */}
         <div className="space-y-6 rounded-[18px_4px_18px_18px] border border-slate-200/90 bg-white p-6 shadow-card sm:p-8">
           <div className="flex items-center gap-2.5 pb-4 border-b border-slate-100">
@@ -775,6 +992,7 @@ function NewBookingForm() {
                     <div className="relative">
                       <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
                       <input
+                        ref={roomSearchInputRef}
                         id="room-search"
                         type="search"
                         value={roomSearch}
@@ -782,6 +1000,7 @@ function NewBookingForm() {
                           setRoomSearch(event.target.value);
                           setIsRoomMenuOpen(true);
                           setActiveResultIndex(-1);
+                          clearFieldError('room');
                         }}
                         onFocus={() => setIsRoomMenuOpen(true)}
                         onKeyDown={(event) => {
@@ -799,6 +1018,7 @@ function NewBookingForm() {
                               setRoomId(room.id);
                               setRoomSearch(room.name);
                               setIsRoomMenuOpen(false);
+                              clearFieldError('room');
                             }
                           } else if (event.key === 'Escape') {
                             setIsRoomMenuOpen(false);
@@ -811,10 +1031,14 @@ function NewBookingForm() {
                         aria-expanded={isRoomMenuOpen}
                         aria-controls="room-results"
                         aria-activedescendant={activeResultIndex >= 0 ? `room-result-${matchingRooms[activeResultIndex]?.id}` : undefined}
-                        className="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-10 pr-10 text-xs font-medium text-slate-900 outline-none transition-colors focus:border-yarsi-primary focus:ring-2 focus:ring-yarsi-primary disabled:cursor-wait disabled:opacity-60 sm:text-sm"
+                        className={`w-full rounded-xl border py-3 pl-10 pr-10 text-xs font-medium outline-none transition-all disabled:cursor-wait disabled:opacity-60 sm:text-sm ${
+                          fieldErrors.room
+                            ? 'border-red-500 ring-2 ring-red-500 bg-red-50/40 text-red-900 placeholder:text-red-300'
+                            : 'border-slate-200 bg-slate-50 text-slate-900 focus:border-yarsi-primary focus:ring-2 focus:ring-yarsi-primary'
+                        }`}
                       />
                       {roomSearch && (
-                        <button type="button" onClick={() => { setRoomSearch(''); setRoomId(''); }} className="absolute right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-200 hover:text-slate-800" aria-label="Hapus pencarian ruangan">
+                        <button type="button" onClick={() => { setRoomSearch(''); setRoomId(''); clearFieldError('room'); }} className="absolute right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-200 hover:text-slate-800" aria-label="Hapus pencarian ruangan">
                           <X className="h-4 w-4" aria-hidden="true" />
                         </button>
                       )}
@@ -831,6 +1055,14 @@ function NewBookingForm() {
                       ))}
                     </select>
                   </div>
+
+                  {fieldErrors.room && (
+                    <p className="text-[11px] font-semibold text-red-600 mt-1">
+                      {!selectedRoom
+                        ? 'Silakan pilih ruangan yang tersedia terlebih dahulu.'
+                        : 'Ruangan yang dipilih sedang tidak tersedia atau dalam verifikasi.'}
+                    </p>
+                  )}
 
                   <label className="flex min-h-10 items-center gap-2 text-xs font-medium text-slate-600">
                     <input
@@ -890,6 +1122,7 @@ function NewBookingForm() {
                                         setRoomId(room.id);
                                         setRoomSearch(room.name);
                                         setIsRoomMenuOpen(false);
+                                        clearFieldError('room');
                                       }}
                                       className={`flex w-full items-start justify-between gap-3 rounded-lg px-3 py-2.5 text-left text-xs transition-colors ${isAvailable
                                           ? 'text-slate-800 hover:bg-emerald-50 focus:bg-emerald-50 focus:outline-none'
@@ -955,17 +1188,27 @@ function NewBookingForm() {
                 >
                   <Calendar className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5 pointer-events-none" />
                   <input
+                    ref={dateInputRef}
                     id="booking-date-input"
                     type="date"
-                    required
                     value={date}
-                    onChange={(e) => setDate(e.target.value)}
+                    onChange={(e) => {
+                      setDate(e.target.value);
+                      if (e.target.value) clearFieldError('date');
+                    }}
                     onClick={(e) => {
                       try { e.currentTarget.showPicker?.(); } catch { }
                     }}
-                    className="w-full pl-10 pr-4 py-2.5 text-xs sm:text-sm font-medium bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yarsi-primary text-slate-800 cursor-pointer"
+                    className={`w-full pl-10 pr-4 py-2.5 text-xs sm:text-sm font-medium border rounded-xl focus:outline-none transition-all cursor-pointer ${
+                      fieldErrors.date
+                        ? 'border-red-500 ring-2 ring-red-500 bg-red-50/40 text-red-900'
+                        : 'border-slate-200 bg-slate-50 text-slate-800 focus:ring-2 focus:ring-yarsi-primary'
+                    }`}
                   />
                 </div>
+                {fieldErrors.date && (
+                  <p className="text-[11px] font-semibold text-red-600 mt-1">Tanggal pelaksanaan kegiatan wajib diisi.</p>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-3">
@@ -974,30 +1217,52 @@ function NewBookingForm() {
                     Jam Mulai (WIB) *
                   </label>
                   <input
+                    ref={startTimeInputRef}
                     type="time"
-                    required
                     value={startTime}
-                    onChange={(e) => setStartTime(e.target.value)}
+                    onChange={(e) => {
+                      setStartTime(e.target.value);
+                      if (e.target.value) clearFieldError('startTime');
+                    }}
                     onClick={(e) => {
                       try { e.currentTarget.showPicker?.(); } catch { }
                     }}
-                    className="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yarsi-primary text-slate-800 cursor-pointer"
+                    className={`w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border rounded-xl focus:outline-none transition-all cursor-pointer ${
+                      fieldErrors.startTime
+                        ? 'border-red-500 ring-2 ring-red-500 bg-red-50/40 text-red-900'
+                        : 'border-slate-200 bg-slate-50 text-slate-800 focus:ring-2 focus:ring-yarsi-primary'
+                    }`}
                   />
+                  {fieldErrors.startTime && (
+                    <p className="text-[11px] font-semibold text-red-600 mt-1">Jam mulai wajib diisi.</p>
+                  )}
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">
                     Jam Selesai (WIB) *
                   </label>
                   <input
+                    ref={endTimeInputRef}
                     type="time"
-                    required
                     value={endTime}
-                    onChange={(e) => setEndTime(e.target.value)}
+                    onChange={(e) => {
+                      setEndTime(e.target.value);
+                      if (e.target.value && (!startTime || e.target.value > startTime)) clearFieldError('endTime');
+                    }}
                     onClick={(e) => {
                       try { e.currentTarget.showPicker?.(); } catch { }
                     }}
-                    className="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yarsi-primary text-slate-800 cursor-pointer"
+                    className={`w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border rounded-xl focus:outline-none transition-all cursor-pointer ${
+                      fieldErrors.endTime
+                        ? 'border-red-500 ring-2 ring-red-500 bg-red-50/40 text-red-900'
+                        : 'border-slate-200 bg-slate-50 text-slate-800 focus:ring-2 focus:ring-yarsi-primary'
+                    }`}
                   />
+                  {fieldErrors.endTime && (
+                    <p className="text-[11px] font-semibold text-red-600 mt-1">
+                      {!endTime ? 'Jam selesai wajib diisi.' : 'Jam selesai harus lebih akhir dari jam mulai.'}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -1007,7 +1272,10 @@ function NewBookingForm() {
                   <input
                     type="checkbox"
                     checked={isPerSemester}
-                    onChange={(e) => setIsPerSemester(e.target.checked)}
+                    onChange={(e) => {
+                      setIsPerSemester(e.target.checked);
+                      if (!e.target.checked) clearFieldError('tenggatPelaksanaan');
+                    }}
                     className="mt-0.5 w-4 h-4 text-yarsi-primary rounded border-slate-300 focus:ring-yarsi-primary cursor-pointer accent-emerald-600"
                   />
                   <div className="space-y-1 flex-1">
@@ -1108,16 +1376,30 @@ function NewBookingForm() {
                           Tanggal Selesai Pelaksanaan (Rentang Hari) *
                         </label>
                         <input
+                          ref={repeatType === 'consecutive' ? tenggatInputRef : undefined}
                           type="date"
-                          required={isPerSemester && repeatType === 'consecutive'}
                           min={date || undefined}
                           value={tenggatPelaksanaan}
-                          onChange={(e) => setTenggatPelaksanaan(e.target.value)}
+                          onChange={(e) => {
+                            setTenggatPelaksanaan(e.target.value);
+                            if (e.target.value && (!date || e.target.value >= date)) clearFieldError('tenggatPelaksanaan');
+                          }}
                           onClick={(e) => {
                             try { e.currentTarget.showPicker?.(); } catch { }
                           }}
-                          className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 font-semibold cursor-pointer"
+                          className={`w-full px-3 py-2 text-xs border rounded-xl focus:outline-none transition-all font-semibold cursor-pointer ${
+                            fieldErrors.tenggatPelaksanaan
+                              ? 'border-red-500 ring-2 ring-red-500 bg-red-50/40 text-red-900'
+                              : 'border-slate-200 bg-slate-50 text-slate-800 focus:ring-2 focus:ring-blue-500'
+                          }`}
                         />
+                        {fieldErrors.tenggatPelaksanaan && (
+                          <p className="text-[11px] font-semibold text-red-600 mt-1">
+                            {!tenggatPelaksanaan
+                              ? 'Tanggal selesai pelaksanaan wajib diisi.'
+                              : 'Tanggal selesai tidak boleh lebih awal dari tanggal mulai.'}
+                          </p>
+                        )}
                         <p className="text-[10px] text-slate-400">
                           Mulai dari <span className="font-semibold text-slate-600">{date ? formatDateIndo(date) : '(pilih tanggal pelaksanaan di atas)'}</span> hingga tanggal selesai yang dipilih.
                         </p>
@@ -1129,16 +1411,30 @@ function NewBookingForm() {
                             Tenggat Akhir Pelaksanaan *
                           </label>
                           <input
+                            ref={repeatType === 'recurring' ? tenggatInputRef : undefined}
                             type="date"
-                            required={isPerSemester && repeatType === 'recurring'}
                             min={date || undefined}
                             value={tenggatPelaksanaan}
-                            onChange={(e) => setTenggatPelaksanaan(e.target.value)}
+                            onChange={(e) => {
+                              setTenggatPelaksanaan(e.target.value);
+                              if (e.target.value && (!date || e.target.value >= date)) clearFieldError('tenggatPelaksanaan');
+                            }}
                             onClick={(e) => {
                               try { e.currentTarget.showPicker?.(); } catch { }
                             }}
-                            className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-800 font-semibold cursor-pointer"
+                            className={`w-full px-3 py-2 text-xs border rounded-xl focus:outline-none transition-all font-semibold cursor-pointer ${
+                              fieldErrors.tenggatPelaksanaan
+                                ? 'border-red-500 ring-2 ring-red-500 bg-red-50/40 text-red-900'
+                                : 'border-slate-200 bg-slate-50 text-slate-800 focus:ring-2 focus:ring-emerald-500'
+                            }`}
                           />
+                          {fieldErrors.tenggatPelaksanaan && (
+                            <p className="text-[11px] font-semibold text-red-600 mt-1">
+                              {!tenggatPelaksanaan
+                                ? 'Tenggat pelaksanaan jadwal berkala wajib diisi.'
+                                : 'Tenggat pelaksanaan tidak boleh lebih awal dari tanggal mulai.'}
+                            </p>
+                          )}
                           <p className="text-[10px] text-slate-400 mt-1">
                             Batas akhir periode jadwal berkala
                           </p>
@@ -1309,13 +1605,23 @@ function NewBookingForm() {
                   Nama / Judul Kegiatan *
                 </label>
                 <input
+                  ref={titleInputRef}
                   type="text"
-                  required
                   placeholder="Contoh: Seminar Nasional AI Healthcare & Workshop Python FTI"
                   value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  className="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yarsi-primary text-slate-900"
+                  onChange={(e) => {
+                    setTitle(e.target.value);
+                    if (e.target.value.trim()) clearFieldError('title');
+                  }}
+                  className={`w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border rounded-xl focus:outline-none transition-all ${
+                    fieldErrors.title
+                      ? 'border-red-500 ring-2 ring-red-500 bg-red-50/40 text-red-900 placeholder:text-red-300'
+                      : 'border-slate-200 bg-slate-50 text-slate-900 focus:ring-2 focus:ring-yarsi-primary'
+                  }`}
                 />
+                {fieldErrors.title && (
+                  <p className="text-[11px] font-semibold text-red-600 mt-1">Nama / Judul kegiatan wajib diisi.</p>
+                )}
               </div>
 
               <div>
@@ -1347,16 +1653,26 @@ function NewBookingForm() {
                   Estimasi Jumlah Peserta *
                 </label>
                 <input
+                  ref={attendeesInputRef}
                   type="number"
-                  required
                   min={1}
                   value={estimatedAttendees}
-                  onChange={(e) => setEstimatedAttendees(parseInt(e.target.value) || 0)}
-                  className={`w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium bg-slate-50 border rounded-xl focus:outline-none focus:ring-2 focus:ring-yarsi-primary ${isCapacityExceeded
-                      ? 'border-rose-400 text-rose-900 bg-rose-50'
-                      : 'border-slate-200 text-slate-900'
-                    }`}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value) || 0;
+                    setEstimatedAttendees(val);
+                    if (val > 0 && (!selectedRoom?.capacity || val <= selectedRoom.capacity)) {
+                      clearFieldError('estimatedAttendees');
+                    }
+                  }}
+                  className={`w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border rounded-xl focus:outline-none transition-all ${
+                    fieldErrors.estimatedAttendees || isCapacityExceeded
+                      ? 'border-red-500 ring-2 ring-red-500 bg-red-50/40 text-red-900'
+                      : 'border-slate-200 bg-slate-50 text-slate-900 focus:ring-2 focus:ring-yarsi-primary'
+                  }`}
                 />
+                {fieldErrors.estimatedAttendees && !isCapacityExceeded && (
+                  <p className="text-[11px] font-semibold text-red-600 mt-1">Estimasi jumlah peserta wajib diisi lebih dari 0.</p>
+                )}
                 {isCapacityExceeded && (
                   <p className="text-[11px] text-rose-600 mt-1 font-semibold">
                     Jumlah peserta ({estimatedAttendees}) melebihi kapasitas ruang ({selectedRoom?.capacity ?? 'belum tersedia'} orang).
@@ -1369,13 +1685,23 @@ function NewBookingForm() {
                   Organisasi / Unit Pengusul *
                 </label>
                 <input
+                  ref={orgInputRef}
                   type="text"
-                  required
                   value={userOrganization}
-                  onChange={(e) => setUserOrganization(e.target.value)}
+                  onChange={(e) => {
+                    setUserOrganization(e.target.value);
+                    if (e.target.value.trim()) clearFieldError('userOrganization');
+                  }}
                   placeholder="Contoh: BEM Fakultas Teknologi Informasi"
-                  className="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yarsi-primary text-slate-900"
+                  className={`w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border rounded-xl focus:outline-none transition-all ${
+                    fieldErrors.userOrganization
+                      ? 'border-red-500 ring-2 ring-red-500 bg-red-50/40 text-red-900 placeholder:text-red-300'
+                      : 'border-slate-200 bg-slate-50 text-slate-900 focus:ring-2 focus:ring-yarsi-primary'
+                  }`}
                 />
+                {fieldErrors.userOrganization && (
+                  <p className="text-[11px] font-semibold text-red-600 mt-1">Organisasi / Unit pengusul kegiatan wajib diisi.</p>
+                )}
               </div>
             </div>
 
@@ -1384,13 +1710,23 @@ function NewBookingForm() {
                 Deskripsi Singkat Acara & Kebutuhan Ruangan *
               </label>
               <textarea
+                ref={descriptionInputRef}
                 rows={3}
-                required
                 value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                onChange={(e) => {
+                  setDescription(e.target.value);
+                  if (e.target.value.trim()) clearFieldError('description');
+                }}
                 placeholder="Tuliskan tujuan acara, susunan pembicara, dan catatan teknis pendukung..."
-                className="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yarsi-primary text-slate-900"
+                className={`w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border rounded-xl focus:outline-none transition-all ${
+                  fieldErrors.description
+                    ? 'border-red-500 ring-2 ring-red-500 bg-red-50/40 text-red-900 placeholder:text-red-300'
+                    : 'border-slate-200 bg-slate-50 text-slate-900 focus:ring-2 focus:ring-yarsi-primary'
+                }`}
               />
+              {fieldErrors.description && (
+                <p className="text-[11px] font-semibold text-red-600 mt-1">Deskripsi kegiatan wajib diisi.</p>
+              )}
             </div>
           </div>
         </div>
@@ -1416,11 +1752,16 @@ function NewBookingForm() {
             </div>
           </div>
 
-          {/* Quick Equipment Checklist */}
+          {/* Quick Equipment Checklist (Dynamic from Superadmin Master Data) */}
           <div className="space-y-2">
-            <p className="text-xs font-bold text-slate-700">Fasilitas Standar Ruang:</p>
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-bold text-slate-700">Fasilitas Standar &amp; Tambahan Ruang:</p>
+              {isLoadingFacilities && (
+                <span className="text-[10px] text-slate-400 font-medium">Sinkronisasi fasilitas...</span>
+              )}
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {STANDARD_EQUIPMENTS.map((eq) => {
+              {dynamicEquipments.map((eq) => {
                 const state = selectedEquipments[eq.id] || {
                   selected: false,
                   quantity: 1,
@@ -1444,7 +1785,19 @@ function NewBookingForm() {
                     />
 
                     <div className="flex-1 text-xs">
-                      <p className="font-bold text-slate-800">{eq.name}</p>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <p className="font-bold text-slate-800">{eq.name}</p>
+                        {eq.isSpecial && (
+                          <span className="text-[9.5px] font-bold px-1.5 py-0.2 rounded bg-rose-100 text-rose-800 border border-rose-200">
+                            Khusus
+                          </span>
+                        )}
+                      </div>
+                      {Boolean(eq.description) && (
+                        <p className="text-[10.5px] text-slate-400 mt-0.5 leading-snug">
+                          {eq.description}
+                        </p>
+                      )}
                       {state.selected && (
                         <div
                           className="pt-1.5 flex items-center gap-2"
@@ -1454,7 +1807,7 @@ function NewBookingForm() {
                           <input
                             type="number"
                             min={1}
-                            max={20}
+                            max={50}
                             value={state.quantity}
                             onChange={(e) =>
                               handleEquipmentQty(eq.id, parseInt(e.target.value) || 1)
@@ -1597,24 +1950,44 @@ function NewBookingForm() {
         </div>
 
         {/* STEP 5: VERIFIKASI INTERNAL HIMA / BEM (PRIORITAS 5) */}
-        <div className="space-y-4 rounded-[18px_4px_18px_18px] border border-emerald-300 bg-emerald-50/80 p-6 sm:p-8">
+        <div
+          ref={internalApprovalContainerRef}
+          className={`space-y-4 rounded-[18px_4px_18px_18px] border p-6 sm:p-8 transition-all ${
+            fieldErrors.isInternalApproved
+              ? 'border-red-500 ring-2 ring-red-500 bg-red-50/70'
+              : 'border-emerald-300 bg-emerald-50/80'
+          }`}
+        >
           <div className="flex items-start gap-3">
             <input
+              ref={internalApprovalRef}
               type="checkbox"
               id="internalApprovalCheck"
               checked={isInternalApproved}
-              onChange={(e) => setIsInternalApproved(e.target.checked)}
-              className="mt-1 w-5 h-5 rounded text-yarsi-primary focus:ring-yarsi-primary border-emerald-400"
+              onChange={(e) => {
+                setIsInternalApproved(e.target.checked);
+                if (e.target.checked) clearFieldError('isInternalApproved');
+              }}
+              className={`mt-1 w-5 h-5 rounded focus:ring-yarsi-primary cursor-pointer ${
+                fieldErrors.isInternalApproved
+                  ? 'text-red-600 border-red-500 focus:ring-red-500'
+                  : 'text-yarsi-primary border-emerald-400 focus:ring-yarsi-primary'
+              }`}
             />
             <label htmlFor="internalApprovalCheck" className="cursor-pointer space-y-1">
-              <p className="text-sm font-bold text-emerald-950 leading-snug">
+              <p className={`text-sm font-bold leading-snug ${fieldErrors.isInternalApproved ? 'text-red-950' : 'text-emerald-950'}`}>
                 Konfirmasi Persetujuan Internal *
               </p>
-              <p className="text-xs text-emerald-800 leading-relaxed">
+              <p className={`text-xs leading-relaxed ${fieldErrors.isInternalApproved ? 'text-red-800' : 'text-emerald-800'}`}>
                 Saya menyatakan bahwa kegiatan ini telah diketahui atau disetujui oleh pimpinan fakultas, dekanat, BEM/DPM, atau pembina kemahasiswaan terkait.
               </p>
             </label>
           </div>
+          {fieldErrors.isInternalApproved && (
+            <p className="text-xs font-bold text-red-600">
+              Anda wajib mencentang konfirmasi persetujuan internal sebelum mengirim permohonan.
+            </p>
+          )}
         </div>
 
         {/* SUBMIT BUTTON BAR */}
@@ -1626,22 +1999,42 @@ function NewBookingForm() {
             Batal
           </Link>
 
-          <button
-            type="submit"
-            disabled={isSubmitting || !isInternalApproved || !hasCompleteSchedule || selectedRoomAvailability?.state !== 'available'}
-            className="w-full sm:w-auto px-8 py-3.5 rounded-2xl font-bold text-sm text-white bg-yarsi-primary hover:bg-yarsi-dark shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isSubmitting ? (
-              <span>Mengirim permohonan...</span>
-            ) : (
-              <>
-                <span>Kirim Permohonan Peminjaman</span>
-                <ArrowRight className="w-4 h-4" />
-              </>
+          <div className="w-full sm:w-auto flex flex-col sm:items-end gap-1.5">
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className={`w-full sm:w-auto px-8 py-3.5 rounded-2xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${
+                isSubmitting
+                  ? 'bg-slate-300 text-slate-500 cursor-wait'
+                  : isFormValid
+                    ? 'bg-yarsi-primary hover:bg-yarsi-dark text-white shadow-lg hover:shadow-xl shadow-emerald-900/20 active:scale-95 cursor-pointer'
+                    : 'bg-slate-300 hover:bg-slate-400 text-slate-600 shadow-none cursor-pointer'
+              }`}
+            >
+              {isSubmitting ? (
+                <span>Mengirim permohonan...</span>
+              ) : (
+                <>
+                  <span>Kirim Permohonan Peminjaman</span>
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
+            </button>
+            {!isFormValid && (
+              <span className="text-[11px] text-slate-400 font-medium text-center sm:text-right">
+                Lengkapi seluruh field wajib bertanda (*) untuk mengaktifkan warna hijau
+              </span>
             )}
-          </button>
+          </div>
         </div>
       </form>
+
+      {/* Interactive Success Modal with 1x24 Jam Warning */}
+      <BookingSuccessModal
+        isOpen={isSuccessModalOpen}
+        onClose={() => setIsSuccessModalOpen(false)}
+        booking={createdBooking}
+      />
     </div>
   );
 }

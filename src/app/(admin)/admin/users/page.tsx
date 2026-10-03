@@ -11,6 +11,7 @@ import {
   Trash2,
   CheckCircle2,
   AlertCircle,
+  AlertTriangle,
   KeyRound,
   Mail,
   GraduationCap,
@@ -20,32 +21,19 @@ import {
   Lock,
 } from 'lucide-react';
 
-const UNIT_PRESETS = [
-  'Fakultas Teknologi Informasi',
-  'Fakultas Kedokteran',
-  'Fakultas Hukum',
-  'Fakultas Ekonomi dan Bisnis',
-  'Fakultas Psikologi',
-  'Fakultas Kedokteran Gigi',
-  'Biro Layanan Pengelolaan Fasilitas (LPF)',
-  'Biro Sekretariat & Aset Yayasan YARSI',
-  'Bagian Tata Usaha Kampus',
-];
-
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<WhitelistUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState('ALL');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<WhitelistUser | null>(null);
 
-  // Form state
+  // Form state (simplified LDAP invite)
   const [identifier, setIdentifier] = useState('');
-  const [fullName, setFullName] = useState('');
   const [role, setRole] = useState('mahasiswa');
-  const [unitName, setUnitName] = useState('Fakultas Teknologi Informasi');
-  const [password, setPassword] = useState('password123');
 
   // Feedback notifications
   const [notification, setNotification] = useState<{
@@ -97,7 +85,7 @@ export default function AdminUsersPage() {
     if (!identifier.trim()) {
       setNotification({
         type: 'error',
-        message: 'Identifier (Email / Username / NPM) wajib diisi.',
+        message: 'Identifier Pengguna (Username LDAP / NPM / Email Kampus) wajib diisi.',
       });
       return;
     }
@@ -107,10 +95,7 @@ export default function AdminUsersPage() {
 
     const payload: InviteUserPayload = {
       identifier: identifier.trim(),
-      fullName: fullName.trim() || undefined,
       role,
-      unitName: unitName.trim() || undefined,
-      password: password || 'password123',
     };
 
     try {
@@ -122,8 +107,7 @@ export default function AdminUsersPage() {
       setIsModalOpen(false);
       // Reset form
       setIdentifier('');
-      setFullName('');
-      setPassword('password123');
+      setRole('mahasiswa');
       await fetchUsers();
     } catch (err: any) {
       setNotification({
@@ -135,23 +119,25 @@ export default function AdminUsersPage() {
     }
   };
 
-  const handleRemoveUser = async (user: WhitelistUser) => {
-    if (!confirm(`Apakah Anda yakin ingin menghapus "${user.fullName} (${user.username})" dari whitelist? Pengguna ini tidak akan bisa login lagi.`)) {
-      return;
-    }
+  const handleConfirmDelete = async () => {
+    if (!userToDelete) return;
 
+    setIsDeleting(true);
     try {
-      await usersApi.remove(user.id);
+      await usersApi.remove(userToDelete.id);
       setNotification({
         type: 'success',
-        message: `Pengguna ${user.username} berhasil dihapus dari whitelist.`,
+        message: `Pengguna "${userToDelete.fullName} (${userToDelete.username})" berhasil dihapus dari whitelist.`,
       });
+      setUserToDelete(null);
       await fetchUsers();
     } catch (err: any) {
       setNotification({
         type: 'error',
-        message: err.message || 'Gagal menghapus pengguna.',
+        message: err.message || 'Gagal menghapus pengguna dari whitelist.',
       });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -397,7 +383,7 @@ export default function AdminUsersPage() {
                     <td className="px-4 py-3 text-right">
                       <button
                         type="button"
-                        onClick={() => handleRemoveUser(u)}
+                        onClick={() => setUserToDelete(u)}
                         className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
                         title="Hapus dari whitelist"
                       >
@@ -412,13 +398,13 @@ export default function AdminUsersPage() {
         )}
       </div>
 
-      {/* Modal Invite / Tambah User */}
+      {/* Modal Invite / Tambah User (Simplified LDAP-based) */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fade-in">
-          <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+          <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <div className="flex items-center gap-2">
-                <div className="p-2 rounded-xl bg-emerald-50 text-emerald-700">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2.5 rounded-xl bg-emerald-50 text-yarsi-primary border border-emerald-100">
                   <UserPlus className="h-5 w-5" />
                 </div>
                 <div>
@@ -426,114 +412,71 @@ export default function AdminUsersPage() {
                     Undang Pengguna Baru ke Whitelist
                   </h3>
                   <p className="text-xs text-slate-500">
-                    Otorisasi akun agar dapat masuk via SSO LDAP maupun Dummy Lokal
+                    Otorisasi akses akun civitas akademika berbasis SSO LDAP YARSI
                   </p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setIsModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 p-1"
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 transition-colors"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
             <form onSubmit={handleInviteSubmit} className="space-y-4">
-              {/* Input Identifier (Multi-format) */}
+              {/* Input Identifier (Username LDAP / NPM / Email Kampus) */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Identifier Pengguna (Multi-format) <span className="text-rose-500">*</span>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                  Identifier Pengguna (Username LDAP / NPM / Email Kampus) <span className="text-rose-500">*</span>
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="e.g. yoga.pandu, user@yarsi.ac.id, atau 1402021001"
+                  placeholder="e.g. yoga.pandu, 1402021001, atau yoga@yarsi.ac.id"
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-mono text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 transition-all"
                 />
-                <p className="mt-1 text-[11px] text-slate-400 leading-relaxed">
-                  Mendukung 3 format: <strong>Username LDAP</strong> (e.g. <code>yoga.pandu</code>), <strong>Email Kampus</strong> (<code>user@yarsi.ac.id</code>), atau <strong>NPM/NIK</strong> (<code>1402021001</code>).
+                <p className="mt-1.5 text-[11px] text-slate-500 leading-relaxed">
+                  Mendukung 3 format: <strong>Username LDAP</strong> (<code>yoga.pandu</code>), <strong>NPM / NIK</strong> (<code>1402021001</code>), atau <strong>Email Kampus</strong> (<code>user@yarsi.ac.id</code>).
                 </p>
               </div>
 
-              {/* Input Full Name */}
+              {/* Dropdown Role / Hak Akses */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Nama Lengkap <span className="text-slate-400 font-normal">(Opsional)</span>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                  Role / Hak Akses <span className="text-rose-500">*</span>
                 </label>
-                <input
-                  type="text"
-                  placeholder="e.g. Yoga Pratama, M.Kom"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-400"
-                />
-                <p className="mt-1 text-[10px] text-slate-400">
-                  Jika dikosongkan, nama akan otomatis dibuat dari format identifier atau diperbarui saat login LDAP.
+                <select
+                  value={role}
+                  onChange={(e) => setRole(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-semibold text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-400 transition-all"
+                >
+                  <option value="mahasiswa">Mahasiswa (Peminjam Reguler)</option>
+                  <option value="dosen">Dosen (Peminjam &amp; Pengampu)</option>
+                  <option value="tendik">Tenaga Kependidikan (Tendik)</option>
+                  <option value="admin_umum">Admin Umum (Verifikator Ruangan Reguler)</option>
+                  <option value="admin_lpf">Admin LPF (Verifikator Ruangan Yayasan)</option>
+                  <option value="admin_yayasan">Pengurus Yayasan (Approval Yayasan)</option>
+                  <option value="superadmin">Superadmin (Full Control &amp; Approval Akhir)</option>
+                </select>
+              </div>
+
+              {/* Info Sinkronisasi Otomatis Data LDAP */}
+              <div className="p-3 bg-emerald-50/70 rounded-xl border border-emerald-200/80 text-xs text-emerald-950 space-y-1">
+                <div className="flex items-center gap-1.5 font-bold text-yarsi-primary">
+                  <Sparkles className="h-3.5 w-3.5" />
+                  <span>Sinkronisasi Otomatis SSO LDAP</span>
+                </div>
+                <p className="text-[11px] text-emerald-800/90 leading-relaxed">
+                  Field <strong>Nama Lengkap</strong> dan <strong>Fakultas / Unit Kerja</strong> ditarik otomatis dari direktori SSO/LDAP YARSI saat pengguna melakukan login pertama kali.
                 </p>
-              </div>
-
-              {/* Dropdown Role User */}
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Role / Hak Akses <span className="text-rose-500">*</span>
-                  </label>
-                  <select
-                    value={role}
-                    onChange={(e) => setRole(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-400"
-                  >
-                    <option value="mahasiswa">Mahasiswa</option>
-                    <option value="dosen">Dosen</option>
-                    <option value="tendik">Tenaga Kependidikan (Tendik)</option>
-                    <option value="admin_umum">Admin Umum (Verifikator Ruangan Reguler)</option>
-                    <option value="admin_lpf">Admin LPF (Verifikator Ruangan Yayasan)</option>
-                    <option value="admin_yayasan">Pengurus Yayasan (Approval Yayasan)</option>
-                    <option value="superadmin">Superadmin (Full Control & Approval Akhir)</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Password Akun Lokal (Dummy)
-                  </label>
-                  <input
-                    type="text"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-mono focus:outline-none focus:ring-2 focus:ring-emerald-400"
-                  />
-                  <p className="mt-1 text-[10px] text-slate-400">
-                    Default: <code>password123</code> (untuk pengujian lokal)
-                  </p>
-                </div>
-              </div>
-
-              {/* Unit / Fakultas */}
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Fakultas / Unit Kerja
-                </label>
-                <input
-                  type="text"
-                  list="unit-presets"
-                  value={unitName}
-                  onChange={(e) => setUnitName(e.target.value)}
-                  placeholder="Pilih atau ketik unit kerja..."
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-400"
-                />
-                <datalist id="unit-presets">
-                  {UNIT_PRESETS.map((u) => (
-                    <option key={u} value={u} />
-                  ))}
-                </datalist>
               </div>
 
               {/* Buttons */}
-              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
@@ -544,7 +487,7 @@ export default function AdminUsersPage() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white bg-yarsi-primary hover:bg-yarsi-dark shadow-sm shadow-emerald-900/20 transition-all disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-yarsi-primary hover:bg-yarsi-dark shadow-sm shadow-emerald-900/20 transition-all disabled:opacity-50"
                 >
                   {isSubmitting ? (
                     <>
@@ -560,6 +503,98 @@ export default function AdminUsersPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Custom Delete Confirmation Modal */}
+      {userToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+          <div className="w-full max-w-md rounded-2xl border border-rose-200 bg-white p-6 shadow-2xl space-y-4">
+            {/* Header with Danger Accent */}
+            <div className="flex items-start gap-3.5">
+              <div className="w-12 h-12 rounded-2xl bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center shrink-0">
+                <Trash2 className="h-6 w-6" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-bold text-slate-900 text-base leading-tight">
+                    Hapus Pengguna dari Whitelist
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => setUserToDelete(null)}
+                    disabled={isDeleting}
+                    className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 transition-colors"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+                <p className="text-xs text-rose-600 font-semibold mt-0.5">
+                  Tindakan ini memerlukan konfirmasi otorisasi
+                </p>
+              </div>
+            </div>
+
+            {/* Confirmation Message */}
+            <div className="p-3.5 bg-rose-50/70 rounded-xl border border-rose-200/80 text-xs text-slate-800 space-y-2">
+              <p className="leading-relaxed">
+                Apakah Anda yakin ingin menghapus{' '}
+                <strong className="text-slate-900 font-bold">{userToDelete.fullName}</strong> (
+                <code className="px-1 py-0.5 rounded bg-white border border-rose-200 text-rose-700 font-mono text-[11px]">
+                  {userToDelete.username}
+                </code>
+                ) dari whitelist? Pengguna ini tidak akan bisa login kembali.
+              </p>
+            </div>
+
+            {/* User Meta Summary */}
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs space-y-1.5">
+              <div className="flex justify-between items-center">
+                <span className="text-slate-500 text-[11px]">Identifier / Akun:</span>
+                <span className="font-mono font-bold text-slate-700">{userToDelete.username}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-500 text-[11px]">Peran / Role:</span>
+                <div>{getRoleBadge(userToDelete.role)}</div>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-500 text-[11px]">Fakultas / Unit:</span>
+                <span className="font-medium text-slate-700 truncate max-w-[200px] text-right">
+                  {userToDelete.unitName}
+                </span>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setUserToDelete(null)}
+                disabled={isDeleting}
+                className="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition-colors disabled:opacity-50"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDelete}
+                disabled={isDeleting}
+                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 shadow-sm shadow-rose-900/20 active:scale-95 transition-all disabled:opacity-50"
+              >
+                {isDeleting ? (
+                  <>
+                    <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                    <span>Menghapus...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="h-3.5 w-3.5" />
+                    <span>Hapus Pengguna</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}

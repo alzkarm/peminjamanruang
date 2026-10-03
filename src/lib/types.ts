@@ -36,6 +36,19 @@ export interface Faculty {
   updatedAt?: string;
 }
 
+export interface Facility {
+  id: string;
+  name: string;
+  category: string;
+  description?: string;
+  icon?: string;
+  isSpecial?: boolean;
+  isActive: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+
 export type BookingCategory =
   | 'seminar'
   | 'workshop'

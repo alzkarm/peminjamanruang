@@ -13,6 +13,7 @@ import {
   Users,
   CalendarDays,
   Monitor,
+  PackageCheck,
 } from 'lucide-react';
 
 import { countUniqueBookingApplications } from '@/lib/utils';
@@ -126,6 +127,12 @@ export function AdminSidebar() {
         label: 'Master Fakultas',
         description: 'Kelola daftar fakultas & warna',
         icon: GraduationCap,
+      },
+      {
+        href: '/admin/facilities',
+        label: 'Master Fasilitas',
+        description: 'Kelola fasilitas & logistik sarpras',
+        icon: PackageCheck,
       }
     );
   }

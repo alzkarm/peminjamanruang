@@ -26,6 +26,7 @@ import {
   ArrowRight,
   ArrowLeft,
   Sparkles,
+  PackageCheck,
 } from 'lucide-react';
 
 import { countUniqueBookingApplications } from '@/lib/utils';
@@ -168,8 +169,8 @@ export function Navbar() {
       <header className={`sticky top-0 z-40 w-full border-b backdrop-blur-xl ${isHome ? 'border-white/10 bg-[#032f25] text-white shadow-none' : 'border-emerald-950/10 bg-white/95 shadow-[0_8px_28px_-24px_rgba(3,47,37,0.7)]'}`}>
         {/* Top Banner Notice: Dynamic Context & Two-Way Switching for Admin */}
         {mounted && isAdminUser ? (
-          <div className="bg-[#02241b] border-b border-emerald-500/25 px-4 py-1.5 text-[11px] text-emerald-100">
-            <div className="flex items-center justify-between max-w-7xl mx-auto w-full gap-2">
+          <div className="bg-[#02241b] border-b border-emerald-500/25 py-1.5 text-[11px] text-emerald-100">
+            <div className="flex items-center justify-between w-full pl-[8px] pr-4 sm:pr-6 lg:pr-8 gap-2">
               <div className="flex items-center gap-2 truncate">
                 <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold border border-emerald-500/30 text-[10px] shrink-0">
                   <ShieldCheck className="w-3 h-3 text-emerald-400" />
@@ -181,16 +182,7 @@ export function Navbar() {
               </div>
 
               <div className="flex items-center gap-2 shrink-0">
-                {isOnAdminPath ? (
-                  <Link
-                    href="/"
-                    className="inline-flex items-center gap-1 text-[11px] font-bold text-white bg-emerald-700/60 hover:bg-emerald-600 px-2.5 py-0.5 rounded border border-emerald-400/30 transition-colors"
-                    title="Beralih ke tampilan publik (Beranda, Kalender, CBT)"
-                  >
-                    <span>Ke Tampilan Publik</span>
-                    <ExternalLink className="w-3 h-3" />
-                  </Link>
-                ) : (
+                {!isOnAdminPath && (
                   <Link
                     href={adminTargetUrl}
                     className="inline-flex items-center gap-1.5 text-[11px] font-bold text-white bg-emerald-600 hover:bg-emerald-500 px-3 py-0.5 rounded border border-emerald-400/40 shadow-sm transition-all"
@@ -210,8 +202,8 @@ export function Navbar() {
             </div>
           </div>
         ) : (
-          <div className={`${isHome ? 'hidden' : 'flex'} bg-[#04382c] px-4 py-1.5 text-[11px] text-emerald-100`}>
-            <div className="flex items-center gap-2 max-w-7xl mx-auto w-full">
+          <div className={`${isHome ? 'hidden' : 'flex'} bg-[#04382c] py-1.5 text-[11px] text-emerald-100`}>
+            <div className="flex items-center gap-2 w-full pl-[8px] pr-4 sm:pr-6 lg:pr-8">
               <span className="relative flex h-2 w-2" aria-hidden="true">
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400"></span>
               </span>
@@ -232,10 +224,10 @@ export function Navbar() {
           </div>
         )}
 
-        <div className="mx-auto w-full min-w-0 max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="w-full min-w-0 pr-4 sm:pr-6 lg:pr-8">
           <div className={`flex items-center justify-between gap-2 sm:gap-4 ${isHome ? 'h-[76px]' : 'h-[68px]'}`}>
             {/* Brand Logo */}
-            <Link href="/" className="group flex min-w-0 items-center gap-3">
+            <Link href="/" title="SIPERU YARSI - Beranda Utama" className="group flex min-w-0 shrink-0 items-center gap-3 pl-[8px]">
               <div className={`flex h-10 w-10 items-center justify-center rounded-[11px_3px_11px_11px] text-white transition-transform group-hover:-translate-y-0.5 ${isHome ? 'border border-emerald-300/20 bg-emerald-400/15 shadow-none' : 'bg-gradient-to-br from-yarsi-primary to-yarsi-dark shadow-md shadow-emerald-900/20'}`}>
                 <Building2 className="w-5 h-5 text-white" />
               </div>
@@ -402,6 +394,18 @@ export function Navbar() {
                                 <p className="text-[10px] text-slate-400 font-normal">Identitas fakultas &amp; CBT</p>
                               </div>
                             </Link>
+
+                            <Link
+                              href="/admin/facilities"
+                              onClick={() => setAdminDropdownOpen(false)}
+                              className="flex items-center gap-2.5 px-3 py-2 text-slate-700 hover:text-purple-700 hover:bg-purple-50 rounded-xl transition-colors font-semibold"
+                            >
+                              <PackageCheck className="w-4 h-4 text-purple-600 shrink-0" />
+                              <div>
+                                <p className="leading-tight">Master Data Fasilitas</p>
+                                <p className="text-[10px] text-slate-400 font-normal">Fasilitas &amp; logistik tambahan</p>
+                              </div>
+                            </Link>
                           </>
                         )}
                       </div>
@@ -439,32 +443,21 @@ export function Navbar() {
             {/* User Profile / Quick Switcher / Auth Trigger */}
             <div className="flex shrink-0 items-center gap-2 sm:gap-3">
               {/* Quick Switch Button (Two-Way Navigation) */}
-              {mounted && isAdminUser && (
+              {mounted && isAdminUser && !isOnAdminPath && (
                 <div className="hidden sm:block">
-                  {isOnAdminPath ? (
-                    <Link
-                      href="/"
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-xl transition-all shadow-xs"
-                      title="Kembali ke Beranda Publik"
-                    >
-                      <ArrowLeft className="w-3.5 h-3.5 text-slate-500" />
-                      <span>Ke Beranda Publik</span>
-                    </Link>
-                  ) : (
-                    <Link
-                      href={adminTargetUrl}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 border border-emerald-500/40 rounded-xl transition-all shadow-xs"
-                      title="Buka Dashboard Admin Internal (Sidebar View)"
-                    >
-                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-200" />
-                      <span>Panel Admin</span>
-                      {adminPendingBadge > 0 && (
-                        <span className="px-1.5 py-0.2 bg-rose-600 text-white rounded text-[9.5px]">
-                          {adminPendingBadge}
-                        </span>
-                      )}
-                    </Link>
-                  )}
+                  <Link
+                    href={adminTargetUrl}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 border border-emerald-500/40 rounded-xl transition-all shadow-xs"
+                    title="Buka Dashboard Admin Internal (Sidebar View)"
+                  >
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-200" />
+                    <span>Panel Admin</span>
+                    {adminPendingBadge > 0 && (
+                      <span className="px-1.5 py-0.2 bg-rose-600 text-white rounded text-[9.5px]">
+                        {adminPendingBadge}
+                      </span>
+                    )}
+                  </Link>
                 </div>
               )}
 
@@ -595,6 +588,14 @@ export function Navbar() {
                                 >
                                   <Building2 className="w-4 h-4 text-slate-400" />
                                   <span>Master Data Ruangan</span>
+                                </Link>
+                                <Link
+                                  href="/admin/facilities"
+                                  onClick={() => setUserDropdownOpen(false)}
+                                  className="w-full flex items-center gap-2 px-3 py-2 text-slate-700 hover:text-purple-700 hover:bg-purple-50 rounded-lg transition-colors font-medium text-xs"
+                                >
+                                  <PackageCheck className="w-4 h-4 text-slate-400" />
+                                  <span>Master Data Fasilitas</span>
                                 </Link>
                               </>
                             )}
@@ -744,6 +745,15 @@ export function Navbar() {
                         className="flex items-center justify-between px-3 py-2 text-xs font-medium text-slate-700 hover:bg-purple-50 rounded-lg"
                       >
                         <span>Master Data Fakultas</span>
+                        <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
+                      </Link>
+
+                      <Link
+                        href="/admin/facilities"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="flex items-center justify-between px-3 py-2 text-xs font-medium text-slate-700 hover:bg-purple-50 rounded-lg"
+                      >
+                        <span>Master Data Fasilitas</span>
                         <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
                       </Link>
                     </>

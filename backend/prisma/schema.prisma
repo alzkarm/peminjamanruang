@@ -225,3 +225,18 @@ model Faculty {
 
   @@map("faculties")
 }
+
+model Facility {
+  id          String   @id @default(uuid()) @db.Uuid
+  name        String   @unique
+  category    String   @default("audio_visual")
+  description String?
+  icon        String?  @default("Package")
+  isSpecial   Boolean  @default(false)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime @updatedAt @db.Timestamptz(3)
+
+  @@map("facilities")
+}
+

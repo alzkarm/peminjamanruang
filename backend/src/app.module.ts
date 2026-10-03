@@ -10,6 +10,7 @@ import { FeedbacksModule } from './feedbacks/feedbacks.module';
 import { CbtRoomModule } from './cbt-room/cbt-room.module';
 import { UsersModule } from './users/users.module';
 import { FacultiesModule } from './faculties/faculties.module';
+import { FacilitiesModule } from './facilities/facilities.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { FacultiesModule } from './faculties/faculties.module';
     FeedbacksModule,
     CbtRoomModule,
     FacultiesModule,
+    FacilitiesModule,
   ],
 })
 export class AppModule {}
