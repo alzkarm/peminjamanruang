@@ -38,6 +38,25 @@ export class BookingsService {
       throw new BadRequestException('Waktu mulai harus lebih awal dari waktu selesai.');
     }
 
+    // Cek sanksi penalti aktif (Task 2.2 Anti-Ghost Booking / Cooling-down)
+    const activePenalty = await (this.prisma as any).userPenalty?.findFirst?.({
+      where: {
+        userId,
+        isActive: true,
+        coolingDownUntil: { gt: new Date() },
+      },
+    });
+    if (activePenalty) {
+      const untilDate = new Date(activePenalty.coolingDownUntil).toLocaleDateString('id-ID', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      });
+      throw new BadRequestException(
+        `Akun Anda sedang dalam masa sanksi cooling-down akibat pelanggaran No-Show hingga ${untilDate}. Alasan: ${activePenalty.reason}`
+      );
+    }
+
     const finalAttachmentUrl = dto.dokumenUrl || uploadedAttachmentUrl;
     const finalNotes = dto.notes || dto.catatan;
 
@@ -292,10 +311,13 @@ export class BookingsService {
           );
         }
 
+        const passToken = (b as any).passToken || (targetStatus === BookingStatus.APPROVED ? `PASS-${randomUUID().replace(/-/g, '').slice(0, 12).toUpperCase()}` : undefined);
+
         const updated = await tx.booking.update({
           where: { id: b.id },
           data: {
             status: targetStatus as PrismaBookingStatus,
+            ...(passToken ? { passToken } : {}),
           },
           include: {
             room: { include: { floor: true } },
@@ -412,9 +434,14 @@ export class BookingsService {
           );
         }
 
+        const passToken = (booking as any).passToken || (targetStatus === BookingStatus.APPROVED ? `PASS-${randomUUID().replace(/-/g, '').slice(0, 12).toUpperCase()}` : undefined);
+
         const updated = await tx.booking.update({
           where: { id: bookingId },
-          data: { status: targetStatus as PrismaBookingStatus },
+          data: {
+            status: targetStatus as PrismaBookingStatus,
+            ...(passToken ? { passToken } : {}),
+          },
           include: {
             room: { include: { floor: true } },
             user: true,
@@ -626,48 +653,84 @@ export class BookingsService {
     }
 
     const cleanCode = code.trim();
-    const cleanPrefix = cleanCode.replace(/^YARSI-BK-/i, '').toLowerCase();
+    const cleanUpper = cleanCode.toUpperCase();
+    const cleanPrefix = cleanUpper.replace(/^YARSI-BK-/i, '').toLowerCase();
 
     let booking: any = null;
-    const isFullUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cleanPrefix);
 
-    if (isFullUuid) {
-      booking = await this.prisma.booking.findUnique({
-        where: { id: cleanPrefix },
-        include: {
-          room: { include: { floor: true } },
-          user: { select: { id: true, fullName: true, username: true, unitName: true, email: true, role: true } },
-          approvalLogs: {
-            include: { approver: { select: { fullName: true, role: true } } },
-            orderBy: { createdAt: 'desc' },
-          },
+    // 1. Cek pencarian berdasarkan passToken
+    booking = await (this.prisma.booking as any).findFirst({
+      where: {
+        OR: [
+          { passToken: cleanUpper },
+          { passToken: cleanCode },
+        ],
+      },
+      include: {
+        room: { include: { floor: true } },
+        user: { select: { id: true, fullName: true, username: true, unitName: true, email: true, role: true } },
+        logistik: true,
+        approvalLogs: {
+          include: { approver: { select: { fullName: true, role: true } } },
+          orderBy: { createdAt: 'desc' },
         },
-      });
-    } else {
-      try {
-        const matchedRows: any[] = await this.prisma.$queryRaw`
-          SELECT id FROM bookings WHERE id::text ILIKE ${cleanPrefix + '%'} ORDER BY "createdAt" DESC LIMIT 1
-        `;
-        if (matchedRows && matchedRows.length > 0) {
-          booking = await this.prisma.booking.findUnique({
-            where: { id: matchedRows[0].id },
-            include: {
-              room: { include: { floor: true } },
-              user: { select: { id: true, fullName: true, username: true, unitName: true, email: true, role: true } },
-              approvalLogs: {
-                include: { approver: { select: { fullName: true, role: true } } },
-                orderBy: { createdAt: 'desc' },
-              },
+      },
+    });
+
+    // 2. Jika tidak ditemukan via passToken, cari via UUID / kode awalan
+    if (!booking) {
+      const isFullUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cleanPrefix);
+
+      if (isFullUuid) {
+        booking = await this.prisma.booking.findUnique({
+          where: { id: cleanPrefix },
+          include: {
+            room: { include: { floor: true } },
+            user: { select: { id: true, fullName: true, username: true, unitName: true, email: true, role: true } },
+            logistik: true,
+            approvalLogs: {
+              include: { approver: { select: { fullName: true, role: true } } },
+              orderBy: { createdAt: 'desc' },
             },
-          });
+          },
+        });
+      } else {
+        try {
+          const matchedRows: any[] = await this.prisma.$queryRaw`
+            SELECT id FROM bookings WHERE id::text ILIKE ${cleanPrefix + '%'} ORDER BY "createdAt" DESC LIMIT 1
+          `;
+          if (matchedRows && matchedRows.length > 0) {
+            booking = await this.prisma.booking.findUnique({
+              where: { id: matchedRows[0].id },
+              include: {
+                room: { include: { floor: true } },
+                user: { select: { id: true, fullName: true, username: true, unitName: true, email: true, role: true } },
+                logistik: true,
+                approvalLogs: {
+                  include: { approver: { select: { fullName: true, role: true } } },
+                  orderBy: { createdAt: 'desc' },
+                },
+              },
+            });
+          }
+        } catch (err: any) {
+          this.logger.warn(`Failed raw query search for booking code ${cleanPrefix}: ${err.message}`);
         }
-      } catch (err: any) {
-        this.logger.warn(`Failed raw query search for booking code ${cleanPrefix}: ${err.message}`);
       }
     }
 
     if (!booking) {
-      throw new NotFoundException(`Data peminjaman dengan kode '${code}' tidak ditemukan.`);
+      throw new NotFoundException(`Data peminjaman dengan kode/token '${code}' tidak ditemukan.`);
+    }
+
+    // Buat passToken otomatis jika booking sudah APPROVED namun belum memiliki token
+    if (booking.status === 'APPROVED' && !booking.passToken) {
+      const generatedToken = `PASS-${randomUUID().replace(/-/g, '').slice(0, 12).toUpperCase()}`;
+      await (this.prisma.booking as any).update({
+        where: { id: booking.id },
+        data: { passToken: generatedToken },
+      }).catch(() => undefined);
+      booking.passToken = generatedToken;
     }
 
     const approvalLog = booking.approvalLogs?.find(
@@ -691,6 +754,7 @@ export class BookingsService {
     return {
       id: booking.id,
       bookingCode,
+      passToken: booking.passToken || bookingCode,
       title: booking.title,
       activityType: booking.activityType,
       roomName: booking.room?.name || 'Ruangan Kampus',
@@ -706,11 +770,563 @@ export class BookingsService {
       status: booking.status,
       isValid: booking.status === 'APPROVED',
       approvedAt: approvalLog?.createdAt || (booking.status === 'APPROVED' ? booking.updatedAt : null),
-      approvedBy: approvalLog?.approver?.fullName || 'LPF / Yayasan YARSI',
+      approvedBy: approvalLog?.approver?.fullName || 'Biro LPF & Pimpinan Universitas YARSI',
+      additionalFacilities: booking.additionalFacilities || [],
+      logistik: booking.logistik || [],
+      notes: booking.notes,
+      estimatedAttendees: booking.estimatedAttendees,
+      isLeaderApproved: booking.isLeaderApproved,
       securityNotice:
         'Dokumen ini dikeluarkan resmi oleh Sistem Informasi Peminjaman Ruangan Terpadu Universitas YARSI.',
+      digitalStamp: {
+        issuer: 'Biro Pengelolaan Fasilitas & Logistik (LPF) Universitas YARSI',
+        status: booking.status === 'APPROVED' ? 'SAH & TERVERIFIKASI' : 'BELUM FINAL',
+        verificationUrl: `https://siperu.yarsi.ac.id/verify/${booking.passToken || bookingCode}`,
+        algorithm: 'SHA256-DIGITAL-TOKEN-VERIFIED',
+      },
       createdAt: booking.createdAt,
     };
   }
+
+  /**
+   * Daily Run-Sheet: Agenda Harian & Checklist Kesiapan Sarpras (Task 1.2)
+   */
+  async getDailyRunsheet(dateStr?: string) {
+    const targetDate = dateStr ? new Date(dateStr) : new Date();
+    const year = targetDate.getFullYear();
+    const month = targetDate.getMonth();
+    const day = targetDate.getDate();
+
+    const startOfDay = new Date(year, month, day, 0, 0, 0, 0);
+    const endOfDay = new Date(year, month, day, 23, 59, 59, 999);
+
+    const bookings = await (this.prisma.booking as any).findMany({
+      where: {
+        status: { in: [PrismaBookingStatus.APPROVED, PrismaBookingStatus.RECOMMENDED, PrismaBookingStatus.VERIFIED] },
+        startTime: {
+          gte: new Date(startOfDay.getTime() - 24 * 3600 * 1000), // Rentang lebar untuk time zone safety
+          lte: new Date(endOfDay.getTime() + 24 * 3600 * 1000),
+        },
+      },
+      include: {
+        room: { include: { floor: true } },
+        user: { select: { id: true, fullName: true, username: true, unitName: true, role: true } },
+        logistik: true,
+        readinessChecklist: true,
+      },
+      orderBy: { startTime: 'asc' },
+    });
+
+    // Filter tanggal presisi berbasis WIB
+    const filtered = bookings.filter((b) => {
+      const bDate = new Date(b.startTime);
+      const bDateStr = `${bDate.getFullYear()}-${String(bDate.getMonth() + 1).padStart(2, '0')}-${String(bDate.getDate()).padStart(2, '0')}`;
+      const searchDateStr = dateStr || `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      return bDateStr === searchDateStr;
+    });
+
+    return filtered.map((b: any) => {
+      const chk = b.readinessChecklist;
+      const isAcReady = chk?.isAcReady ?? false;
+      const isAudioReady = chk?.isAudioReady ?? false;
+      const isLogisticsReady = chk?.isLogisticsReady ?? false;
+      const isCleanlinessReady = chk?.isCleanlinessReady ?? false;
+      const isFullyReady = isAcReady && isAudioReady && isLogisticsReady && isCleanlinessReady;
+
+      return {
+        ...b,
+        bookingCode: `YARSI-BK-${b.id.slice(0, 8).toUpperCase()}`,
+        readiness: {
+          isAcReady,
+          isAudioReady,
+          isLogisticsReady,
+          isCleanlinessReady,
+          isFullyReady,
+          checkedBy: chk?.checkedBy || null,
+          notes: chk?.notes || null,
+          updatedAt: chk?.updatedAt || null,
+        },
+      };
+    });
+  }
+
+  /**
+   * Toggle Checklist Kesiapan Ruangan Operasional (Task 1.2)
+   */
+  async toggleRunsheetCheck(
+    bookingId: string,
+    currentUser: { fullName?: string },
+    item: 'ac' | 'audio' | 'logistics' | 'cleanliness',
+    value: boolean,
+    notes?: string,
+  ) {
+    const fieldMap: Record<string, string> = {
+      ac: 'isAcReady',
+      audio: 'isAudioReady',
+      logistics: 'isLogisticsReady',
+      cleanliness: 'isCleanlinessReady',
+    };
+
+    const targetField = fieldMap[item];
+    if (!targetField) {
+      throw new BadRequestException(`Item checklist '${item}' tidak dikenali.`);
+    }
+
+    const existing = await (this.prisma as any).roomReadinessChecklist.findUnique({
+      where: { bookingId },
+    });
+
+    let updated: any;
+    if (existing) {
+      updated = await (this.prisma as any).roomReadinessChecklist.update({
+        where: { bookingId },
+        data: {
+          [targetField]: value,
+          checkedBy: currentUser?.fullName || 'Petugas Lapangan',
+          ...(notes ? { notes } : {}),
+        },
+      });
+    } else {
+      updated = await (this.prisma as any).roomReadinessChecklist.create({
+        data: {
+          bookingId,
+          [targetField]: value,
+          checkedBy: currentUser?.fullName || 'Petugas Lapangan',
+          notes,
+        },
+      });
+    }
+
+    const isFullyReady =
+      updated.isAcReady &&
+      updated.isAudioReady &&
+      updated.isLogisticsReady &&
+      updated.isCleanlinessReady;
+
+    return {
+      success: true,
+      checklist: updated,
+      isFullyReady,
+    };
+  }
+
+  /**
+   * Auto-Expired & System Release untuk Booking Menggantung (Task 1.3)
+   */
+  async cleanupExpiredBookings() {
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const now = new Date();
+
+    const pendingBookings = await this.prisma.booking.findMany({
+      where: {
+        status: { in: [PrismaBookingStatus.PENDING, PrismaBookingStatus.RETURNED] },
+        OR: [
+          { createdAt: { lte: twentyFourHoursAgo } },
+          { startTime: { lte: now } },
+        ],
+      },
+      include: { room: true },
+    });
+
+    if (pendingBookings.length === 0) {
+      return { cleanedCount: 0, message: 'Tidak ada booking kadaluwarsa yang perlu dibersihkan.' };
+    }
+
+    let cleanedCount = 0;
+    for (const b of pendingBookings) {
+      try {
+        await (this.prisma.booking as any).update({
+          where: { id: b.id },
+          data: { status: 'EXPIRED' },
+        });
+
+        await (this.prisma.approvalLog as any).create({
+          data: {
+            bookingId: b.id,
+            approverId: b.userId,
+            fromStatus: b.status,
+            toStatus: 'EXPIRED',
+            notes: 'Status otomatis diubah menjadi KADALUWARSA (Expired) oleh sistem karena melewati batas toleransi waktu tanpa tindak lanjut.',
+          },
+        });
+        cleanedCount++;
+      } catch (err: any) {
+        this.logger.warn(`Failed to expire booking ${b.id}: ${err.message}`);
+      }
+    }
+
+    this.logger.log(`Cleaned up ${cleanedCount} expired booking(s).`);
+    return {
+      cleanedCount,
+      message: `Berhasil melepaskan ${cleanedCount} jadwal booking yang kadaluwarsa.`,
+    };
+  }
+
+  /**
+   * Tokenized Signed Link for 1-Click Executive Approval (Task 1.4)
+   */
+  generateQuickActionToken(bookingId: string, action: 'APPROVE' | 'REJECT'): string {
+    const payload = {
+      bookingId,
+      action,
+      exp: Date.now() + 48 * 3600 * 1000, // 48 jam
+    };
+    const jsonStr = JSON.stringify(payload);
+    const b64Payload = Buffer.from(jsonStr).toString('base64url');
+    const secret = process.env.JWT_SECRET || 'siperu-yarsi-secret-2026';
+    const hmac = require('crypto').createHmac('sha256', secret);
+    hmac.update(b64Payload);
+    const sig = hmac.digest('base64url');
+    return `${b64Payload}.${sig}`;
+  }
+
+  async verifyAndExecuteQuickAction(token: string) {
+    if (!token || !token.includes('.')) {
+      throw new BadRequestException('Format token persetujuan cepat tidak valid.');
+    }
+
+    const [b64Payload, sig] = token.split('.');
+    const secret = process.env.JWT_SECRET || 'siperu-yarsi-secret-2026';
+    const hmac = require('crypto').createHmac('sha256', secret);
+    hmac.update(b64Payload);
+    const expectedSig = hmac.digest('base64url');
+
+    if (sig !== expectedSig) {
+      throw new ForbiddenException('Tanda tangan digital token tidak cocok atau telah dimanipulasi.');
+    }
+
+    const payload = JSON.parse(Buffer.from(b64Payload, 'base64url').toString('utf8'));
+    if (Date.now() > payload.exp) {
+      throw new BadRequestException('Tautan persetujuan cepat telah kadaluarsa (melebihi 48 jam).');
+    }
+
+    const { bookingId, action } = payload;
+    const booking = await this.prisma.booking.findUnique({
+      where: { id: bookingId },
+      include: { room: true, user: true },
+    });
+
+    if (!booking) {
+      throw new NotFoundException('Data peminjaman tidak ditemukan.');
+    }
+
+    if (booking.status === PrismaBookingStatus.APPROVED) {
+      return {
+        alreadyProcessed: true,
+        status: 'APPROVED',
+        message: 'Permohonan ini telah disetujui sebelumnya.',
+        booking,
+      };
+    }
+
+    if (booking.status === PrismaBookingStatus.REJECTED || booking.status === PrismaBookingStatus.CANCELED) {
+      return {
+        alreadyProcessed: true,
+        status: booking.status,
+        message: `Permohonan ini berstatus ${booking.status} dan tidak dapat diubah lagi.`,
+        booking,
+      };
+    }
+
+    const targetStatus = action === 'APPROVE' ? PrismaBookingStatus.APPROVED : PrismaBookingStatus.REJECTED;
+    const passToken = (booking as any).passToken || (targetStatus === PrismaBookingStatus.APPROVED ? `PASS-${randomUUID().replace(/-/g, '').slice(0, 12).toUpperCase()}` : undefined);
+
+    const updated = await this.prisma.booking.update({
+      where: { id: bookingId },
+      data: {
+        status: targetStatus,
+        ...(passToken ? { passToken } : {}),
+      },
+    });
+
+    await this.prisma.approvalLog.create({
+      data: {
+        bookingId: booking.id,
+        approverId: booking.userId,
+        fromStatus: booking.status,
+        toStatus: targetStatus,
+        notes: `Tindakan dieksekusi secara instan melalui Tautan Resmi Persetujuan Cepat Pimpinan Yayasan YARSI (${action === 'APPROVE' ? 'Disetujui' : 'Ditolak'}).`,
+      },
+    });
+
+    return {
+      success: true,
+      action,
+      bookingCode: `YARSI-BK-${booking.id.slice(0, 8).toUpperCase()}`,
+      roomName: booking.room.name,
+      applicantName: booking.user.fullName,
+      status: targetStatus,
+      passToken: passToken || (booking as any).passToken,
+      message: action === 'APPROVE'
+        ? 'Permohonan peminjaman berhasil DISETUJUI secara resmi oleh Pimpinan Yayasan.'
+        : 'Permohonan peminjaman berhasil DITOLAK.',
+    };
+  }
+
+  /**
+   * Reschedule Mandiri (Task 2.1)
+   */
+  async requestReschedule(
+    bookingId: string,
+    currentUser: { id: string; role: string; fullName: string },
+    dto: {
+      newDate: string;
+      newStartTime: string;
+      newEndTime: string;
+      reason: string;
+      newRoomId?: string;
+    },
+  ) {
+    const booking = await this.prisma.booking.findUnique({
+      where: { id: bookingId },
+      include: { room: true, user: true },
+    });
+
+    if (!booking) {
+      throw new NotFoundException('Data peminjaman tidak ditemukan.');
+    }
+
+    const isAdmin = ['SUPERADMIN', 'ADMIN_LPF', 'ADMIN_UNIV', 'ADMIN_YAYASAN'].includes(currentUser.role);
+    if (!isAdmin && booking.userId !== currentUser.id) {
+      throw new ForbiddenException('Anda tidak berhak mereschedule peminjaman ini.');
+    }
+
+    const allowedStatuses: string[] = ['PENDING', 'VERIFIED', 'RECOMMENDED', 'APPROVED', 'RESCHEDULE_PENDING'];
+    if (!allowedStatuses.includes(booking.status as string)) {
+      throw new BadRequestException(
+        `Jadwal peminjaman dengan status ${booking.status} tidak dapat diajukan pindah jadwal.`
+      );
+    }
+
+    const [startH, startM] = dto.newStartTime.split(':').map(Number);
+    const [endH, endM] = dto.newEndTime.split(':').map(Number);
+    const [y, m, d] = dto.newDate.split('-').map(Number);
+
+    const newStart = new Date(y, m - 1, d, startH, startM, 0);
+    const newEnd = new Date(y, m - 1, d, endH, endM, 0);
+
+    if (newStart >= newEnd) {
+      throw new BadRequestException('Jam mulai baru harus lebih awal dari jam selesai.');
+    }
+
+    if (newStart <= new Date()) {
+      throw new BadRequestException('Jadwal baru harus berada di masa mendatang.');
+    }
+
+    const targetRoomId = dto.newRoomId || booking.roomId;
+
+    // Check availability on target room
+    const availability = await this.scheduling.checkAvailability(
+      targetRoomId,
+      newStart,
+      newEnd,
+      booking.id,
+    );
+
+    if (!availability.isAvailable) {
+      throw new ConflictException(
+        'Ruangan pada jadwal baru yang Anda pilih telah terisi atau sedang dalam pemeliharaan. Silakan pilih waktu atau ruangan lain.'
+      );
+    }
+
+    const oldDateStr = booking.startTime.toISOString().split('T')[0];
+    const oldScheduleStr = `${oldDateStr} (${booking.startTime.toTimeString().slice(0, 5)} - ${booking.endTime.toTimeString().slice(0, 5)} WIB)`;
+
+    const updated = await (this.prisma.booking as any).update({
+      where: { id: booking.id },
+      data: {
+        status: 'RESCHEDULE_PENDING',
+        roomId: targetRoomId,
+        startTime: newStart,
+        endTime: newEnd,
+        rescheduleReason: dto.reason,
+        originalSchedule: oldScheduleStr,
+      },
+      include: {
+        room: { include: { floor: true } },
+        user: true,
+      },
+    });
+
+    await this.prisma.approvalLog.create({
+      data: {
+        bookingId: booking.id,
+        approverId: currentUser.id,
+        fromStatus: booking.status,
+        toStatus: 'RESCHEDULE_PENDING' as any,
+        notes: `Pengajuan Pindah Jadwal: Dari [${oldScheduleStr}] menjadi [${dto.newDate} ${dto.newStartTime}-${dto.newEndTime} WIB]. Alasan: ${dto.reason}`,
+      },
+    });
+
+    return {
+      success: true,
+      message: 'Pengajuan pindah jadwal berhasil diajukan. Menunggu verifikasi tim LPF.',
+      booking: updated,
+    };
+  }
+
+  /**
+   * Check-in Peminjaman (Task 2.2)
+   */
+  async checkInBooking(
+    bookingCodeOrId: string,
+    currentUser: { id: string; fullName: string; role: string },
+  ) {
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(bookingCodeOrId);
+    let booking: any = null;
+
+    if (isUuid) {
+      booking = await this.prisma.booking.findUnique({
+        where: { id: bookingCodeOrId },
+        include: { room: true, user: true },
+      });
+    }
+
+    if (!booking) {
+      booking = await this.prisma.booking.findFirst({
+        where: {
+          passToken: bookingCodeOrId,
+        },
+        include: { room: true, user: true },
+      });
+    }
+
+    if (!booking) {
+      throw new NotFoundException('Data peminjaman tidak ditemukan.');
+    }
+
+    if (booking.status !== PrismaBookingStatus.APPROVED) {
+      throw new BadRequestException(
+        `Check-in hanya dapat dilakukan untuk peminjaman berstatus Disetujui (APPROVED). Status saat ini: ${booking.status}`
+      );
+    }
+
+    await this.prisma.approvalLog.create({
+      data: {
+        bookingId: booking.id,
+        approverId: currentUser.id,
+        fromStatus: booking.status,
+        toStatus: booking.status,
+        notes: `Check-in Kehadiran Berhasil: Petugas (${currentUser.fullName}) mengonfirmasi kehadiran peminjam di ruangan.`,
+      },
+    });
+
+    return {
+      success: true,
+      message: `Check-in berhasil dikonfirmasi untuk kegiatan "${booking.title}".`,
+      booking,
+    };
+  }
+
+  /**
+   * Deteksi No-Show & Sanksi Otomatis (Task 2.2)
+   */
+  async detectNoShowBookings() {
+    const now = new Date();
+    const fortyFiveMinutesAgo = new Date(now.getTime() - 45 * 60 * 1000);
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    const activeApproved = await this.prisma.booking.findMany({
+      where: {
+        status: PrismaBookingStatus.APPROVED,
+        startTime: {
+          gte: startOfToday,
+          lte: fortyFiveMinutesAgo,
+        },
+      },
+      include: {
+        approvalLogs: true,
+        user: true,
+        room: true,
+      },
+    });
+
+    let detectedCount = 0;
+    const penalizedUsers: string[] = [];
+
+    for (const b of activeApproved) {
+      const hasCheckedIn = b.approvalLogs.some(
+        (log) => log.notes && log.notes.toLowerCase().includes('check-in'),
+      );
+
+      if (!hasCheckedIn) {
+        try {
+          await (this.prisma.booking as any).update({
+            where: { id: b.id },
+            data: { status: 'NO_SHOW' },
+          });
+
+          await this.prisma.approvalLog.create({
+            data: {
+              bookingId: b.id,
+              approverId: b.userId,
+              fromStatus: b.status,
+              toStatus: 'NO_SHOW' as any,
+              notes: 'Status otomatis diubah menjadi NO_SHOW karena tidak melakukan check-in setelah 45 menit jadwal dimulai.',
+            },
+          });
+          detectedCount++;
+
+          const sixMonthsAgo = new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000);
+          const totalNoShow = await this.prisma.booking.count({
+            where: {
+              userId: b.userId,
+              status: 'NO_SHOW' as any,
+              createdAt: { gte: sixMonthsAgo },
+            },
+          });
+
+          if (totalNoShow >= 2) {
+            const coolingDownUntil = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000);
+            await (this.prisma as any).userPenalty.create({
+              data: {
+                userId: b.userId,
+                bookingId: b.id,
+                reason: `Terakumulasi ${totalNoShow}x pelanggaran No-Show (reservasi ruangan tidak digunakan dan tidak dibatalkan).`,
+                coolingDownUntil,
+                isActive: true,
+              },
+            });
+            penalizedUsers.push(b.user?.fullName || b.userId);
+          }
+        } catch (err: any) {
+          this.logger.warn(`Failed to process no-show for booking ${b.id}: ${err.message}`);
+        }
+      }
+    }
+
+    return {
+      detectedCount,
+      penalizedUsersCount: penalizedUsers.length,
+      penalizedUsers,
+      message: `Deteksi selesai: ${detectedCount} peminjaman ditandai NO-SHOW, ${penalizedUsers.length} pengguna dikenai sanksi cooling-down.`,
+    };
+  }
+
+  async getMyPenalties(userId: string) {
+    return (this.prisma as any).userPenalty.findMany({
+      where: { userId },
+      include: { booking: { select: { id: true, title: true, startTime: true, room: true } } },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async getAllPenalties() {
+    return (this.prisma as any).userPenalty.findMany({
+      include: {
+        user: { select: { id: true, fullName: true, username: true, unitName: true, role: true } },
+        booking: { select: { id: true, title: true, startTime: true, room: true } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
+  async revokePenalty(penaltyId: string) {
+    return (this.prisma as any).userPenalty.update({
+      where: { id: penaltyId },
+      data: { isActive: false },
+    });
+  }
 }
+
 

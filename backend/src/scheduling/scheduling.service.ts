@@ -33,6 +33,29 @@ export class SchedulingService {
       throw new NotFoundException('Ruangan tidak ditemukan atau tidak aktif.');
     }
 
+    // Cek pemeliharaan ruangan (Room Maintenance)
+    const maintenance = await (this.prisma as any).roomMaintenance?.findFirst?.({
+      where: {
+        roomId,
+        AND: [
+          { startTime: { lt: endTime } },
+          { endTime: { gt: startTime } },
+        ],
+      },
+    });
+
+    if (maintenance) {
+      return {
+        isAvailable: false,
+        room,
+        conflict: {
+          startTime: maintenance.startTime,
+          endTime: maintenance.endTime,
+          status: 'MAINTENANCE',
+        } as any,
+      };
+    }
+
     // Cek konflik jadwal: PENDING, RECOMMENDED, dan APPROVED memblokir slot agar tidak terjadi bentrok
     const conflict = await executor.booking.findFirst({
       where: {

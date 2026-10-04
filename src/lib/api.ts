@@ -808,6 +808,86 @@ export const bookingsApi = {
     });
     return mapBackendBookingToFrontend(res);
   },
+
+  async reschedule(
+    id: string,
+    payload: {
+      newDate: string;
+      newStartTime: string;
+      newEndTime: string;
+      reason: string;
+      newRoomId?: string;
+    }
+  ): Promise<any> {
+    return request<any>(`/bookings/${id}/reschedule`, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  },
+
+  async checkIn(bookingCodeOrId: string): Promise<any> {
+    return request<any>(`/bookings/${bookingCodeOrId}/check-in`, {
+      method: 'POST',
+    });
+  },
+
+  async detectNoShow(): Promise<any> {
+    return request<any>('/bookings/detect-no-show', {
+      method: 'POST',
+    });
+  },
+
+  async getMyPenalties(): Promise<any[]> {
+    return request<any[]>('/bookings/penalties/my');
+  },
+
+  async getAllPenalties(): Promise<any[]> {
+    return request<any[]>('/bookings/penalties/all');
+  },
+
+  async revokePenalty(penaltyId: string): Promise<any> {
+    return request<any>(`/bookings/penalties/${penaltyId}/revoke`, {
+      method: 'PATCH',
+    });
+  },
+};
+
+export const maintenanceApi = {
+  async getAll(): Promise<any[]> {
+    const data = await request<any[]>('/rooms/maintenance/list');
+    return data.map((m: any) => ({
+      id: m.id,
+      roomId: m.roomId,
+      roomName: m.room?.name || 'Ruangan',
+      building: m.room?.building || 'Menara YARSI',
+      floor: m.room?.floor?.level ?? 1,
+      title: m.title,
+      description: m.description,
+      startTime: m.startTime,
+      endTime: m.endTime,
+      createdBy: m.createdBy,
+      createdAt: m.createdAt,
+    }));
+  },
+
+  async create(payload: {
+    roomId: string;
+    title: string;
+    description?: string;
+    startTime: string;
+    endTime: string;
+  }): Promise<any> {
+    return request<any>('/rooms/maintenance', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  },
+
+  async remove(id: string): Promise<any> {
+    return request<any>(`/rooms/maintenance/${id}`, {
+      method: 'DELETE',
+    });
+  },
 };
 
 export const academicBulkApi = {
@@ -987,3 +1067,121 @@ export const usersApi = {
     });
   },
 };
+
+export interface DailyRunsheetItem {
+  id: string;
+  bookingCode: string;
+  title: string;
+  activityType: string;
+  startTime: string;
+  endTime: string;
+  status: string;
+  notes?: string;
+  room: {
+    id: string;
+    name: string;
+    building: string;
+    floor: {
+      level: number;
+      name: string;
+    };
+  };
+  user: {
+    id: string;
+    fullName: string;
+    username: string;
+    unitName: string;
+    role: string;
+  };
+  logistik: Array<{
+    id: string;
+    jenisItem: string;
+    jumlah: number;
+    catatan?: string;
+  }>;
+  readiness: {
+    isAcReady: boolean;
+    isAudioReady: boolean;
+    isLogisticsReady: boolean;
+    isCleanlinessReady: boolean;
+    isFullyReady: boolean;
+    checkedBy?: string | null;
+    notes?: string | null;
+    updatedAt?: string | null;
+  };
+}
+
+export const runsheetApi = {
+  async getDaily(date?: string): Promise<DailyRunsheetItem[]> {
+    const url = date ? `/bookings/runsheet/daily?date=${date}` : '/bookings/runsheet/daily';
+    return request<DailyRunsheetItem[]>(url);
+  },
+
+  async toggleCheck(
+    bookingId: string,
+    item: 'ac' | 'audio' | 'logistics' | 'cleanliness',
+    value: boolean,
+    notes?: string,
+  ): Promise<{ success: boolean; checklist: any; isFullyReady: boolean }> {
+    return request<{ success: boolean; checklist: any; isFullyReady: boolean }>(
+      `/bookings/runsheet/${bookingId}/toggle-check`,
+      {
+        method: 'PATCH',
+        body: JSON.stringify({ item, value, notes }),
+      },
+    );
+  },
+};
+
+export const cleanupApi = {
+  async cleanupExpired(): Promise<{ cleanedCount: number; message: string }> {
+    return request<{ cleanedCount: number; message: string }>('/bookings/cleanup-expired', {
+      method: 'POST',
+    });
+  },
+};
+
+export const quickApprovalApi = {
+  async execute(token: string): Promise<any> {
+    return request<any>(`/verify/quick-action/execute?token=${encodeURIComponent(token)}`);
+  },
+
+  async generateLink(bookingId: string, action: 'APPROVE' | 'REJECT'): Promise<{ token: string; actionUrl: string }> {
+    return request<{ token: string; actionUrl: string }>(
+      `/verify/quick-action/generate-link/${bookingId}?action=${action}`,
+    );
+  },
+};
+
+export interface SmartSearchResult {
+  id: string;
+  code: string;
+  name: string;
+  building: string;
+  floorLevel: number;
+  floorName: string;
+  capacity: number;
+  isSpecialRoom: boolean;
+  availableSlot: {
+    date: string;
+    startTime: string;
+    endTime: string;
+  };
+}
+
+export const smartRoomsApi = {
+  async search(params: {
+    date: string;
+    startTime: string;
+    endTime: string;
+    minCapacity?: number;
+    facilities?: string[];
+    building?: string;
+  }): Promise<SmartSearchResult[]> {
+    return request<SmartSearchResult[]>('/rooms/smart-search', {
+      method: 'POST',
+      body: JSON.stringify(params),
+    });
+  },
+};
+

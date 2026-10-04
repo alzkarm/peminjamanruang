@@ -23,6 +23,7 @@ import { RoomCard } from '@/components/common/RoomCard';
 import { AuthGateModal } from '@/components/common/AuthGateModal';
 import { InteractiveBuilding } from '@/components/home/InteractiveBuilding';
 import { CBTBannerSection } from '@/components/home/CBTBannerSection';
+import { SmartRoomFinder } from '@/components/booking/SmartRoomFinder';
 import {
   formatDateIndo,
   formatShortDateIndo,
@@ -342,7 +343,10 @@ export default function HomePage() {
       {/* CBT ROOM SPOTLIGHT SECTION (Interactive & Dynamic Multi-Tenant CBT Banner) */}
       <CBTBannerSection />
 
-      <main className="mx-auto max-w-[1376px] px-3 pt-10 sm:px-6 sm:pt-12 lg:px-8 lg:pt-20">
+      <main className="mx-auto max-w-[1376px] px-3 pt-8 sm:px-6 sm:pt-10 lg:px-8 lg:pt-12 space-y-10">
+        {/* SMART ROOM FINDER WIDGET (Task 1.5) */}
+        <SmartRoomFinder />
+
         <section aria-labelledby="status-ruangan-hari-ini" className="rounded-[22px_6px_22px_22px] border border-emerald-900/10 bg-white p-4 shadow-[0_28px_80px_-58px_rgba(3,47,37,0.5)] sm:p-6">
           <div className="flex flex-col gap-4 border-b border-slate-200 pb-4 sm:flex-row sm:items-end sm:justify-between">
             <div>

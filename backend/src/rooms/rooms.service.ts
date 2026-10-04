@@ -189,17 +189,45 @@ export class RoomsService {
       orderBy: { startTime: 'asc' },
     });
 
+    const maintenances = ((await (this.prisma as any).roomMaintenance?.findMany?.({
+      where: {
+        ...(roomId ? { roomId } : {}),
+        AND: [
+          { startTime: { lt: endTime } },
+          { endTime: { gt: startTime } },
+        ],
+      },
+      include: {
+        room: { include: { floor: true } },
+      },
+      orderBy: { startTime: 'asc' },
+    })) || []) as any[];
+
+    const bookingEvents = bookings.map((booking) => ({
+      id: booking.id,
+      roomId: booking.roomId,
+      roomName: booking.room.name,
+      floorName: booking.room.floor.name,
+      title: booking.title,
+      startTime: booking.startTime,
+      endTime: booking.endTime,
+      status: booking.status,
+    }));
+
+    const maintenanceEvents = maintenances.map((m: any) => ({
+      id: m.id,
+      roomId: m.roomId,
+      roomName: m.room?.name || 'Ruangan',
+      floorName: m.room?.floor?.name || 'Lantai Kampus',
+      title: `[PEMELIHARAAN] ${m.title}`,
+      startTime: m.startTime,
+      endTime: m.endTime,
+      status: 'MAINTENANCE',
+      description: m.description,
+    }));
+
     return {
-      events: bookings.map((booking) => ({
-        id: booking.id,
-        roomId: booking.roomId,
-        roomName: booking.room.name,
-        floorName: booking.room.floor.name,
-        title: booking.title,
-        startTime: booking.startTime,
-        endTime: booking.endTime,
-        status: booking.status,
-      })),
+      events: [...bookingEvents, ...maintenanceEvents],
     };
   }
 
@@ -242,4 +270,113 @@ export class RoomsService {
       createdAt: b.createdAt,
     }));
   }
+
+  /**
+   * Smart Room Finder (Task 1.5)
+   */
+  async smartSearch(dto: {
+    date: string;
+    startTime: string;
+    endTime: string;
+    minCapacity?: number;
+    facilities?: string[];
+    building?: string;
+  }) {
+    const { date, startTime, endTime, minCapacity, building } = dto;
+    if (!date || !startTime || !endTime) {
+      throw new BadRequestException('Parameter date, startTime, dan endTime wajib dicantumkan.');
+    }
+
+    const sessionStart = new Date(`${date}T${startTime}:00.000Z`);
+    const sessionEnd = new Date(`${date}T${endTime}:00.000Z`);
+
+    const rooms = await this.prisma.room.findMany({
+      where: {
+        isActive: true,
+        ...(minCapacity ? { capacity: { gte: Number(minCapacity) } } : {}),
+        ...(building ? { building: { contains: building, mode: 'insensitive' } } : {}),
+      },
+      include: {
+        floor: true,
+        bookings: {
+          where: {
+            status: { in: BLOCKING_BOOKING_STATUSES },
+            AND: [
+              { startTime: { lt: sessionEnd } },
+              { endTime: { gt: sessionStart } },
+            ],
+          },
+        },
+      },
+      orderBy: [{ floor: { level: 'asc' } }, { capacity: 'asc' }],
+    });
+
+    const availableRooms = rooms.filter((r) => r.bookings.length === 0);
+
+    return availableRooms.map((r) => ({
+      id: r.id,
+      code: r.code || r.name,
+      name: r.name,
+      building: r.building || 'Menara YARSI',
+      floorLevel: r.floor.level,
+      floorName: r.floor.name,
+      capacity: r.capacity || 40,
+      isSpecialRoom: r.isSpecialRoom,
+      availableSlot: {
+        date,
+        startTime,
+        endTime,
+      },
+    }));
+  }
+
+  /**
+   * Maintenance Downtime Scheduler (Task 2.3)
+   */
+  async getMaintenances() {
+    return (this.prisma as any).roomMaintenance.findMany({
+      include: {
+        room: {
+          include: { floor: true },
+        },
+      },
+      orderBy: { startTime: 'desc' },
+    });
+  }
+
+  async createMaintenance(dto: {
+    roomId: string;
+    title: string;
+    description?: string;
+    startTime: Date;
+    endTime: Date;
+    createdBy: string;
+  }) {
+    if (dto.startTime >= dto.endTime) {
+      throw new BadRequestException('Waktu mulai pemeliharaan harus lebih awal dari waktu selesai.');
+    }
+
+    const room = await this.findOne(dto.roomId);
+
+    return (this.prisma as any).roomMaintenance.create({
+      data: {
+        roomId: dto.roomId,
+        title: dto.title,
+        description: dto.description,
+        startTime: dto.startTime,
+        endTime: dto.endTime,
+        createdBy: dto.createdBy,
+      },
+      include: {
+        room: { include: { floor: true } },
+      },
+    });
+  }
+
+  async removeMaintenance(id: string) {
+    return (this.prisma as any).roomMaintenance.delete({
+      where: { id },
+    });
+  }
 }
+

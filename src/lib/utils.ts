@@ -218,6 +218,27 @@ export function getStatusBadgeConfig(status: BookingStatus) {
         dot: "bg-purple-500",
         iconName: "GraduationCap",
       };
+    case "RESCHEDULE_PENDING":
+      return {
+        label: "Pindah Jadwal Diajukan",
+        bg: "bg-blue-50 text-blue-800 border-blue-300 ring-blue-500/20",
+        dot: "bg-blue-500",
+        iconName: "Clock",
+      };
+    case "NO_SHOW":
+      return {
+        label: "Tidak Hadir (No-Show)",
+        bg: "bg-red-50 text-red-900 border-red-300 ring-red-500/20",
+        dot: "bg-red-600",
+        iconName: "XCircle",
+      };
+    case "EXPIRED":
+      return {
+        label: "Kadaluwarsa",
+        bg: "bg-zinc-100 text-zinc-700 border-zinc-300 ring-zinc-400/20",
+        dot: "bg-zinc-500",
+        iconName: "Ban",
+      };
     default:
       return {
         label: String(status || "Status"),

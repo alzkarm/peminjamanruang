@@ -16,6 +16,8 @@ import { RolesGuard } from '@/common/guards/roles.guard';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { Role } from '@/common/types';
 
+import { CurrentUser } from '@/common/decorators/current-user.decorator';
+
 @Controller('rooms')
 export class RoomsController {
   constructor(private readonly roomsService: RoomsService) {}
@@ -60,6 +62,57 @@ export class RoomsController {
   async getRecentSubmissions(@Query('limit') limit?: string) {
     const parsedLimit = limit ? Math.min(Math.max(parseInt(limit, 10) || 5, 1), 20) : 5;
     return this.roomsService.getRecentSubmissions(parsedLimit);
+  }
+
+  @Post('smart-search')
+  async smartSearch(
+    @Body()
+    body: {
+      date: string;
+      startTime: string;
+      endTime: string;
+      minCapacity?: number;
+      facilities?: string[];
+      building?: string;
+    },
+  ) {
+    return this.roomsService.smartSearch(body);
+  }
+
+  @Get('maintenance/list')
+  async getMaintenances() {
+    return this.roomsService.getMaintenances();
+  }
+
+  @Post('maintenance')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.SUPERADMIN, Role.ADMIN_UNIV, Role.ADMIN_LPF, Role.ADMIN_YAYASAN)
+  async createMaintenance(
+    @CurrentUser() currentUser: { fullName: string },
+    @Body()
+    body: {
+      roomId: string;
+      title: string;
+      description?: string;
+      startTime: string;
+      endTime: string;
+    },
+  ) {
+    return this.roomsService.createMaintenance({
+      roomId: body.roomId,
+      title: body.title,
+      description: body.description,
+      startTime: new Date(body.startTime),
+      endTime: new Date(body.endTime),
+      createdBy: currentUser?.fullName || 'Petugas LPF',
+    });
+  }
+
+  @Delete('maintenance/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.SUPERADMIN, Role.ADMIN_UNIV, Role.ADMIN_LPF, Role.ADMIN_YAYASAN)
+  async removeMaintenance(@Param('id') id: string) {
+    return this.roomsService.removeMaintenance(id);
   }
 
   @Get(':id')

@@ -26,6 +26,9 @@ enum BookingStatus {
   REJECTED
   RETURNED
   CANCELED
+  EXPIRED
+  RESCHEDULE_PENDING
+  NO_SHOW
 }
 
 enum ActivityType {
@@ -56,6 +59,7 @@ model User {
   approvals   ApprovalLog[]
   feedbacks   Feedback[]
   cbtBookings CbtSeatBooking[]
+  penalties   UserPenalty[]
 
   @@map("users")
 }
@@ -80,8 +84,9 @@ model Room {
   isActive      Boolean  @default(true)
   createdAt     DateTime @default(now()) @db.Timestamptz(3)
 
-  floor    Floor     @relation(fields: [floorId], references: [id])
-  bookings Booking[]
+  floor        Floor             @relation(fields: [floorId], references: [id])
+  bookings     Booking[]
+  maintenances RoomMaintenance[]
 
   @@index([name])
   @@map("rooms")
@@ -101,17 +106,22 @@ model Booking {
   notes                String?
   attachmentUrl        String?
   dokumenUrl           String?
+  passToken            String?       @unique @map("pass_token")
   isLeaderApproved     Boolean       @default(false)
   isAcademicBulk       Boolean       @default(false)
   bulkGroupId          String?
+  rescheduleReason     String?
+  originalSchedule     String?
   createdAt            DateTime      @default(now()) @db.Timestamptz(3)
   updatedAt            DateTime      @updatedAt @db.Timestamptz(3)
 
-  user         User              @relation(fields: [userId], references: [id])
-  room         Room              @relation(fields: [roomId], references: [id])
-  logistik     BookingLogistik[]
-  approvalLogs ApprovalLog[]
-  feedback     Feedback?
+  user               User                    @relation(fields: [userId], references: [id])
+  room               Room                    @relation(fields: [roomId], references: [id])
+  logistik           BookingLogistik[]
+  approvalLogs       ApprovalLog[]
+  feedback           Feedback?
+  readinessChecklist RoomReadinessChecklist?
+  penalties          UserPenalty[]
 
   @@index([roomId, startTime, endTime])
   @@index([status, startTime, endTime])
@@ -163,6 +173,22 @@ model Feedback {
   user    User    @relation(fields: [userId], references: [id])
 
   @@map("feedbacks")
+}
+
+model RoomReadinessChecklist {
+  id                 String   @id @default(uuid()) @db.Uuid
+  bookingId          String   @unique @db.Uuid
+  isAcReady          Boolean  @default(false)
+  isAudioReady       Boolean  @default(false)
+  isLogisticsReady   Boolean  @default(false)
+  isCleanlinessReady Boolean  @default(false)
+  checkedBy          String?
+  notes              String?
+  updatedAt          DateTime @updatedAt @db.Timestamptz(3)
+
+  booking            Booking  @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+
+  @@map("room_readiness_checklists")
 }
 
 enum CbtRoomType {
@@ -238,5 +264,39 @@ model Facility {
   updatedAt   DateTime @updatedAt @db.Timestamptz(3)
 
   @@map("facilities")
+}
+
+model RoomMaintenance {
+  id          String   @id @default(uuid()) @db.Uuid
+  roomId      String   @db.Uuid
+  title       String
+  description String?
+  startTime   DateTime @db.Timestamptz(3)
+  endTime     DateTime @db.Timestamptz(3)
+  createdBy   String
+  createdAt   DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt   DateTime @updatedAt @db.Timestamptz(3)
+
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  @@index([roomId, startTime, endTime])
+  @@map("room_maintenances")
+}
+
+model UserPenalty {
+  id               String   @id @default(uuid()) @db.Uuid
+  userId           String   @db.Uuid
+  reason           String
+  bookingId        String?  @db.Uuid
+  penaltyPoints    Int      @default(1)
+  coolingDownUntil DateTime @db.Timestamptz(3)
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now()) @db.Timestamptz(3)
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  booking Booking? @relation(fields: [bookingId], references: [id], onDelete: SetNull)
+
+  @@index([userId, isActive])
+  @@map("user_penalties")
 }
 

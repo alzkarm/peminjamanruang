@@ -14,6 +14,7 @@ import {
   CalendarDays,
   Monitor,
   PackageCheck,
+  Wrench,
 } from 'lucide-react';
 
 import { countUniqueBookingApplications } from '@/lib/utils';
@@ -96,6 +97,24 @@ export function AdminSidebar() {
       label: 'Jadwal Akademik',
       description: 'Kelola penggunaan ruang semester',
       icon: GraduationCap,
+    });
+  }
+
+  // Agenda Hari Ini (Run-Sheet Operasional)
+  navItems.push({
+    href: '/admin/runsheet',
+    label: 'Agenda Hari Ini (Run-Sheet)',
+    description: 'Checklist kesiapan ruangan & logistik',
+    icon: PackageCheck,
+  });
+
+  // Pemeliharaan Ruang (Maintenance Scheduler - Task 2.3)
+  if (isSuperadmin || isAdminLPF || isAdminUmum) {
+    navItems.push({
+      href: '/admin/maintenance',
+      label: 'Pemeliharaan Ruang',
+      description: 'Jadwal perbaikan & blokir reservasi',
+      icon: Wrench,
     });
   }
 

@@ -22,6 +22,9 @@ export type BookingStatus =
   | 'RETURNED'
   | 'CANCELLED'
   | 'ACADEMIC_BLOCKED'
+  | 'EXPIRED'
+  | 'RESCHEDULE_PENDING'
+  | 'NO_SHOW'
   | 'COMPLETED';
 
 export interface Faculty {
@@ -124,6 +127,18 @@ export interface BookingLogistikItem {
   catatan?: string;
 }
 
+export interface RoomReadinessChecklist {
+  id?: string;
+  bookingId: string;
+  isAcReady: boolean;
+  isAudioReady: boolean;
+  isLogisticsReady: boolean;
+  isCleanlinessReady: boolean;
+  checkedBy?: string;
+  notes?: string;
+  updatedAt?: string;
+}
+
 export interface ApprovalLogEntry {
   id: string;
   approverId: string;
@@ -181,8 +196,13 @@ export interface Booking {
   catatan?: string;
   approvalLogs?: ApprovalLogEntry[];
   qrCodeToken: string;
+  passToken?: string;
+  readinessChecklist?: RoomReadinessChecklist;
+  additionalFacilities?: string[];
   createdAt: string;
   feedbackSubmitted?: boolean;
+  rescheduleReason?: string;
+  originalSchedule?: string;
 }
 
 export interface Feedback {
@@ -283,6 +303,31 @@ export interface RecentSubmission {
   activityType: string;
   applicantName: string;
   unitName: string;
+  createdAt: string;
+}
+
+export interface RoomMaintenance {
+  id: string;
+  roomId: string;
+  roomName?: string;
+  building?: string;
+  floor?: number;
+  title: string;
+  description?: string;
+  startTime: string;
+  endTime: string;
+  createdBy: string;
+  createdAt?: string;
+}
+
+export interface UserPenalty {
+  id: string;
+  userId: string;
+  reason: string;
+  bookingId?: string;
+  penaltyPoints: number;
+  coolingDownUntil: string;
+  isActive: boolean;
   createdAt: string;
 }
 

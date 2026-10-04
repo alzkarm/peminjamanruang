@@ -26,6 +26,7 @@ import {
   LockKeyhole,
   Repeat,
 } from 'lucide-react';
+import { CalendarExportButtons } from '@/components/common/CalendarExportButtons';
 
 interface EventDetailModalProps {
   isOpen: boolean;
@@ -244,6 +245,11 @@ export function EventDetailModal({
             </p>
           </div>
         </div>
+
+        {/* Calendar Integration (Task 2.5) */}
+        {booking.status === 'APPROVED' && (
+          <CalendarExportButtons booking={booking} />
+        )}
 
         {/* Dedicated Recurring Information Box */}
         {isRecurringBooking(booking) && (

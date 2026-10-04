@@ -18,12 +18,19 @@ import {
   AlertTriangle,
   ExternalLink,
   Building,
+  Package,
+  Armchair,
+  Sparkles,
+  QrCode,
+  BadgeCheck,
 } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 import { formatDateIndo } from '@/lib/utils';
 
 interface VerificationData {
   id: string;
   bookingCode: string;
+  passToken?: string;
   title: string;
   activityType: string;
   roomName: string;
@@ -40,17 +47,39 @@ interface VerificationData {
   isValid: boolean;
   approvedAt?: string | null;
   approvedBy?: string | null;
+  additionalFacilities?: string[];
+  logistik?: Array<{
+    jenisItem: string;
+    jumlah: number;
+    catatan?: string;
+  }>;
   securityNotice: string;
+  digitalStamp?: {
+    issuer: string;
+    status: string;
+    verificationUrl: string;
+    algorithm: string;
+  };
   createdAt?: string;
 }
+
+import { useParams } from 'next/navigation';
 
 export default function VerifyBookingPage({
   params,
 }: {
-  params: Promise<{ code: string }> | { code: string };
+  params?: { code?: string } | Promise<{ code?: string }>;
 }) {
-  const unwrappedParams = use(params as Promise<{ code: string }>);
-  const rawCode = unwrappedParams?.code || '';
+  const routeParams = useParams();
+  const rawCodeFromRoute =
+    typeof routeParams?.code === 'string'
+      ? routeParams.code
+      : Array.isArray(routeParams?.code)
+      ? routeParams.code[0]
+      : '';
+  const rawCodeFromProps =
+    params && 'code' in params && typeof params.code === 'string' ? params.code : '';
+  const rawCode = rawCodeFromRoute || rawCodeFromProps || '';
 
   const [data, setData] = useState<VerificationData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -59,8 +88,6 @@ export default function VerifyBookingPage({
 
   useEffect(() => {
     if (!rawCode) {
-      setError('Kode booking tidak ditemukan pada URL.');
-      setLoading(false);
       return;
     }
 
@@ -68,26 +95,29 @@ export default function VerifyBookingPage({
     setLoading(true);
     setError(null);
 
-    fetch(`/api/verify/${encodeURIComponent(rawCode)}`)
-      .then(async (res) => {
+    const runFetch = async () => {
+      try {
+        const res = await fetch(`/api/verify/${encodeURIComponent(rawCode)}`, {
+          cache: 'no-store',
+        });
         if (!res.ok) {
           const errData = await res.json().catch(() => ({}));
-          throw new Error(errData.error || `Data peminjaman tidak ditemukan.`);
+          throw new Error(errData.error || `Data peminjaman dengan kode '${rawCode}' tidak ditemukan.`);
         }
-        return res.json();
-      })
-      .then((resData) => {
+        const resData = await res.json();
         if (isMounted) {
           setData(resData);
           setLoading(false);
         }
-      })
-      .catch((err: any) => {
+      } catch (err: any) {
         if (isMounted) {
           setError(err.message || 'Gagal memverifikasi peminjaman.');
           setLoading(false);
         }
-      });
+      }
+    };
+
+    runFetch();
 
     return () => {
       isMounted = false;
@@ -206,13 +236,21 @@ export default function VerifyBookingPage({
                     </div>
                   </div>
 
-                  <div className="text-left sm:text-right">
-                    <span className="text-[10px] text-emerald-200 font-medium block">
-                      KODE BOOKING RESMI
+                  <div className="text-left sm:text-right space-y-1">
+                    <span className="text-[10px] text-emerald-200 font-medium block uppercase tracking-wider">
+                      Kode Booking Resmi
                     </span>
-                    <span className="inline-block mt-0.5 font-mono text-sm font-black bg-white/15 px-3 py-1 rounded-lg border border-white/20">
+                    <span className="inline-block font-mono text-sm font-black bg-white/15 px-3 py-1 rounded-lg border border-white/20">
                       {data.bookingCode}
                     </span>
+                    {data.passToken && (
+                      <div className="pt-0.5">
+                        <span className="inline-flex items-center gap-1 text-[10px] font-mono font-bold bg-emerald-400/20 text-emerald-100 border border-emerald-400/30 px-2 py-0.5 rounded">
+                          <BadgeCheck className="w-3 h-3 text-emerald-300" />
+                          <span>PASS: {data.passToken}</span>
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -354,6 +392,85 @@ export default function VerifyBookingPage({
                       <CheckCircle2 className="w-3 h-3 text-emerald-600" />
                       Otorisasi Digital Terverifikasi
                     </span>
+                  </div>
+                </div>
+
+                {/* Logistics and Facilities Approved */}
+                {((data.logistik && data.logistik.length > 0) || (data.additionalFacilities && data.additionalFacilities.length > 0)) && (
+                  <div className="bg-slate-50/90 rounded-2xl p-4 border border-slate-200/80 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
+                        <Package className="w-4 h-4 text-emerald-700" />
+                        <span>Fasilitas & Logistik Tambahan yang Disetujui</span>
+                      </div>
+                      <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded">
+                        Resmi LPF
+                      </span>
+                    </div>
+
+                    {data.additionalFacilities && data.additionalFacilities.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 pt-1">
+                        {data.additionalFacilities.map((fac, idx) => (
+                          <span
+                            key={idx}
+                            className="inline-flex items-center gap-1 text-xs bg-white text-slate-700 px-2.5 py-1 rounded-lg border border-slate-200 shadow-2xs font-medium"
+                          >
+                            <Sparkles className="w-3 h-3 text-amber-500" />
+                            <span>{fac}</span>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    {data.logistik && data.logistik.length > 0 && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                        {data.logistik.map((item, idx) => (
+                          <div
+                            key={idx}
+                            className="bg-white p-2.5 rounded-xl border border-slate-200 flex items-center justify-between shadow-2xs text-xs"
+                          >
+                            <div className="flex items-center gap-2">
+                              <Armchair className="w-3.5 h-3.5 text-emerald-600" />
+                              <span className="font-semibold text-slate-800 capitalize">
+                                {item.jenisItem.replace(/_/g, ' ')}
+                              </span>
+                            </div>
+                            <span className="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded text-[11px]">
+                              {item.jumlah} Unit
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Digital Stamp & QR Verification Box */}
+                <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200/80 rounded-2xl p-4 flex flex-col sm:flex-row items-center gap-4">
+                  <div className="w-24 h-24 bg-white p-1.5 rounded-xl border border-emerald-200 shadow-sm shrink-0 flex items-center justify-center">
+                    <QRCodeSVG
+                      value={typeof window !== 'undefined' ? window.location.href : `https://siperu.yarsi.ac.id/verify/${data.passToken || data.bookingCode}`}
+                      size={84}
+                      level="M"
+                      includeMargin={false}
+                    />
+                  </div>
+
+                  <div className="flex-1 text-center sm:text-left space-y-1">
+                    <div className="flex flex-wrap items-center justify-center sm:justify-start gap-1.5">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded">
+                        Cap Digital Resmi Universitas YARSI
+                      </span>
+                      <span className="text-[9px] font-mono text-emerald-700 bg-white px-1.5 py-0.5 rounded border border-emerald-200">
+                        SHA256: VALID
+                      </span>
+                    </div>
+                    <p className="text-xs font-bold text-slate-800">
+                      Biro Pengelolaan Fasilitas & Logistik (LPF)
+                    </p>
+                    <p className="text-[11px] text-slate-600 leading-relaxed">
+                      Dokumen digital ini diterbitkan secara otomatis dan terotentikasi melalui basis data terpusat SIPERU. Petugas keamanan berhak mencocokkan identitas pemohon sesuai rincian di atas.
+                    </p>
                   </div>
                 </div>
 

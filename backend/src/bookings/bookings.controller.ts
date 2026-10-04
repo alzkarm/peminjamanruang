@@ -23,6 +23,7 @@ import {
 } from './dto/create-booking.dto';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { RolesGuard } from '@/common/guards/roles.guard';
+import { Roles } from '@/common/decorators/roles.decorator';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { Role } from '@/common/types';
 import { diskStorage } from 'multer';
@@ -104,6 +105,92 @@ export class BookingsController {
     @CurrentUser() currentUser: { id: string; role: Role },
   ) {
     return this.bookingsService.findAll(query, currentUser);
+  }
+
+  @Get('runsheet/daily')
+  @UseGuards(JwtAuthGuard)
+  async getDailyRunsheet(@Query('date') date?: string) {
+    return this.bookingsService.getDailyRunsheet(date);
+  }
+
+  @Patch('runsheet/:bookingId/toggle-check')
+  @UseGuards(JwtAuthGuard)
+  async toggleRunsheetCheck(
+    @Param('bookingId') bookingId: string,
+    @CurrentUser() currentUser: { fullName: string },
+    @Body()
+    body: {
+      item: 'ac' | 'audio' | 'logistics' | 'cleanliness';
+      value: boolean;
+      notes?: string;
+    },
+  ) {
+    return this.bookingsService.toggleRunsheetCheck(
+      bookingId,
+      currentUser,
+      body.item,
+      body.value,
+      body.notes,
+    );
+  }
+
+  @Post('cleanup-expired')
+  @UseGuards(JwtAuthGuard)
+  async cleanupExpired() {
+    return this.bookingsService.cleanupExpiredBookings();
+  }
+
+  @Post('detect-no-show')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.SUPERADMIN, Role.ADMIN_UNIV, Role.ADMIN_LPF, Role.ADMIN_UMUM)
+  async detectNoShow() {
+    return this.bookingsService.detectNoShowBookings();
+  }
+
+  @Get('penalties/my')
+  @UseGuards(JwtAuthGuard)
+  async getMyPenalties(@CurrentUser() currentUser: { id: string }) {
+    return this.bookingsService.getMyPenalties(currentUser.id);
+  }
+
+  @Get('penalties/all')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.SUPERADMIN, Role.ADMIN_UNIV, Role.ADMIN_LPF)
+  async getAllPenalties() {
+    return this.bookingsService.getAllPenalties();
+  }
+
+  @Patch('penalties/:id/revoke')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.SUPERADMIN, Role.ADMIN_UNIV, Role.ADMIN_LPF)
+  async revokePenalty(@Param('id') id: string) {
+    return this.bookingsService.revokePenalty(id);
+  }
+
+  @Post(':id/reschedule')
+  @UseGuards(JwtAuthGuard)
+  async requestReschedule(
+    @Param('id') id: string,
+    @CurrentUser() currentUser: { id: string; role: Role; fullName: string },
+    @Body()
+    dto: {
+      newDate: string;
+      newStartTime: string;
+      newEndTime: string;
+      reason: string;
+      newRoomId?: string;
+    },
+  ) {
+    return this.bookingsService.requestReschedule(id, currentUser, dto);
+  }
+
+  @Post(':id/check-in')
+  @UseGuards(JwtAuthGuard)
+  async checkIn(
+    @Param('id') id: string,
+    @CurrentUser() currentUser: { id: string; role: Role; fullName: string },
+  ) {
+    return this.bookingsService.checkInBooking(id, currentUser);
   }
 
   @Get(':id')

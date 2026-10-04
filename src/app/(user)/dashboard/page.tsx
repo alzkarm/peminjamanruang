@@ -38,7 +38,12 @@ import {
   CalendarRange,
   Loader2,
   ExternalLink,
+  CalendarClock,
+  AlertTriangle,
 } from 'lucide-react';
+import { bookingsApi } from '@/lib/api';
+import { RescheduleBookingModal } from '@/components/booking/RescheduleBookingModal';
+import { CalendarExportButtons } from '@/components/common/CalendarExportButtons';
 
 interface UserBookingGroup {
   groupId: string;
@@ -55,6 +60,8 @@ export default function UserDashboardPage() {
   const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState<string>('all');
   const [selectedTicket, setSelectedTicket] = useState<Booking | null>(null);
+  const [rescheduleTarget, setRescheduleTarget] = useState<Booking | null>(null);
+  const [activePenalties, setActivePenalties] = useState<any[]>([]);
   const [cancelTargetId, setCancelTargetId] = useState<string | null>(null);
   const [cancelReason, setCancelReason] = useState<string>('');
   const [expandedGroupIds, setExpandedGroupIds] = useState<string[]>([]);
@@ -62,10 +69,11 @@ export default function UserDashboardPage() {
   const [isDownloading, setIsDownloading] = useState<boolean>(false);
 
   const getTicketVerificationUrl = (booking: Booking) => {
+    const code = booking.passToken || booking.bookingCode || booking.id;
     if (typeof window !== 'undefined' && window.location?.origin) {
-      return `${window.location.origin}/verify/${booking.bookingCode}`;
+      return `${window.location.origin}/verify/${code}`;
     }
-    return `https://siperu.yarsi.ac.id/verify/${booking.bookingCode}`;
+    return `https://siperu.yarsi.ac.id/verify/${code}`;
   };
 
   const handleDownloadTicketImage = async () => {
@@ -92,6 +100,16 @@ export default function UserDashboardPage() {
     setMounted(true);
     fetchBookings().catch(() => undefined);
     fetchRooms().catch(() => undefined);
+
+    bookingsApi
+      .getMyPenalties()
+      .then((data) => {
+        if (Array.isArray(data)) {
+          const active = data.filter((p: any) => p.isActive && new Date(p.coolingDownUntil) > new Date());
+          setActivePenalties(active);
+        }
+      })
+      .catch(() => undefined);
   }, [fetchBookings, fetchRooms]);
 
   // Filter user's bookings (or all if admin)
@@ -357,6 +375,27 @@ export default function UserDashboardPage() {
         </div>
       </header>
 
+      {/* Active Penalty Warning Banner (Task 2.2) */}
+      {activePenalties.length > 0 && (
+        <div className="rounded-2xl border-2 border-rose-300 bg-rose-50 p-5 shadow-sm space-y-2">
+          <div className="flex items-center gap-2 text-rose-800 font-bold text-sm">
+            <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0" />
+            <span>Pemberitahuan Sanksi Cooling-Down (No-Show Ruangan)</span>
+          </div>
+          <p className="text-xs text-rose-700 leading-relaxed">
+            Akun Anda terdeteksi tidak hadir pada jadwal peminjaman yang telah disetujui sebelumnya tanpa melakukan pembatalan. Hak pengajuan peminjaman ruangan baru ditangguhkan sementara hingga{' '}
+            <span className="font-bold underline">
+              {new Date(activePenalties[0].coolingDownUntil).toLocaleDateString('id-ID', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+              })}
+            </span>
+            . Alasan: {activePenalties[0].reason}
+          </p>
+        </div>
+      )}
+
       {/* Upcoming Approved Booking Banner (If any) */}
       {upcomingBooking && (
         <div className="relative overflow-hidden rounded-[18px_4px_18px_18px] border-2 border-emerald-400 bg-gradient-to-r from-emerald-600 to-teal-700 p-6 text-white shadow-md">
@@ -619,6 +658,16 @@ export default function UserDashboardPage() {
                             <QrCode className="w-4 h-4" />
                             <span>Lihat E-Ticket & QR Akses</span>
                           </button>
+
+                          <button
+                            type="button"
+                            onClick={() => setRescheduleTarget(booking)}
+                            className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-xs border border-blue-200 transition-colors"
+                          >
+                            <CalendarClock className="w-3.5 h-3.5 text-blue-600" />
+                            <span>Ajukan Pindah Jadwal</span>
+                          </button>
+
                           <button
                             type="button"
                             onClick={() => setCancelTargetId(booking.id)}
@@ -663,7 +712,27 @@ export default function UserDashboardPage() {
                           </button>
 
                           {(booking.status === 'PENDING_LPF' ||
-                            booking.status === 'RECOMMENDED_YAYASAN') && (
+                            booking.status === 'RECOMMENDED_YAYASAN' ||
+                            (booking.status as string) === 'PENDING') && (
+                            <button
+                              type="button"
+                              onClick={() => setRescheduleTarget(booking)}
+                              className="w-full flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-xs border border-blue-200 transition-colors"
+                            >
+                              <CalendarClock className="w-3.5 h-3.5 text-blue-600" />
+                              <span>Pindah Jadwal</span>
+                            </button>
+                          )}
+
+                          {(booking.status as string) === 'RESCHEDULE_PENDING' && (
+                            <div className="p-2 rounded-xl bg-blue-50 border border-blue-200 text-blue-800 text-[11px] font-semibold text-center">
+                              Pindah jadwal sedang ditinjau LPF
+                            </div>
+                          )}
+
+                          {(booking.status === 'PENDING_LPF' ||
+                            booking.status === 'RECOMMENDED_YAYASAN' ||
+                            (booking.status as string) === 'PENDING') && (
                             <button
                               type="button"
                               onClick={() => setCancelTargetId(booking.id)}
@@ -750,8 +819,8 @@ export default function UserDashboardPage() {
                   <p className="text-xs text-slate-600 font-medium">
                     {selectedTicket.roomName}
                   </p>
-                  <p className="text-[11px] font-mono text-slate-400">
-                    Token: {selectedTicket.qrCodeToken}
+                  <p className="text-[11px] font-mono text-slate-500 font-semibold">
+                    {selectedTicket.passToken ? `Pass ID: ${selectedTicket.passToken}` : `Token: ${selectedTicket.qrCodeToken}`}
                   </p>
                 </div>
               </div>
@@ -769,6 +838,22 @@ export default function UserDashboardPage() {
                   <p className="font-bold text-white mt-0.5">{selectedTicket.userName}</p>
                   <p className="text-slate-300 text-[11px]">{selectedTicket.userNimNidn} • {selectedTicket.userOrganization}</p>
                 </div>
+
+                {selectedTicket.logistik && selectedTicket.logistik.length > 0 && (
+                  <div className="col-span-2 bg-white/10 p-3 rounded-xl backdrop-blur text-xs border border-white/15">
+                    <p className="text-emerald-200 text-[10px] font-bold uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
+                      <PackageCheck className="w-3.5 h-3.5 text-teal-300" />
+                      <span>Logistik Tambahan yang Disetujui:</span>
+                    </p>
+                    <div className="flex flex-wrap gap-1.5">
+                      {selectedTicket.logistik.map((l, idx) => (
+                        <span key={idx} className="bg-white/20 text-white text-[11px] px-2 py-0.5 rounded font-medium">
+                          {l.jenisItem.replace(/_/g, ' ')}: <strong className="text-amber-200">{l.jumlah} unit</strong>
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {isRecurringBooking(selectedTicket) && (
                   <div className="col-span-2 bg-white/15 p-3 rounded-xl backdrop-blur flex items-start sm:items-center gap-2.5 text-xs border border-white/20">
@@ -789,6 +874,9 @@ export default function UserDashboardPage() {
                 </span>
               </div>
             </div>
+
+            {/* Calendar Integration (Task 2.5) */}
+            <CalendarExportButtons booking={selectedTicket} />
 
             {/* Actions */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
@@ -879,6 +967,16 @@ export default function UserDashboardPage() {
             </div>
           </div>
         </Modal>
+      )}
+
+      {/* RESCHEDULE MODAL (Task 2.1) */}
+      {rescheduleTarget && (
+        <RescheduleBookingModal
+          booking={rescheduleTarget}
+          isOpen={!!rescheduleTarget}
+          onClose={() => setRescheduleTarget(null)}
+          onSuccess={() => fetchBookings().catch(() => undefined)}
+        />
       )}
     </div>
   );
