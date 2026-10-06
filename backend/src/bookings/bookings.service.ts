@@ -6,13 +6,14 @@ import {
   ForbiddenException,
   Logger,
 } from '@nestjs/common';
-import { randomUUID } from 'crypto';
+import { randomUUID, createHmac } from 'crypto';
 import { PrismaService } from '@/prisma/prisma.service';
 import {
   CreateBookingDto,
   UpdateBookingStatusDto,
   UpdateBatchStatusDto,
   QueryBookingDto,
+  RescheduleBookingDto,
 } from './dto/create-booking.dto';
 import { BookingStatus, Role } from '@/common/types';
 import { BookingStatus as PrismaBookingStatus } from '@prisma/client';
@@ -57,10 +58,13 @@ export class BookingsService {
       );
     }
 
-    const finalAttachmentUrl = dto.dokumenUrl || uploadedAttachmentUrl;
+    // Abaikan URL lampiran dari client: hanya file yang benar-benar diunggah lewat
+    // endpoint ini yang boleh disimpan. Kalau tidak, penyerang bisa menyimpan URL
+    // lampiran milik booking lain (IDOR) sebagai "dokumenUrl".
+    const finalAttachmentUrl = uploadedAttachmentUrl;
     const finalNotes = dto.notes || dto.catatan;
-
     const dates = dto.dates && dto.dates.length > 0 ? dto.dates : [null];
+
     const isMultiple = dates.length > 1;
     const isRecurring =
       isMultiple ||
@@ -184,6 +188,16 @@ export class BookingsService {
       const userRole = currentUser.role as Role;
 
       // Access Isolation enforcement for status updates:
+      const isAdminRole =
+        userRole === Role.SUPERADMIN ||
+        userRole === Role.ADMIN_UMUM ||
+        userRole === Role.ADMIN_LPF ||
+        userRole === Role.YAYASAN ||
+        userRole === Role.ADMIN_UNIV ||
+        userRole === Role.ADMIN_YAYASAN;
+      if (!isAdminRole && booking.userId !== currentUser.id) {
+        throw new ForbiddenException('Anda tidak berhak mengubah status peminjaman milik pengguna lain.');
+      }
       if (userRole === Role.ADMIN_UMUM && isYayasan) {
         throw new ForbiddenException('Admin Umum tidak berwenang mengelola permohonan ruangan khusus Yayasan.');
       }
@@ -855,11 +869,28 @@ export class BookingsService {
    */
   async toggleRunsheetCheck(
     bookingId: string,
-    currentUser: { fullName?: string },
+    currentUser: { id: string; role: Role; fullName?: string },
     item: 'ac' | 'audio' | 'logistics' | 'cleanliness',
     value: boolean,
     notes?: string,
   ) {
+    const booking = await this.prisma.booking.findUnique({
+      where: { id: bookingId },
+    });
+    if (!booking) {
+      throw new NotFoundException('Data peminjaman tidak ditemukan.');
+    }
+    const operationalRoles: Role[] = [
+      Role.SUPERADMIN,
+      Role.ADMIN_UMUM,
+      Role.ADMIN_LPF,
+      Role.ADMIN_UNIV,
+      Role.ADMIN_YAYASAN,
+      Role.YAYASAN,
+    ];
+    if (booking.userId !== currentUser.id && !operationalRoles.includes(currentUser.role)) {
+      throw new ForbiddenException('Anda tidak berhak mengubah checklist kesiapan peminjaman milik pengguna lain.');
+    }
     const fieldMap: Record<string, string> = {
       ac: 'isAcReady',
       audio: 'isAudioReady',
@@ -965,16 +996,20 @@ export class BookingsService {
   /**
    * Tokenized Signed Link for 1-Click Executive Approval (Task 1.4)
    */
-  generateQuickActionToken(bookingId: string, action: 'APPROVE' | 'REJECT'): string {
+  generateQuickActionToken(bookingId: string, action: 'APPROVE' | 'REJECT', approverId: string): string {
+    if (!approverId) {
+      throw new ForbiddenException('Identitas penyetuju wajib ada untuk membuat tautan persetujuan cepat.');
+    }
     const payload = {
       bookingId,
       action,
+      approverId,
       exp: Date.now() + 48 * 3600 * 1000, // 48 jam
     };
     const jsonStr = JSON.stringify(payload);
     const b64Payload = Buffer.from(jsonStr).toString('base64url');
     const secret = process.env.JWT_SECRET || 'siperu-yarsi-secret-2026';
-    const hmac = require('crypto').createHmac('sha256', secret);
+    const hmac = createHmac('sha256', secret);
     hmac.update(b64Payload);
     const sig = hmac.digest('base64url');
     return `${b64Payload}.${sig}`;
@@ -987,7 +1022,7 @@ export class BookingsService {
 
     const [b64Payload, sig] = token.split('.');
     const secret = process.env.JWT_SECRET || 'siperu-yarsi-secret-2026';
-    const hmac = require('crypto').createHmac('sha256', secret);
+    const hmac = createHmac('sha256', secret);
     hmac.update(b64Payload);
     const expectedSig = hmac.digest('base64url');
 
@@ -995,12 +1030,21 @@ export class BookingsService {
       throw new ForbiddenException('Tanda tangan digital token tidak cocok atau telah dimanipulasi.');
     }
 
-    const payload = JSON.parse(Buffer.from(b64Payload, 'base64url').toString('utf8'));
-    if (Date.now() > payload.exp) {
+    const payload = JSON.parse(Buffer.from(b64Payload, 'base64url').toString('utf8')) as {
+      bookingId?: unknown;
+      action?: unknown;
+      approverId?: unknown;
+      exp?: unknown;
+    };
+    if (typeof payload.exp !== 'number' || Date.now() > payload.exp) {
       throw new BadRequestException('Tautan persetujuan cepat telah kadaluarsa (melebihi 48 jam).');
     }
 
-    const { bookingId, action } = payload;
+    if (typeof payload.bookingId !== 'string' || typeof payload.approverId !== 'string') {
+      throw new BadRequestException('Token persetujuan cepat tidak memuat identitas penyetuju.');
+    }
+    const bookingId: string = payload.bookingId;
+    const action = payload.action === 'REJECT' ? 'REJECT' : 'APPROVE';
     const booking = await this.prisma.booking.findUnique({
       where: { id: bookingId },
       include: { room: true, user: true },
@@ -1028,8 +1072,15 @@ export class BookingsService {
       };
     }
 
+    const approver = await this.prisma.user.findUnique({ where: { id: payload.approverId } });
+    if (!approver) {
+      throw new ForbiddenException('Penyetuju pada tautan ini tidak lagi terdaftar.');
+    }
+
     const targetStatus = action === 'APPROVE' ? PrismaBookingStatus.APPROVED : PrismaBookingStatus.REJECTED;
-    const passToken = (booking as any).passToken || (targetStatus === PrismaBookingStatus.APPROVED ? `PASS-${randomUUID().replace(/-/g, '').slice(0, 12).toUpperCase()}` : undefined);
+    const existingPassToken: string | undefined =
+      'passToken' in booking && typeof booking.passToken === 'string' ? booking.passToken : undefined;
+    const passToken = existingPassToken || (targetStatus === PrismaBookingStatus.APPROVED ? `PASS-${randomUUID().replace(/-/g, '').slice(0, 12).toUpperCase()}` : undefined);
 
     const updated = await this.prisma.booking.update({
       where: { id: bookingId },
@@ -1042,7 +1093,7 @@ export class BookingsService {
     await this.prisma.approvalLog.create({
       data: {
         bookingId: booking.id,
-        approverId: booking.userId,
+        approverId: approver.id,
         fromStatus: booking.status,
         toStatus: targetStatus,
         notes: `Tindakan dieksekusi secara instan melalui Tautan Resmi Persetujuan Cepat Pimpinan Yayasan YARSI (${action === 'APPROVE' ? 'Disetujui' : 'Ditolak'}).`,
@@ -1056,7 +1107,7 @@ export class BookingsService {
       roomName: booking.room.name,
       applicantName: booking.user.fullName,
       status: targetStatus,
-      passToken: passToken || (booking as any).passToken,
+      passToken: passToken || existingPassToken,
       message: action === 'APPROVE'
         ? 'Permohonan peminjaman berhasil DISETUJUI secara resmi oleh Pimpinan Yayasan.'
         : 'Permohonan peminjaman berhasil DITOLAK.',
@@ -1069,13 +1120,7 @@ export class BookingsService {
   async requestReschedule(
     bookingId: string,
     currentUser: { id: string; role: string; fullName: string },
-    dto: {
-      newDate: string;
-      newStartTime: string;
-      newEndTime: string;
-      reason: string;
-      newRoomId?: string;
-    },
+    dto: RescheduleBookingDto,
   ) {
     const booking = await this.prisma.booking.findUnique({
       where: { id: bookingId },
@@ -1271,8 +1316,8 @@ export class BookingsService {
           const totalNoShow = await this.prisma.booking.count({
             where: {
               userId: b.userId,
-              status: 'NO_SHOW' as any,
-              createdAt: { gte: sixMonthsAgo },
+              status: PrismaBookingStatus.NO_SHOW,
+              startTime: { gte: sixMonthsAgo },
             },
           });
 

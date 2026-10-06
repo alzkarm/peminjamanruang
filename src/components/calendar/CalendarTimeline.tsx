@@ -416,13 +416,13 @@ export function CalendarTimeline({
   return (
     <div className="w-full min-w-0 space-y-4">
       {/* Top Header & Controls - Google Calendar Style */}
-      <div className="w-full bg-white p-3 sm:p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      <div className="w-full bg-white p-3 sm:p-4 rounded-2xl border border-slate-200 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-4 dark:bg-slate-900 dark:border-slate-700">
         {/* Left: Date Navigator & Ruangan Dropdown */}
         <div className="flex flex-wrap items-center gap-3 sm:gap-4">
           <button
             type="button"
             onClick={handleToday}
-            className="border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-semibold px-4 py-2 rounded-full transition-all shadow-xs"
+            className="border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-semibold px-4 py-2 rounded-full transition-all shadow-xs dark:border-slate-600 dark:hover:bg-slate-800/80 dark:text-slate-300"
           >
             Hari ini
           </button>
@@ -430,7 +430,7 @@ export function CalendarTimeline({
             <button
               type="button"
               onClick={handlePrev}
-              className="p-2 hover:bg-slate-100 rounded-full text-slate-600 transition-colors"
+              className="p-2 hover:bg-slate-100 rounded-full text-slate-600 transition-colors dark:hover:bg-slate-700/60 dark:text-slate-300"
               title={
                 activeViewMode === 'day'
                   ? 'Hari Sebelumnya'
@@ -444,7 +444,7 @@ export function CalendarTimeline({
             <button
               type="button"
               onClick={handleNext}
-              className="p-2 hover:bg-slate-100 rounded-full text-slate-600 transition-colors"
+              className="p-2 hover:bg-slate-100 rounded-full text-slate-600 transition-colors dark:hover:bg-slate-700/60 dark:text-slate-300"
               title={
                 activeViewMode === 'day'
                   ? 'Hari Berikutnya'
@@ -458,7 +458,7 @@ export function CalendarTimeline({
           </div>
 
           <div>
-            <h2 className="text-lg sm:text-xl font-semibold text-slate-800 tracking-tight">
+            <h2 className="text-lg sm:text-xl font-semibold text-slate-800 tracking-tight dark:text-slate-200">
               {activeViewMode === 'day' && formatDateIndo(currentDateStr)}
               {activeViewMode === 'week' &&
                 weekDates.length > 0 &&
@@ -466,7 +466,7 @@ export function CalendarTimeline({
               {activeViewMode === 'month' &&
                 `${MONTH_NAMES[currentMonthDate.getMonth()]} ${currentMonthDate.getFullYear()}`}
             </h2>
-            <p className="text-[11px] text-slate-500">
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">
               {selectedFloor === 'all'
                 ? `Semua Ruangan Kampus YARSI (${filteredRooms.length} Ruang)`
                 : `${formatFloorFilterLabel(selectedFloor)} (${filteredRooms.length} Ruang)`}
@@ -478,10 +478,10 @@ export function CalendarTimeline({
             <button
               type="button"
               onClick={() => setIsRoomDropdownOpen(!isRoomDropdownOpen)}
-              className="flex items-center gap-2 text-xs font-semibold bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-full px-4 py-2 text-slate-700 transition-colors shadow-2xs focus:outline-none focus:ring-2 focus:ring-emerald-600 cursor-pointer"
+              className="flex items-center gap-2 text-xs font-semibold bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-full px-4 py-2 text-slate-700 transition-colors shadow-2xs focus:outline-none focus:ring-2 focus:ring-emerald-600 cursor-pointer dark:bg-slate-800/60 dark:hover:bg-slate-700/60 dark:border-slate-700 dark:text-slate-300"
               aria-label="Pilih Ruangan"
             >
-              <Building2 className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+              <Building2 className="w-3.5 h-3.5 text-slate-500 shrink-0 dark:text-slate-400" />
               <span className="max-w-[130px] sm:max-w-[180px] truncate">
                 {selectedRoomObj
                   ? selectedRoomObj.code
@@ -496,7 +496,7 @@ export function CalendarTimeline({
             </button>
 
             {isRoomDropdownOpen && (
-              <div className="absolute left-0 mt-2 w-72 sm:w-84 bg-white rounded-2xl border border-slate-200 shadow-xl z-50 p-3">
+              <div className="absolute left-0 mt-2 w-72 sm:w-84 bg-white rounded-2xl border border-slate-200 shadow-xl z-50 p-3 dark:bg-slate-900 dark:border-slate-700">
                 {/* Search Bar inside Ruangan dropdown */}
                 <div className="relative mb-2">
                   <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -505,14 +505,14 @@ export function CalendarTimeline({
                     placeholder="Cari ruangan atau kode..."
                     value={searchRoom}
                     onChange={(e) => setSearchRoom(e.target.value)}
-                    className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl pl-8 pr-8 py-2 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-600"
+                    className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl pl-8 pr-8 py-2 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-600 dark:bg-slate-800/60 dark:border-slate-700 dark:text-slate-200"
                     autoFocus
                   />
                   {searchRoom && (
                     <button
                       type="button"
                       onClick={() => setSearchRoom('')}
-                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5"
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 dark:hover:text-slate-300"
                     >
                       <X className="w-3.5 h-3.5" />
                     </button>
@@ -520,7 +520,7 @@ export function CalendarTimeline({
                 </div>
 
                 {/* Options List */}
-                <div className="max-h-60 overflow-y-auto space-y-1 divide-y divide-slate-50 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-thumb]:rounded-full">
+                <div className="max-h-60 overflow-y-auto space-y-1 divide-y divide-slate-50 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-thumb]:rounded-full dark:divide-slate-800 dark:[&::-webkit-scrollbar-thumb]:bg-slate-700">
                   {/* Option: Semua Ruangan */}
                   <button
                     type="button"
@@ -530,8 +530,8 @@ export function CalendarTimeline({
                       setIsRoomDropdownOpen(false);
                     }}
                     className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left text-xs transition-colors cursor-pointer ${selectedRoomFilter === 'all'
-                      ? 'bg-emerald-50 text-emerald-900 font-bold'
-                      : 'text-slate-700 hover:bg-slate-50'
+                      ? 'bg-emerald-50 text-emerald-900 font-bold dark:bg-emerald-500/10 dark:text-emerald-200'
+                      : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/80'
                       }`}
                   >
                     <span>Semua Ruangan</span>
@@ -565,15 +565,15 @@ export function CalendarTimeline({
                             setIsRoomDropdownOpen(false);
                           }}
                           className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left text-xs transition-colors cursor-pointer ${isSelected
-                            ? 'bg-emerald-50 text-emerald-900 font-bold'
-                            : 'text-slate-700 hover:bg-slate-50'
+                            ? 'bg-emerald-50 text-emerald-900 font-bold dark:bg-emerald-500/10 dark:text-emerald-200'
+                            : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/80'
                             }`}
                         >
                           <div className="min-w-0 flex-1 pr-2">
                             <div className="flex items-center gap-1.5 min-w-0">
-                              <p className="truncate font-semibold text-slate-800">{r.name}</p>
+                              <p className="truncate font-semibold text-slate-800 dark:text-slate-200">{r.name}</p>
                               {r.code && (
-                                <span className="font-mono text-[10px] font-bold bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded border border-slate-200 shrink-0">
+                                <span className="font-mono text-[10px] font-bold bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded border border-slate-200 shrink-0 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">
                                   {r.code}
                                 </span>
                               )}
@@ -600,10 +600,10 @@ export function CalendarTimeline({
             <button
               type="button"
               onClick={() => setIsFloorDropdownOpen(!isFloorDropdownOpen)}
-              className="flex items-center gap-2 text-xs font-semibold bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-full px-4 py-2 text-slate-700 transition-colors shadow-2xs focus:outline-none focus:ring-2 focus:ring-emerald-600 cursor-pointer"
+              className="flex items-center gap-2 text-xs font-semibold bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-full px-4 py-2 text-slate-700 transition-colors shadow-2xs focus:outline-none focus:ring-2 focus:ring-emerald-600 cursor-pointer dark:bg-slate-800/60 dark:hover:bg-slate-700/60 dark:border-slate-700 dark:text-slate-300"
               aria-label="Pilih Lantai"
             >
-              <Rows3 className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+              <Rows3 className="w-3.5 h-3.5 text-slate-500 shrink-0 dark:text-slate-400" />
               <span className="max-w-[120px] truncate">
                 {selectedFloor === 'all'
                   ? 'Lantai'
@@ -616,7 +616,7 @@ export function CalendarTimeline({
             </button>
 
             {isFloorDropdownOpen && (
-              <div className="absolute left-0 mt-2 w-56 bg-white rounded-2xl border border-slate-200 shadow-xl z-50 p-2 max-h-72 overflow-y-auto space-y-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-thumb]:rounded-full">
+              <div className="absolute left-0 mt-2 w-56 bg-white rounded-2xl border border-slate-200 shadow-xl z-50 p-2 max-h-72 overflow-y-auto space-y-1 [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-thumb]:rounded-full dark:bg-slate-900 dark:border-slate-700 dark:[&::-webkit-scrollbar-thumb]:bg-slate-700">
                 {/* Option: Semua Lantai */}
                 <button
                   type="button"
@@ -625,8 +625,8 @@ export function CalendarTimeline({
                     setIsFloorDropdownOpen(false);
                   }}
                   className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left text-xs transition-colors cursor-pointer ${selectedFloor === 'all'
-                      ? 'bg-emerald-50 text-emerald-900 font-bold'
-                      : 'text-slate-700 hover:bg-slate-50'
+                      ? 'bg-emerald-50 text-emerald-900 font-bold dark:bg-emerald-500/10 dark:text-emerald-200'
+                      : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/80'
                     }`}
                 >
                   <div className="flex items-center gap-2">
@@ -660,12 +660,12 @@ export function CalendarTimeline({
                         setIsFloorDropdownOpen(false);
                       }}
                       className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-left text-xs transition-colors cursor-pointer ${isSelected
-                          ? 'bg-emerald-50 text-emerald-900 font-bold'
-                          : 'text-slate-700 hover:bg-slate-50'
+                          ? 'bg-emerald-50 text-emerald-900 font-bold dark:bg-emerald-500/10 dark:text-emerald-200'
+                          : 'text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/80'
                         }`}
                     >
                       <div className="flex items-center gap-2">
-                        <Rows3 className={`w-3.5 h-3.5 shrink-0 ${isSelected ? 'text-emerald-700' : 'text-slate-400'}`} />
+                        <Rows3 className={`w-3.5 h-3.5 shrink-0 ${isSelected ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-400'}`} />
                         <span>{formatFloorFilterLabel(fl)}</span>
                         <span className="text-[10px] text-slate-400">
                           ({roomCountOnFloor} ruang)
@@ -683,13 +683,13 @@ export function CalendarTimeline({
         </div>
 
         {/* Right: View Mode Toggle: Google Calendar Segmented Style */}
-        <div className="flex items-center bg-slate-100 p-1 rounded-full border border-slate-200 text-xs font-semibold">
+        <div className="flex items-center bg-slate-100 p-1 rounded-full border border-slate-200 text-xs font-semibold dark:bg-slate-800 dark:border-slate-700">
           <button
             type="button"
             onClick={() => setViewMode('day')}
             className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full transition-all duration-150 ${activeViewMode === 'day'
               ? 'bg-emerald-700 text-white shadow-xs font-bold'
-              : 'text-slate-600 hover:text-slate-900 hover:bg-white/70'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-white/70 dark:text-slate-300 dark:hover:text-slate-100 dark:hover:bg-slate-700/60'
               }`}
           >
             <Calendar className="w-3.5 h-3.5" />
@@ -700,7 +700,7 @@ export function CalendarTimeline({
             onClick={() => setViewMode('week')}
             className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full transition-all duration-150 ${activeViewMode === 'week'
               ? 'bg-emerald-700 text-white shadow-xs font-bold'
-              : 'text-slate-600 hover:text-slate-900 hover:bg-white/70'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-white/70 dark:text-slate-300 dark:hover:text-slate-100 dark:hover:bg-slate-700/60'
               }`}
           >
             <CalendarRange className="w-3.5 h-3.5" />
@@ -711,7 +711,7 @@ export function CalendarTimeline({
             onClick={() => setViewMode('month')}
             className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full transition-all duration-150 ${activeViewMode === 'month'
               ? 'bg-emerald-700 text-white shadow-xs font-bold'
-              : 'text-slate-600 hover:text-slate-900 hover:bg-white/70'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-white/70 dark:text-slate-300 dark:hover:text-slate-100 dark:hover:bg-slate-700/60'
               }`}
           >
             <CalendarDays className="w-3.5 h-3.5" />
@@ -721,7 +721,7 @@ export function CalendarTimeline({
       </div>
 
       {publicSchedule.error && (
-        <div role="alert" className="flex flex-col gap-3 rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-800 sm:flex-row sm:items-center sm:justify-between">
+        <div role="alert" className="flex flex-col gap-3 rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-800 sm:flex-row sm:items-center sm:justify-between dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-200">
           <span>Jadwal publik tidak dapat dimuat. Kalender menampilkan data terakhir jika tersedia.</span>
           <button type="button" onClick={publicSchedule.retry} className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-lg bg-rose-700 px-4 font-bold text-white hover:bg-rose-800">
             Coba Lagi
@@ -729,14 +729,14 @@ export function CalendarTimeline({
         </div>
       )}
       {publicSchedule.isLoading && publicSchedule.events.length === 0 && (
-        <div className="rounded-xl border border-emerald-100 bg-emerald-50/60 px-4 py-3 text-xs font-semibold text-emerald-800" role="status" aria-live="polite">
+        <div className="rounded-xl border border-emerald-100 bg-emerald-50/60 px-4 py-3 text-xs font-semibold text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-200" role="status" aria-live="polite">
           Memuat jadwal publik...
         </div>
       )}
 
       {/* Interactive Legend & Filter Toggles */}
       <div className="flex flex-wrap items-center gap-2 px-1 text-xs">
-        <span className="font-bold text-slate-700 mr-1 flex items-center gap-1">
+        <span className="font-bold text-slate-700 mr-1 flex items-center gap-1 dark:text-slate-300">
           <span>Keterangan & Filter:</span>
         </span>
 
@@ -745,14 +745,14 @@ export function CalendarTimeline({
           type="button"
           onClick={() => toggleStatus('approved')}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all shadow-2xs border cursor-pointer ${filterStatuses.approved
-            ? 'bg-emerald-50 border-emerald-300 text-emerald-900 ring-1 ring-emerald-500/30'
-            : 'bg-slate-100 border-slate-200 text-slate-400 opacity-60'
+            ? 'bg-emerald-50 border-emerald-300 text-emerald-900 ring-1 ring-emerald-500/30 dark:bg-emerald-500/10 dark:border-emerald-500/40 dark:text-emerald-200'
+            : 'bg-slate-100 border-slate-200 text-slate-400 opacity-60 dark:bg-slate-800 dark:border-slate-700'
             }`}
           title={filterStatuses.approved ? 'Status aktif. Klik untuk sembunyikan.' : 'Status nonaktif. Klik untuk tampilkan.'}
         >
           <span className={`w-3 h-3 rounded-full inline-block ${filterStatuses.approved ? 'bg-emerald-600' : 'bg-slate-300'}`} />
           <span>Disetujui / terjadwal</span>
-          {filterStatuses.approved && <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100/80 px-1.5 py-0.2 rounded-full">✓ Aktif</span>}
+          {filterStatuses.approved && <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100/80 px-1.5 py-0.2 rounded-full dark:text-emerald-300 dark:bg-emerald-500/15">✓ Aktif</span>}
         </button>
 
         {/* 2. Rekomendasi Yayasan */}
@@ -760,14 +760,14 @@ export function CalendarTimeline({
           type="button"
           onClick={() => toggleStatus('recommended')}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all shadow-2xs border cursor-pointer ${filterStatuses.recommended
-            ? 'bg-sky-50 border-sky-300 text-sky-900 ring-1 ring-sky-500/30'
-            : 'bg-slate-100 border-slate-200 text-slate-400 opacity-60'
+            ? 'bg-sky-50 border-sky-300 text-sky-900 ring-1 ring-sky-500/30 dark:bg-sky-500/10 dark:border-sky-500/40 dark:text-sky-200'
+            : 'bg-slate-100 border-slate-200 text-slate-400 opacity-60 dark:bg-slate-800 dark:border-slate-700'
             }`}
           title={filterStatuses.recommended ? 'Status aktif. Klik untuk sembunyikan.' : 'Status nonaktif. Klik untuk tampilkan.'}
         >
           <span className={`w-3 h-3 rounded-full inline-block ${filterStatuses.recommended ? 'bg-sky-500' : 'bg-slate-300'}`} />
           <span>Rekomendasi Yayasan</span>
-          {filterStatuses.recommended && <span className="text-[10px] font-bold text-sky-700 bg-sky-100/80 px-1.5 py-0.2 rounded-full">✓ Aktif</span>}
+          {filterStatuses.recommended && <span className="text-[10px] font-bold text-sky-700 bg-sky-100/80 px-1.5 py-0.2 rounded-full dark:text-sky-400 dark:bg-sky-500/15">✓ Aktif</span>}
         </button>
 
         {/* 3. Menunggu persetujuan */}
@@ -775,14 +775,14 @@ export function CalendarTimeline({
           type="button"
           onClick={() => toggleStatus('pending')}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all shadow-2xs border cursor-pointer ${filterStatuses.pending
-            ? 'bg-amber-50 border-amber-300 text-amber-900 ring-1 ring-amber-500/30'
-            : 'bg-slate-100 border-slate-200 text-slate-400 opacity-60'
+            ? 'bg-amber-50 border-amber-300 text-amber-900 ring-1 ring-amber-500/30 dark:bg-amber-500/10 dark:border-amber-500/40 dark:text-amber-200'
+            : 'bg-slate-100 border-slate-200 text-slate-400 opacity-60 dark:bg-slate-800 dark:border-slate-700'
             }`}
           title={filterStatuses.pending ? 'Status aktif. Klik untuk sembunyikan.' : 'Status nonaktif. Klik untuk tampilkan.'}
         >
           <span className={`w-3 h-3 rounded-full inline-block ${filterStatuses.pending ? 'bg-amber-400' : 'bg-slate-300'}`} />
           <span>Menunggu persetujuan</span>
-          {filterStatuses.pending && <span className="text-[10px] font-bold text-amber-700 bg-amber-100/80 px-1.5 py-0.2 rounded-full">✓ Aktif</span>}
+          {filterStatuses.pending && <span className="text-[10px] font-bold text-amber-700 bg-amber-100/80 px-1.5 py-0.2 rounded-full dark:text-amber-400 dark:bg-amber-500/15">✓ Aktif</span>}
         </button>
 
         {/* 4. Tersedia untuk dipinjam */}
@@ -790,38 +790,38 @@ export function CalendarTimeline({
           type="button"
           onClick={() => toggleStatus('available')}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all shadow-2xs border cursor-pointer ${filterStatuses.available
-            ? 'bg-emerald-50/70 border-emerald-300 text-emerald-900 ring-1 ring-emerald-500/30'
-            : 'bg-slate-100 border-slate-200 text-slate-400 opacity-60'
+            ? 'bg-emerald-50/70 border-emerald-300 text-emerald-900 ring-1 ring-emerald-500/30 dark:bg-emerald-500/10 dark:border-emerald-500/40 dark:text-emerald-200'
+            : 'bg-slate-100 border-slate-200 text-slate-400 opacity-60 dark:bg-slate-800 dark:border-slate-700'
             }`}
           title={filterStatuses.available ? 'Slot tersedia aktif. Klik untuk sembunyikan.' : 'Slot tersedia nonaktif. Klik untuk tampilkan.'}
         >
-          <span className={`w-3 h-3 rounded border border-dashed border-emerald-500 inline-block ${filterStatuses.available ? 'bg-emerald-100' : 'bg-slate-200'}`} />
+          <span className={`w-3 h-3 rounded border border-dashed border-emerald-500 inline-block ${filterStatuses.available ? 'bg-emerald-100 dark:bg-emerald-500/15' : 'bg-slate-200 dark:bg-slate-700'}`} />
           <span>Tersedia untuk dipinjam</span>
-          {filterStatuses.available && <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100/80 px-1.5 py-0.2 rounded-full">✓ Aktif</span>}
+          {filterStatuses.available && <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100/80 px-1.5 py-0.2 rounded-full dark:text-emerald-300 dark:bg-emerald-500/15">✓ Aktif</span>}
         </button>
       </div>
 
       {/* VIEW 1: DAY VIEW - GOOGLE CALENDAR STYLE */}
       {activeViewMode === 'day' && (
-        <div className="w-full min-w-0 rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+        <div className="w-full min-w-0 rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden dark:border-slate-700 dark:bg-slate-900">
           {/* Scrollable Container for Day View */}
-          <div ref={dayScrollRef} className="max-h-[600px] overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-slate-100 [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-slate-400">
+          <div ref={dayScrollRef} className="max-h-[600px] overflow-y-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-slate-100 [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-slate-400 dark:[&::-webkit-scrollbar-track]:bg-slate-800 dark:[&::-webkit-scrollbar-thumb]:bg-slate-700 dark:hover:[&::-webkit-scrollbar-thumb]:bg-slate-600">
             {/* Header Row: Timezone & Day Header */}
-            <div className="grid grid-cols-[72px_1fr] sm:grid-cols-[84px_1fr] border-b border-slate-200 bg-white sticky top-0 z-20 shadow-xs">
-              <div className="p-3 text-[11px] font-semibold text-slate-400 border-r border-slate-200 flex items-center justify-center bg-white">
+            <div className="grid grid-cols-[72px_1fr] sm:grid-cols-[84px_1fr] border-b border-slate-200 bg-white sticky top-0 z-20 shadow-xs dark:border-slate-700 dark:bg-slate-900">
+              <div className="p-3 text-[11px] font-semibold text-slate-400 border-r border-slate-200 flex items-center justify-center bg-white dark:border-slate-700 dark:bg-slate-900">
                 WIB
               </div>
-              <div className="py-3 px-4 flex items-center gap-3 bg-white">
+              <div className="py-3 px-4 flex items-center gap-3 bg-white dark:bg-slate-900">
                 <div
                   className={`w-10 h-10 rounded-full flex items-center justify-center text-base font-bold shadow-xs ${currentDateStr === todayDateStr
                     ? 'bg-emerald-700 text-white'
-                    : 'bg-slate-100 text-slate-800'
+                    : 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200'
                     }`}
                 >
                   {new Date(`${currentDateStr}T00:00:00`).getDate()}
                 </div>
                 <div>
-                  <span className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                     {new Date(`${currentDateStr}T00:00:00`).toLocaleDateString('id-ID', { weekday: 'long' })}
                   </span>
                   <p className="text-xs text-slate-400">
@@ -832,7 +832,7 @@ export function CalendarTimeline({
             </div>
 
             {/* Timeline Grid */}
-            <div className="divide-y divide-slate-100 relative">
+            <div className="divide-y divide-slate-100 relative dark:divide-slate-800">
               {TIME_SLOTS.map((slot) => {
                 const nextH = getNextSlotTime(slot);
 
@@ -886,10 +886,10 @@ export function CalendarTimeline({
                 return (
                   <div
                     key={slot}
-                    className="grid grid-cols-[72px_1fr] sm:grid-cols-[84px_1fr] min-h-[56px] group hover:bg-slate-50/40 transition-colors"
+                    className="grid grid-cols-[72px_1fr] sm:grid-cols-[84px_1fr] min-h-[56px] group hover:bg-slate-50/40 transition-colors dark:hover:bg-slate-800/40"
                   >
                     {/* Left Time Axis */}
-                    <div className="p-2 border-r border-slate-200 bg-slate-50/50 flex items-start justify-center text-[11px] font-mono font-semibold text-slate-400">
+                    <div className="p-2 border-r border-slate-200 bg-slate-50/50 flex items-start justify-center text-[11px] font-mono font-semibold text-slate-400 dark:border-slate-700 dark:bg-slate-800/60">
                       {slot}
                     </div>
 
@@ -900,20 +900,20 @@ export function CalendarTimeline({
                           key={academic.id}
                           type="button"
                           onClick={() => handleOpenAcademic(academic)}
-                          className="flex-1 min-w-[240px] text-left p-2 rounded-r-lg border-l-4 border-purple-600 bg-purple-50 hover:bg-purple-100 text-purple-950 shadow-xs transition-colors"
+                          className="flex-1 min-w-[240px] text-left p-2 rounded-r-lg border-l-4 border-purple-600 bg-purple-50 hover:bg-purple-100 text-purple-950 shadow-xs transition-colors dark:bg-purple-500/20 dark:hover:bg-purple-500/30 dark:text-purple-200"
                         >
                           <div className="flex items-center justify-between">
-                            <p className="text-xs font-bold text-slate-900 line-clamp-1">
+                            <p className="text-xs font-bold text-slate-900 line-clamp-1 dark:text-slate-100">
                               {academic.roomName || 'Ruang Kuliah'}
                             </p>
-                            <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-purple-200 text-purple-900">
+                            <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-purple-200 text-purple-900 dark:bg-purple-500/20 dark:text-purple-200">
                               Kuliah
                             </span>
                           </div>
-                          <p className="text-[11px] text-purple-800 font-medium line-clamp-1">
+                          <p className="text-[11px] text-purple-800 font-medium line-clamp-1 dark:text-purple-200">
                             {academic.title}
                           </p>
-                          <span className="font-mono text-[10px] text-purple-600">
+                          <span className="font-mono text-[10px] text-purple-600 dark:text-purple-400">
                             {academic.startTime} - {academic.endTime}
                           </span>
                         </button>
@@ -931,14 +931,14 @@ export function CalendarTimeline({
                             type="button"
                             onClick={() => handleOpenBooking(booking)}
                             className={`flex-1 min-w-[240px] text-left p-2 rounded-r-lg border-l-4 shadow-xs transition-colors ${isApproved
-                              ? 'border-emerald-600 bg-emerald-50 hover:bg-emerald-100 text-emerald-950'
+                              ? 'border-emerald-600 bg-emerald-50 hover:bg-emerald-100 text-emerald-950 dark:bg-emerald-500/10 dark:hover:bg-emerald-500/20 dark:text-emerald-200'
                               : isRecommended
-                                ? 'border-sky-500 bg-sky-50 hover:bg-sky-100 text-sky-950'
-                                : 'border-amber-500 bg-amber-50 hover:bg-amber-100 text-amber-950'
+                                ? 'border-sky-500 bg-sky-50 hover:bg-sky-100 text-sky-950 dark:bg-sky-500/10 dark:hover:bg-sky-500/20 dark:text-sky-200'
+                                : 'border-amber-500 bg-amber-50 hover:bg-amber-100 text-amber-950 dark:bg-amber-500/10 dark:hover:bg-amber-500/20 dark:text-amber-200'
                               }`}
                           >
                             <div className="flex items-center justify-between">
-                              <p className="text-xs font-bold text-slate-900 line-clamp-1">
+                              <p className="text-xs font-bold text-slate-900 line-clamp-1 dark:text-slate-100">
                                 {(() => {
                                   const r = rooms.find((rm) => rm.id === booking.roomId);
                                   return r?.code ? `${booking.roomName || r.name} (${r.code})` : (booking.roomName || 'Ruangan Kampus');
@@ -946,10 +946,10 @@ export function CalendarTimeline({
                               </p>
                               <span
                                 className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${isApproved
-                                  ? 'bg-emerald-200 text-emerald-900'
+                                  ? 'bg-emerald-200 text-emerald-900 dark:bg-emerald-500/20 dark:text-emerald-200'
                                   : isRecommended
-                                    ? 'bg-sky-200 text-sky-900'
-                                    : 'bg-amber-200 text-amber-900'
+                                    ? 'bg-sky-200 text-sky-900 dark:bg-sky-500/20 dark:text-sky-200'
+                                    : 'bg-amber-200 text-amber-900 dark:bg-amber-500/20 dark:text-amber-200'
                                   }`}
                               >
                                 {isApproved
@@ -960,11 +960,11 @@ export function CalendarTimeline({
                               </span>
                             </div>
                             {booking.title && (
-                              <p className="text-[11px] text-slate-600 line-clamp-1">
+                              <p className="text-[11px] text-slate-600 line-clamp-1 dark:text-slate-300">
                                 {booking.title}
                               </p>
                             )}
-                            <span className="font-mono text-[10px] text-slate-500">
+                            <span className="font-mono text-[10px] text-slate-500 dark:text-slate-400">
                               {booking.startTime} - {booking.endTime}
                             </span>
                           </button>
@@ -978,7 +978,7 @@ export function CalendarTimeline({
                           onClick={(e) =>
                             handleSlotClick(e, '', '', currentDateStr, slot, nextH)
                           }
-                          className="h-9 px-3 rounded-lg border border-dashed border-slate-300 hover:border-emerald-500 hover:bg-emerald-50 text-slate-500 hover:text-emerald-700 flex items-center gap-1.5 text-xs font-medium transition-colors shadow-2xs whitespace-nowrap"
+                          className="h-9 px-3 rounded-lg border border-dashed border-slate-300 hover:border-emerald-500 hover:bg-emerald-50 text-slate-500 hover:text-emerald-700 flex items-center gap-1.5 text-xs font-medium transition-colors shadow-2xs whitespace-nowrap dark:border-slate-600 dark:hover:bg-emerald-500/10 dark:text-slate-400 dark:hover:text-emerald-300"
                           title={`Pinjam ruangan lain di jam ${slot} - ${nextH}`}
                         >
                           <Plus className="w-3.5 h-3.5 text-emerald-600" />
@@ -992,7 +992,7 @@ export function CalendarTimeline({
                           onClick={(e) =>
                             handleSlotClick(e, '', '', currentDateStr, slot, nextH)
                           }
-                          className="w-full h-full min-h-[40px] rounded-lg border border-dashed border-slate-300 hover:border-emerald-400 hover:bg-emerald-50/40 flex items-center px-3 text-[11px] text-slate-500 hover:text-emerald-700 transition-colors"
+                          className="w-full h-full min-h-[40px] rounded-lg border border-dashed border-slate-300 hover:border-emerald-400 hover:bg-emerald-50/40 flex items-center px-3 text-[11px] text-slate-500 hover:text-emerald-700 transition-colors dark:border-slate-600 dark:hover:bg-emerald-500/10 dark:text-slate-400 dark:hover:text-emerald-300"
                         >
                           <span className="w-2.5 h-2.5 rounded border border-dashed border-emerald-500 mr-2 shrink-0" />
                           <span className="font-medium">
@@ -1058,35 +1058,35 @@ export function CalendarTimeline({
               return (
                 <section
                   key={dayDateStr}
-                  className="overflow-hidden rounded-xl border border-slate-200 bg-white"
+                  className="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900"
                 >
                   <div
                     className={`flex items-center justify-between border-b px-4 py-3 ${dayDateStr === todayDateStr
-                      ? 'border-emerald-200 bg-emerald-50/70'
-                      : 'border-slate-100'
+                      ? 'border-emerald-200 bg-emerald-50/70 dark:border-emerald-500/30 dark:bg-emerald-500/10'
+                      : 'border-slate-100 dark:border-slate-800'
                       }`}
                   >
                     <div className="flex items-center gap-2.5">
                       <div
                         className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${dayDateStr === todayDateStr
                           ? 'bg-emerald-700 text-white'
-                          : 'bg-slate-100 text-slate-800'
+                          : 'bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200'
                           }`}
                       >
                         {new Date(`${dayDateStr}T00:00:00`).getDate()}
                       </div>
-                      <h3 className="text-xs font-bold text-slate-900">
+                      <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100">
                         {formatDateIndo(dayDateStr)}
                       </h3>
                     </div>
                     {dayDateStr === todayDateStr && (
-                      <span className="text-[10px] font-bold uppercase tracking-wide text-emerald-700">
+                      <span className="text-[10px] font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">
                         Hari ini
                       </span>
                     )}
                   </div>
                   {dayAgenda.length ? (
-                    <div className="divide-y divide-slate-100">
+                    <div className="divide-y divide-slate-100 dark:divide-slate-800">
                       {dayAgenda.map((entry) => (
                         <button
                           key={`${entry.kind}-${entry.item.id}`}
@@ -1096,9 +1096,9 @@ export function CalendarTimeline({
                               ? handleOpenBooking(entry.item)
                               : handleOpenAcademic(entry.item)
                           }
-                          className="flex min-h-14 w-full items-center gap-3 px-4 py-3 text-left hover:bg-slate-50"
+                          className="flex min-h-14 w-full items-center gap-3 px-4 py-3 text-left hover:bg-slate-50 dark:hover:bg-slate-800/80"
                         >
-                          <span className="w-[74px] shrink-0 font-mono text-xs font-bold text-slate-700">
+                          <span className="w-[74px] shrink-0 font-mono text-xs font-bold text-slate-700 dark:text-slate-300">
                             {entry.item.startTime}–{entry.item.endTime}
                           </span>
                           <span
@@ -1111,7 +1111,7 @@ export function CalendarTimeline({
                             aria-hidden="true"
                           />
                           <div className="min-w-0 flex-1">
-                            <span className="truncate text-xs font-bold text-slate-900 block">
+                            <span className="truncate text-xs font-bold text-slate-900 block dark:text-slate-100">
                               {(() => {
                                 if (entry.kind === 'booking') {
                                   const r = rooms.find((rm) => rm.id === entry.item.roomId);
@@ -1120,12 +1120,12 @@ export function CalendarTimeline({
                                 return entry.item.roomName;
                               })()}
                             </span>
-                            <span className="text-[10px] text-slate-500">
+                            <span className="text-[10px] text-slate-500 dark:text-slate-400">
                               {entry.item.title || 'Terjadwal'}
                             </span>
                           </div>
                           <ChevronRight
-                            className="h-4 w-4 shrink-0 text-slate-300"
+                            className="h-4 w-4 shrink-0 text-slate-300 dark:text-slate-600"
                             aria-hidden="true"
                           />
                         </button>
@@ -1142,18 +1142,18 @@ export function CalendarTimeline({
           </div>
 
           {/* Desktop Google Calendar Week Grid */}
-          <div className="hidden overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm md:block">
+          <div className="hidden overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm md:block dark:border-slate-700 dark:bg-slate-900">
             {/* Scrollable Container for Week View */}
-            <div ref={weekScrollRef} className="overflow-auto max-h-[600px] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-track]:bg-slate-100 [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-slate-400">
+            <div ref={weekScrollRef} className="overflow-auto max-h-[600px] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar]:h-2 [&::-webkit-scrollbar-track]:bg-slate-100 [&::-webkit-scrollbar-thumb]:bg-slate-300 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-slate-400 dark:[&::-webkit-scrollbar-track]:bg-slate-800 dark:[&::-webkit-scrollbar-thumb]:bg-slate-700 dark:hover:[&::-webkit-scrollbar-thumb]:bg-slate-600">
               <div className="min-w-[900px]">
                 {/* Header Row: 7 Days Google Calendar Style */}
                 <div
-                  className="grid border-b border-slate-200 bg-white sticky top-0 z-20 shadow-xs"
+                  className="grid border-b border-slate-200 bg-white sticky top-0 z-20 shadow-xs dark:border-slate-700 dark:bg-slate-900"
                   style={{
                     gridTemplateColumns: '72px repeat(7, minmax(110px, 1fr))',
                   }}
                 >
-                  <div className="p-3 font-semibold text-[11px] text-slate-400 border-r border-slate-200 flex items-center justify-center sticky left-0 top-0 bg-white z-30">
+                  <div className="p-3 font-semibold text-[11px] text-slate-400 border-r border-slate-200 flex items-center justify-center sticky left-0 top-0 bg-white z-30 dark:border-slate-700 dark:bg-slate-900">
                     WIB
                   </div>
                   {weekDates.map((dayDateStr) => {
@@ -1165,16 +1165,16 @@ export function CalendarTimeline({
                     return (
                       <div
                         key={dayDateStr}
-                        className={`p-2.5 text-center border-r border-slate-200 last:border-r-0 bg-white ${isToday ? 'bg-emerald-50/40' : ''
+                        className={`p-2.5 text-center border-r border-slate-200 last:border-r-0 bg-white dark:border-slate-700 dark:bg-slate-900 ${isToday ? 'bg-emerald-50/40 dark:bg-emerald-500/10' : ''
                           }`}
                       >
-                        <p className={`text-[11px] font-semibold uppercase tracking-wider ${isToday ? 'text-emerald-700 font-bold' : 'text-slate-500'}`}>
+                        <p className={`text-[11px] font-semibold uppercase tracking-wider ${isToday ? 'text-emerald-700 font-bold dark:text-emerald-300' : 'text-slate-500 dark:text-slate-400'}`}>
                           {dayAbbr}
                         </p>
                         <div
                           className={`w-8 h-8 rounded-full flex items-center justify-center text-sm mx-auto mt-0.5 ${isToday
                             ? 'bg-emerald-700 text-white font-bold shadow-xs'
-                            : 'text-slate-800 font-semibold hover:bg-slate-100'
+                            : 'text-slate-800 font-semibold hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-700/60'
                             }`}
                         >
                           {dayNum}
@@ -1185,7 +1185,7 @@ export function CalendarTimeline({
                 </div>
 
                 {/* Time Slot Rows for Week */}
-                <div className="divide-y divide-slate-100">
+                <div className="divide-y divide-slate-100 dark:divide-slate-800">
                   {TIME_SLOTS.map((slot) => {
                     const nextH = getNextSlotTime(slot);
 
@@ -1197,7 +1197,7 @@ export function CalendarTimeline({
                           gridTemplateColumns: '72px repeat(7, minmax(110px, 1fr))',
                         }}
                       >
-                        <div className="p-2 border-r border-slate-200 bg-slate-50/50 flex flex-col items-center justify-center text-[11px] font-mono font-semibold text-slate-400 sticky left-0 z-10">
+                        <div className="p-2 border-r border-slate-200 bg-slate-50/50 flex flex-col items-center justify-center text-[11px] font-mono font-semibold text-slate-400 sticky left-0 z-10 dark:border-slate-700 dark:bg-slate-800/60">
                           {slot}
                         </div>
 
@@ -1255,7 +1255,7 @@ export function CalendarTimeline({
                           return (
                             <div
                               key={dayDateStr}
-                              className="p-1 border-r border-slate-100 last:border-r-0 group hover:bg-slate-50/60 transition-colors flex flex-col justify-between"
+                              className="p-1 border-r border-slate-100 last:border-r-0 group hover:bg-slate-50/60 transition-colors flex flex-col justify-between dark:border-slate-800 dark:hover:bg-slate-800/60"
                             >
                               <div className="space-y-1 w-full">
                                 {academicList.map((academic) => (
@@ -1263,12 +1263,12 @@ export function CalendarTimeline({
                                     key={academic.id}
                                     type="button"
                                     onClick={() => handleOpenAcademic(academic)}
-                                    className="w-full p-1.5 text-left bg-purple-50 hover:bg-purple-100 border-l-[3px] border-purple-600 rounded-r-md text-purple-950 shadow-2xs block"
+                                    className="w-full p-1.5 text-left bg-purple-50 hover:bg-purple-100 border-l-[3px] border-purple-600 rounded-r-md text-purple-950 shadow-2xs block dark:bg-purple-500/20 dark:hover:bg-purple-500/30 dark:text-purple-200"
                                   >
                                     <p className="text-[10px] font-bold line-clamp-1">
                                       {academic.roomName || academic.title}
                                     </p>
-                                    <p className="text-[9px] text-purple-700 font-mono">
+                                    <p className="text-[9px] text-purple-700 font-mono dark:text-purple-400">
                                       {academic.startTime} - {academic.endTime}
                                     </p>
                                   </button>
@@ -1286,10 +1286,10 @@ export function CalendarTimeline({
                                       type="button"
                                       onClick={() => handleOpenBooking(booking)}
                                       className={`w-full p-1.5 text-left rounded-r-md border-l-[3px] shadow-2xs block transition-colors ${isApproved
-                                        ? 'border-emerald-600 bg-emerald-50 hover:bg-emerald-100 text-emerald-950'
+                                        ? 'border-emerald-600 bg-emerald-50 hover:bg-emerald-100 text-emerald-950 dark:bg-emerald-500/10 dark:hover:bg-emerald-500/20 dark:text-emerald-200'
                                         : isRecommended
-                                          ? 'border-sky-500 bg-sky-50 hover:bg-sky-100 text-sky-950'
-                                          : 'border-amber-500 bg-amber-50 hover:bg-amber-100 text-amber-950'
+                                          ? 'border-sky-500 bg-sky-50 hover:bg-sky-100 text-sky-950 dark:bg-sky-500/10 dark:hover:bg-sky-500/20 dark:text-sky-200'
+                                          : 'border-amber-500 bg-amber-50 hover:bg-amber-100 text-amber-950 dark:bg-amber-500/10 dark:hover:bg-amber-500/20 dark:text-amber-200'
                                         }`}
                                     >
                                       <p className="text-[10px] font-bold line-clamp-1">
@@ -1318,7 +1318,7 @@ export function CalendarTimeline({
                                     nextH,
                                   )
                                 }
-                                className={`w-full text-center py-1 rounded border border-dashed border-slate-200 hover:border-emerald-400 hover:bg-emerald-50/50 text-[9px] text-slate-400 hover:text-emerald-700 transition-colors block ${academicList.length > 0 || bookingList.length > 0
+                                className={`w-full text-center py-1 rounded border border-dashed border-slate-200 hover:border-emerald-400 hover:bg-emerald-50/50 text-[9px] text-slate-400 hover:text-emerald-700 transition-colors block dark:border-slate-700 dark:hover:bg-emerald-500/10 dark:hover:text-emerald-300 ${academicList.length > 0 || bookingList.length > 0
                                   ? 'mt-1 opacity-0 group-hover:opacity-100'
                                   : 'min-h-[44px] flex items-center justify-center'
                                   }`}

@@ -192,10 +192,10 @@ export default function AdminFacultiesPage() {
 
   if (!isSuperadmin) {
     return (
-      <div className="rounded-2xl border border-rose-200 bg-white p-8 text-center space-y-4">
-        <ShieldAlert className="h-12 w-12 text-rose-500 mx-auto" />
-        <h2 className="text-xl font-bold text-slate-800">Akses Dibatasi</h2>
-        <p className="text-xs text-slate-500 max-w-md mx-auto">
+      <div className="rounded-2xl border border-rose-200 dark:border-rose-500/30 bg-white dark:bg-slate-900 p-8 text-center space-y-4">
+        <ShieldAlert className="h-12 w-12 text-rose-500 dark:text-rose-400 mx-auto" />
+        <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">Akses Dibatasi</h2>
+        <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">
           Halaman Pengelolaan Master Fakultas hanya dapat diakses oleh akun dengan role <strong>Superadmin</strong>.
         </p>
       </div>
@@ -205,16 +205,16 @@ export default function AdminFacultiesPage() {
   return (
     <div className="space-y-6">
       {/* Top Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-[18px_4px_18px_18px] border border-slate-200/90 border-l-4 border-l-yarsi-primary bg-white p-6 shadow-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-[18px_4px_18px_18px] border border-slate-200/90 dark:border-slate-700 border-l-4 border-l-yarsi-primary bg-white dark:bg-slate-900 p-6 shadow-sm">
         <div>
-          <div className="mb-2 inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-yarsi-primary">
-            <GraduationCap className="w-4 h-4 text-yarsi-primary" />
+          <div className="mb-2 inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-yarsi-primary dark:text-emerald-400">
+            <GraduationCap className="w-4 h-4 text-yarsi-primary dark:text-emerald-400" />
             <span>Master Data Management · Superadmin</span>
           </div>
-          <h1 className="text-2xl font-black text-slate-900">
+          <h1 className="text-2xl font-black text-slate-900 dark:text-slate-100">
             Master Fakultas & Warna Denah CBT
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
             Kelola daftar fakultas, opsi dropdown peminjaman, serta palet warna indikator kursi pada Denah CBT Center A & B.
           </p>
         </div>
@@ -222,7 +222,7 @@ export default function AdminFacultiesPage() {
         <button
           type="button"
           onClick={openCreateModal}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs text-white bg-yarsi-primary hover:bg-yarsi-dark shadow-md shadow-emerald-900/20 transition-all self-start sm:self-center"
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs text-white bg-yarsi-primary dark:bg-emerald-600 hover:bg-yarsi-dark dark:hover:bg-emerald-500 shadow-md shadow-emerald-900/20 transition-all self-start sm:self-center"
         >
           <Plus className="w-4 h-4" />
           <span>Tambah Fakultas Baru</span>
@@ -234,22 +234,22 @@ export default function AdminFacultiesPage() {
         <div
           className={`flex items-center justify-between p-3.5 rounded-xl text-xs font-semibold ${
             notification.type === 'success'
-              ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-              : 'bg-rose-50 text-rose-800 border border-rose-200'
+              ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-800 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-500/30'
+              : 'bg-rose-50 dark:bg-rose-500/10 text-rose-800 dark:text-rose-200 border border-rose-200 dark:border-rose-500/30'
           }`}
         >
           <div className="flex items-center gap-2">
             {notification.type === 'success' ? (
-              <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+              <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
             ) : (
-              <XCircle className="h-4 w-4 text-rose-600 shrink-0" />
+              <XCircle className="h-4 w-4 text-rose-600 dark:text-rose-400 shrink-0" />
             )}
             <span>{notification.message}</span>
           </div>
           <button
             type="button"
             onClick={() => setNotification(null)}
-            className="text-slate-400 hover:text-slate-600"
+            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
           >
             <X className="h-4 w-4" />
           </button>
@@ -257,7 +257,7 @@ export default function AdminFacultiesPage() {
       )}
 
       {/* Search and Action Bar */}
-      <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 shadow-sm">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <input
@@ -265,14 +265,14 @@ export default function AdminFacultiesPage() {
             placeholder="Cari kode atau nama fakultas..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 rounded-lg border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-400"
+            className="w-full pl-9 pr-3 py-2 min-h-11 sm:min-h-0 rounded-lg border border-slate-200 dark:border-slate-700 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-400"
           />
         </div>
 
         <button
           type="button"
           onClick={fetchFaculties}
-          className="p-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors self-end sm:self-center"
+          className="p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors self-end sm:self-center"
           title="Muat ulang data"
         >
           <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
@@ -281,12 +281,12 @@ export default function AdminFacultiesPage() {
 
       {/* Faculties Cards Grid */}
       {isLoading ? (
-        <div className="py-16 text-center text-xs text-slate-400 rounded-xl border border-slate-200 bg-white">
-          <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2 text-emerald-600" />
+        <div className="py-16 text-center text-xs text-slate-400 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
+          <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2 text-emerald-600 dark:text-emerald-400" />
           Memuat data fakultas...
         </div>
       ) : filteredFaculties.length === 0 ? (
-        <div className="py-16 text-center text-xs text-slate-500 rounded-xl border border-slate-200 bg-white">
+        <div className="py-16 text-center text-xs text-slate-500 dark:text-slate-400 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900">
           <GraduationCap className="h-8 w-8 text-slate-300 mx-auto mb-2" />
           Tidak ada data fakultas yang sesuai.
         </div>
@@ -295,7 +295,7 @@ export default function AdminFacultiesPage() {
           {filteredFaculties.map((f) => (
             <div
               key={f.id}
-              className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between space-y-4"
+              className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between space-y-4"
             >
               <div>
                 <div className="flex items-center justify-between gap-2">
@@ -313,10 +313,10 @@ export default function AdminFacultiesPage() {
                   <button
                     type="button"
                     onClick={() => handleToggleActive(f)}
-                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                    className={`inline-flex min-h-11 items-center gap-1.5 px-3 py-2 rounded-full text-[11px] font-bold ${
                       f.isActive
-                        ? 'bg-emerald-100 text-emerald-800'
-                        : 'bg-slate-100 text-slate-500'
+                        ? 'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-800 dark:text-emerald-200'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
                     }`}
                   >
                     <Power className="h-3 w-3" />
@@ -324,13 +324,13 @@ export default function AdminFacultiesPage() {
                   </button>
                 </div>
 
-                <h3 className="font-bold text-slate-900 text-sm mt-3 leading-snug">
+                <h3 className="font-bold text-slate-900 dark:text-slate-100 text-sm mt-3 leading-snug">
                   {f.name}
                 </h3>
               </div>
 
               {/* Color swatches preview */}
-              <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
+              <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div
                     className="w-4 h-4 rounded-full shadow-inner"
@@ -354,7 +354,7 @@ export default function AdminFacultiesPage() {
                   <button
                     type="button"
                     onClick={() => openEditModal(f)}
-                    className="p-1.5 rounded-lg text-slate-500 hover:text-emerald-700 hover:bg-emerald-50 transition-colors"
+                    className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-slate-500 dark:text-slate-400 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-colors"
                     title="Edit Fakultas"
                   >
                     <Edit2 className="h-4 w-4" />
@@ -362,7 +362,7 @@ export default function AdminFacultiesPage() {
                   <button
                     type="button"
                     onClick={() => handleDelete(f)}
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                    className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors"
                     title="Hapus Fakultas"
                   >
                     <Trash2 className="h-4 w-4" />
@@ -377,17 +377,17 @@ export default function AdminFacultiesPage() {
       {/* Modal Tambah / Edit Fakultas */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fade-in">
-          <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div className="w-full max-w-lg rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
               <div className="flex items-center gap-2">
-                <div className="p-2 rounded-xl bg-emerald-50 text-emerald-700">
+                <div className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
                   <Palette className="h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-slate-900 leading-tight">
+                  <h3 className="font-bold text-slate-900 dark:text-slate-100 leading-tight">
                     {editingFaculty ? `Edit Fakultas: ${editingFaculty.code}` : 'Tambah Master Fakultas'}
                   </h3>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
                     Atur nama fakultas dan skema warna kartu denah CBT
                   </p>
                 </div>
@@ -395,17 +395,17 @@ export default function AdminFacultiesPage() {
               <button
                 type="button"
                 onClick={() => setIsModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 p-1"
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-1"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
             <form onSubmit={handleFormSubmit} className="space-y-4">
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="col-span-1">
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Kode Singkat <span className="text-rose-500">*</span>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Kode Singkat <span className="text-rose-500 dark:text-rose-400">*</span>
                   </label>
                   <input
                     type="text"
@@ -413,12 +413,12 @@ export default function AdminFacultiesPage() {
                     placeholder="e.g. FTI"
                     value={code}
                     onChange={(e) => setCode(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-mono font-bold uppercase focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                    className="w-full px-3 py-2 min-h-11 sm:min-h-0 rounded-xl border border-slate-300 dark:border-slate-700 text-xs font-mono font-bold uppercase focus:outline-none focus:ring-2 focus:ring-emerald-400"
                   />
                 </div>
-                <div className="col-span-2">
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Nama Fakultas Lengkap <span className="text-rose-500">*</span>
+                <div className="col-span-1 sm:col-span-2">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Nama Fakultas Lengkap <span className="text-rose-500 dark:text-rose-400">*</span>
                   </label>
                   <input
                     type="text"
@@ -426,14 +426,14 @@ export default function AdminFacultiesPage() {
                     placeholder="e.g. Fakultas Teknologi Informasi"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                    className="w-full px-3 py-2 min-h-11 sm:min-h-0 rounded-xl border border-slate-300 dark:border-slate-700 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-400"
                   />
                 </div>
               </div>
 
               {/* Color Preset Selector */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">
                   Pilih Preset Warna:
                 </label>
                 <div className="flex flex-wrap gap-1.5">
@@ -457,57 +457,57 @@ export default function AdminFacultiesPage() {
               </div>
 
               {/* Custom Color Pickers */}
-              <div className="grid grid-cols-3 gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700">
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-600 mb-1">Warna Background</label>
+                  <label className="block text-[10px] font-bold text-slate-600 dark:text-slate-300 mb-1">Warna Background</label>
                   <div className="flex items-center gap-2">
                     <input
                       type="color"
                       value={colorBg}
                       onChange={(e) => setColorBg(e.target.value)}
-                      className="w-8 h-8 rounded border border-slate-300 cursor-pointer"
+                      className="w-8 h-8 rounded border border-slate-300 dark:border-slate-700 cursor-pointer"
                     />
                     <input
                       type="text"
                       value={colorBg}
                       onChange={(e) => setColorBg(e.target.value)}
-                      className="w-full px-2 py-1 text-[10px] font-mono rounded border border-slate-300"
+                      className="w-full px-2 py-1 text-[10px] font-mono rounded border border-slate-300 dark:border-slate-700"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-600 mb-1">Warna Border</label>
+                  <label className="block text-[10px] font-bold text-slate-600 dark:text-slate-300 mb-1">Warna Border</label>
                   <div className="flex items-center gap-2">
                     <input
                       type="color"
                       value={colorBorder}
                       onChange={(e) => setColorBorder(e.target.value)}
-                      className="w-8 h-8 rounded border border-slate-300 cursor-pointer"
+                      className="w-8 h-8 rounded border border-slate-300 dark:border-slate-700 cursor-pointer"
                     />
                     <input
                       type="text"
                       value={colorBorder}
                       onChange={(e) => setColorBorder(e.target.value)}
-                      className="w-full px-2 py-1 text-[10px] font-mono rounded border border-slate-300"
+                      className="w-full px-2 py-1 text-[10px] font-mono rounded border border-slate-300 dark:border-slate-700"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-[10px] font-bold text-slate-600 mb-1">Warna Teks</label>
+                  <label className="block text-[10px] font-bold text-slate-600 dark:text-slate-300 mb-1">Warna Teks</label>
                   <div className="flex items-center gap-2">
                     <input
                       type="color"
                       value={colorText}
                       onChange={(e) => setColorText(e.target.value)}
-                      className="w-8 h-8 rounded border border-slate-300 cursor-pointer"
+                      className="w-8 h-8 rounded border border-slate-300 dark:border-slate-700 cursor-pointer"
                     />
                     <input
                       type="text"
                       value={colorText}
                       onChange={(e) => setColorText(e.target.value)}
-                      className="w-full px-2 py-1 text-[10px] font-mono rounded border border-slate-300"
+                      className="w-full px-2 py-1 text-[10px] font-mono rounded border border-slate-300 dark:border-slate-700"
                     />
                   </div>
                 </div>
@@ -515,10 +515,10 @@ export default function AdminFacultiesPage() {
 
               {/* Live Preview */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                   Preview Kursi Denah CBT:
                 </label>
-                <div className="p-3 rounded-xl border border-slate-200 bg-slate-100 flex items-center justify-center gap-3">
+                <div className="p-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 flex items-center justify-center gap-3">
                   <div
                     className="w-10 h-10 flex flex-col items-center justify-center rounded-md text-[9px] font-bold shadow-sm"
                     style={{
@@ -531,24 +531,24 @@ export default function AdminFacultiesPage() {
                     <span>197</span>
                   </div>
                   <div className="text-xs">
-                    <span className="font-bold text-slate-800">{name || 'Nama Fakultas'}</span>
-                    <span className="block text-[10px] text-slate-500 font-mono">Kode: {code || 'CODE'}</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-200">{name || 'Nama Fakultas'}</span>
+                    <span className="block text-[10px] text-slate-500 dark:text-slate-400 font-mono">Kode: {code || 'CODE'}</span>
                   </div>
                 </div>
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition-colors"
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/60 transition-colors"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white bg-yarsi-primary hover:bg-yarsi-dark shadow-sm transition-all disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white bg-yarsi-primary dark:bg-emerald-600 hover:bg-yarsi-dark dark:hover:bg-emerald-500 shadow-sm transition-all disabled:opacity-50"
                 >
                   {isSubmitting ? (
                     <>

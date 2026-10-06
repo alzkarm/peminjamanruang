@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
+import Script from 'next/script';
 import './globals.css';
 import { Navbar } from '@/components/common/Navbar';
 import { Footer } from '@/components/common/Footer';
@@ -30,8 +31,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="id" className={inter.variable}>
-      <body className="min-h-screen flex flex-col bg-slate-50 text-slate-900 font-sans">
+    <html lang="id" className={inter.variable} suppressHydrationWarning>
+      <body className="min-h-screen flex flex-col bg-slate-50 text-slate-900 font-sans dark:bg-[#0b1120] dark:text-slate-100">
+        <Script id="theme-init" strategy="beforeInteractive">
+          {`(function(){try{var t=localStorage.getItem('siperu-theme');var d=t==='dark'||(!t&&window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.classList.toggle('dark',!!d);document.documentElement.style.colorScheme=d?'dark':'light';}catch(e){}})();`}
+        </Script>
         <Navbar />
         <main className="flex-1">{children}</main>
         <Footer />

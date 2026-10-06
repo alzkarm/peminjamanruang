@@ -161,7 +161,7 @@ export default function VerifyBookingPage({
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col justify-between print:bg-white print:p-0">
+    <div className="min-h-screen bg-slate-50 text-slate-800 flex flex-col justify-between print:bg-white print:p-0 dark:bg-[#0b1120] dark:text-slate-200">
       {/* Top Banner Navigation (Hidden in Print) */}
       <header className="bg-yarsi-dark text-white border-b border-emerald-800/40 print:hidden">
         <div className="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
@@ -182,33 +182,33 @@ export default function VerifyBookingPage({
       {/* Main Content Area */}
       <main className="flex-1 max-w-3xl w-full mx-auto p-4 sm:p-6 lg:p-8">
         {loading ? (
-          <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-200/80 text-center space-y-4 my-8">
-            <div className="w-14 h-14 mx-auto rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center animate-spin">
-              <ShieldCheck className="w-7 h-7 text-emerald-600" />
+          <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-200/80 text-center space-y-4 my-8 dark:bg-slate-900 dark:border-slate-800">
+            <div className="w-14 h-14 mx-auto rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center animate-spin dark:bg-emerald-500/10 dark:border-emerald-500/30">
+              <ShieldCheck className="w-7 h-7 text-emerald-600 dark:text-emerald-400" />
             </div>
-            <h2 className="text-base font-bold text-slate-800">
+            <h2 className="text-base font-bold text-slate-800 dark:text-slate-200">
               Memverifikasi Keabsahan E-Ticket...
             </h2>
-            <p className="text-xs text-slate-500 max-w-sm mx-auto">
+            <p className="text-xs text-slate-500 max-w-sm mx-auto dark:text-slate-400">
               Menghubungkan ke basis data SIPERU Universitas YARSI untuk memvalidasi izin ruangan.
             </p>
           </div>
         ) : error || !data ? (
-          <div className="bg-white rounded-3xl p-8 shadow-sm border border-rose-200 text-center space-y-4 my-8">
-            <div className="w-16 h-16 mx-auto rounded-2xl bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-600">
+          <div className="bg-white rounded-3xl p-8 shadow-sm border border-rose-200 text-center space-y-4 my-8 dark:bg-slate-900 dark:border-rose-500/40">
+            <div className="w-16 h-16 mx-auto rounded-2xl bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-600 dark:bg-rose-500/10 dark:border-rose-500/40 dark:text-rose-400">
               <AlertTriangle className="w-8 h-8" />
             </div>
-            <h2 className="text-lg font-black text-rose-700">Data Peminjaman Tidak Valid</h2>
-            <p className="text-sm text-slate-600 max-w-md mx-auto">
+            <h2 className="text-lg font-black text-rose-700 dark:text-rose-400">Data Peminjaman Tidak Valid</h2>
+            <p className="text-sm text-slate-600 max-w-md mx-auto dark:text-slate-300">
               {error || 'Kode booking tidak terdaftar atau telah kadaluarsa.'}
             </p>
-            <div className="bg-rose-50/70 p-3 rounded-xl max-w-xs mx-auto border border-rose-100 font-mono text-xs text-rose-900 font-bold">
+            <div className="bg-rose-50/70 p-3 rounded-xl max-w-xs mx-auto border border-rose-100 font-mono text-xs text-rose-900 font-bold dark:bg-rose-500/10 dark:border-rose-500/40 dark:text-rose-200">
               KODE: {rawCode}
             </div>
             <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
               <Link
                 href="/"
-                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-yarsi-primary hover:bg-yarsi-dark text-white text-xs font-bold transition-all shadow-sm"
+                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-yarsi-primary hover:bg-yarsi-dark text-white text-xs font-bold transition-all shadow-sm dark:bg-emerald-600 dark:hover:bg-emerald-500"
               >
                 Halaman Utama SIPERU
               </Link>
@@ -217,7 +217,7 @@ export default function VerifyBookingPage({
         ) : (
           <div className="space-y-6">
             {/* Verification Card */}
-            <div className="bg-white rounded-3xl shadow-lg border border-slate-200/80 overflow-hidden print:shadow-none print:border-slate-300">
+            <div className="bg-white rounded-3xl shadow-lg border border-slate-200/80 overflow-hidden print:shadow-none print:border-slate-300 dark:bg-slate-900 dark:border-slate-800">
               
               {/* Card Header with YARSI Branding */}
               <div className="bg-gradient-to-r from-yarsi-dark via-yarsi-primary to-emerald-900 p-6 text-white relative">
@@ -256,7 +256,7 @@ export default function VerifyBookingPage({
               </div>
 
               {/* Status Banner */}
-              <div className="p-6 border-b border-slate-100 bg-slate-50/50">
+              <div className="p-6 border-b border-slate-100 bg-slate-50/50 dark:bg-slate-800/60 dark:border-slate-800">
                 {data.isValid ? (
                   <div className="flex items-center gap-3.5 p-4 rounded-2xl bg-emerald-500 text-white shadow-md shadow-emerald-500/20 border border-emerald-400">
                     <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
@@ -305,19 +305,19 @@ export default function VerifyBookingPage({
               {/* Booking Details Grid */}
               <div className="p-6 space-y-6">
                 {/* Event Name */}
-                <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200/80">
-                  <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 mb-1">
+                <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200/80 dark:bg-slate-800/70 dark:border-slate-700">
+                  <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 mb-1 dark:text-slate-400">
                     <FileCheck2 className="w-4 h-4 text-yarsi-primary" />
                     <span>Nama Kegiatan / Keperluan</span>
                   </div>
-                  <h3 className="text-base sm:text-lg font-bold text-slate-900 leading-snug">
+                  <h3 className="text-base sm:text-lg font-bold text-slate-900 leading-snug dark:text-slate-100">
                     {data.title}
                   </h3>
                   <div className="mt-2 flex flex-wrap items-center gap-2">
-                    <span className="inline-block text-[11px] font-bold text-emerald-800 bg-emerald-100 px-2.5 py-0.5 rounded-md uppercase tracking-wider">
+                    <span className="inline-block text-[11px] font-bold text-emerald-800 bg-emerald-100 px-2.5 py-0.5 rounded-md uppercase tracking-wider dark:bg-emerald-500/15 dark:text-emerald-200">
                       {data.activityType}
                     </span>
-                    <span className="text-xs text-slate-500">
+                    <span className="text-xs text-slate-500 dark:text-slate-400">
                       Ref ID: <span className="font-mono">{data.id.slice(0, 8)}</span>
                     </span>
                   </div>
@@ -326,30 +326,30 @@ export default function VerifyBookingPage({
                 {/* Grid 2 Columns for Room & Time */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Room Details */}
-                  <div className="bg-slate-50/80 rounded-2xl p-4 border border-slate-200/80 space-y-2">
-                    <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
+                  <div className="bg-slate-50/80 rounded-2xl p-4 border border-slate-200/80 space-y-2 dark:bg-slate-800/70 dark:border-slate-700">
+                    <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
                       <Building className="w-4 h-4 text-emerald-600" />
                       <span>Lokasi & Ruangan</span>
                     </div>
-                    <p className="text-base font-bold text-slate-900">
+                    <p className="text-base font-bold text-slate-900 dark:text-slate-100">
                       {data.roomName}
                     </p>
-                    <div className="flex items-center gap-1.5 text-xs text-slate-600">
+                    <div className="flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300">
                       <MapPin className="w-3.5 h-3.5 text-slate-400" />
                       <span>{data.building || 'Menara Utama YARSI'} • Lantai {data.floor}</span>
                     </div>
                   </div>
 
                   {/* Schedule Details */}
-                  <div className="bg-slate-50/80 rounded-2xl p-4 border border-slate-200/80 space-y-2">
-                    <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
+                  <div className="bg-slate-50/80 rounded-2xl p-4 border border-slate-200/80 space-y-2 dark:bg-slate-800/70 dark:border-slate-700">
+                    <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
                       <Calendar className="w-4 h-4 text-emerald-600" />
                       <span>Jadwal Penggunaan</span>
                     </div>
-                    <p className="text-base font-bold text-slate-900">
+                    <p className="text-base font-bold text-slate-900 dark:text-slate-100">
                       {formatDateIndo(data.date)}
                     </p>
-                    <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700">
+                    <div className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
                       <Clock className="w-3.5 h-3.5 text-emerald-600" />
                       <span>{data.startTime} - {data.endTime} WIB</span>
                     </div>
@@ -359,37 +359,37 @@ export default function VerifyBookingPage({
                 {/* Applicant & Approval Information */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Applicant Details */}
-                  <div className="bg-slate-50/80 rounded-2xl p-4 border border-slate-200/80 space-y-2">
-                    <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
+                  <div className="bg-slate-50/80 rounded-2xl p-4 border border-slate-200/80 space-y-2 dark:bg-slate-800/70 dark:border-slate-700">
+                    <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
                       <User className="w-4 h-4 text-emerald-600" />
                       <span>Penanggung Jawab / Pemohon</span>
                     </div>
-                    <p className="text-base font-bold text-slate-900">
+                    <p className="text-base font-bold text-slate-900 dark:text-slate-100">
                       {data.userName}
                     </p>
-                    <p className="text-xs text-slate-600">
+                    <p className="text-xs text-slate-600 dark:text-slate-300">
                       NPM / NIP: <span className="font-mono font-semibold">{data.userNimNidn}</span>
                     </p>
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
                       Unit / Fakultas: {data.userUnit}
                     </p>
                   </div>
 
                   {/* Approval Record */}
-                  <div className="bg-slate-50/80 rounded-2xl p-4 border border-slate-200/80 space-y-2">
-                    <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
+                  <div className="bg-slate-50/80 rounded-2xl p-4 border border-slate-200/80 space-y-2 dark:bg-slate-800/70 dark:border-slate-700">
+                    <div className="flex items-center gap-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
                       <ShieldCheck className="w-4 h-4 text-emerald-600" />
                       <span>Otorisasi & Persetujuan</span>
                     </div>
-                    <p className="text-sm font-bold text-slate-900">
+                    <p className="text-sm font-bold text-slate-900 dark:text-slate-100">
                       {data.approvedBy || 'Biro LPF Universitas YARSI'}
                     </p>
-                    <div className="text-xs text-slate-600">
+                    <div className="text-xs text-slate-600 dark:text-slate-300">
                       <span className="text-slate-400">Waktu ACC: </span>
                       <span className="font-semibold">{formatDateTimeIndo(data.approvedAt)}</span>
                     </div>
-                    <span className="inline-flex items-center gap-1 text-[11px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 font-medium">
-                      <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                    <span className="inline-flex items-center gap-1 text-[11px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 font-medium dark:text-emerald-300 dark:bg-emerald-500/10 dark:border-emerald-500/30">
+                      <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
                       Otorisasi Digital Terverifikasi
                     </span>
                   </div>
@@ -397,13 +397,13 @@ export default function VerifyBookingPage({
 
                 {/* Logistics and Facilities Approved */}
                 {((data.logistik && data.logistik.length > 0) || (data.additionalFacilities && data.additionalFacilities.length > 0)) && (
-                  <div className="bg-slate-50/90 rounded-2xl p-4 border border-slate-200/80 space-y-3">
+                  <div className="bg-slate-50/90 rounded-2xl p-4 border border-slate-200/80 space-y-3 dark:bg-slate-800/70 dark:border-slate-700">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2 text-xs font-bold text-slate-700">
+                      <div className="flex items-center gap-2 text-xs font-bold text-slate-700 dark:text-slate-300">
                         <Package className="w-4 h-4 text-emerald-700" />
                         <span>Fasilitas & Logistik Tambahan yang Disetujui</span>
                       </div>
-                      <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded">
+                      <span className="text-[10px] font-semibold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded dark:bg-emerald-500/15 dark:text-emerald-200">
                         Resmi LPF
                       </span>
                     </div>
@@ -413,7 +413,7 @@ export default function VerifyBookingPage({
                         {data.additionalFacilities.map((fac, idx) => (
                           <span
                             key={idx}
-                            className="inline-flex items-center gap-1 text-xs bg-white text-slate-700 px-2.5 py-1 rounded-lg border border-slate-200 shadow-2xs font-medium"
+                            className="inline-flex items-center gap-1 text-xs bg-white text-slate-700 px-2.5 py-1 rounded-lg border border-slate-200 shadow-2xs font-medium dark:bg-slate-900 dark:text-slate-300 dark:border-slate-700"
                           >
                             <Sparkles className="w-3 h-3 text-amber-500" />
                             <span>{fac}</span>
@@ -427,15 +427,15 @@ export default function VerifyBookingPage({
                         {data.logistik.map((item, idx) => (
                           <div
                             key={idx}
-                            className="bg-white p-2.5 rounded-xl border border-slate-200 flex items-center justify-between shadow-2xs text-xs"
-                          >
+className="bg-white p-2.5 rounded-xl border border-slate-200 flex items-center justify-between shadow-2xs text-xs dark:bg-slate-900 dark:border-slate-700"
+                            >
                             <div className="flex items-center gap-2">
                               <Armchair className="w-3.5 h-3.5 text-emerald-600" />
-                              <span className="font-semibold text-slate-800 capitalize">
+                              <span className="font-semibold text-slate-800 capitalize dark:text-slate-200">
                                 {item.jenisItem.replace(/_/g, ' ')}
                               </span>
                             </div>
-                            <span className="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded text-[11px]">
+                            <span className="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded text-[11px] dark:text-emerald-300 dark:bg-emerald-500/10">
                               {item.jumlah} Unit
                             </span>
                           </div>
@@ -446,8 +446,8 @@ export default function VerifyBookingPage({
                 )}
 
                 {/* Digital Stamp & QR Verification Box */}
-                <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200/80 rounded-2xl p-4 flex flex-col sm:flex-row items-center gap-4">
-                  <div className="w-24 h-24 bg-white p-1.5 rounded-xl border border-emerald-200 shadow-sm shrink-0 flex items-center justify-center">
+                <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200/80 rounded-2xl p-4 flex flex-col sm:flex-row items-center gap-4 dark:from-emerald-500/10 dark:to-teal-500/10 dark:border-emerald-500/30">
+                  <div className="w-24 h-24 bg-white p-1.5 rounded-xl border border-emerald-200 shadow-sm shrink-0 flex items-center justify-center dark:bg-slate-950 dark:border-emerald-500/30">
                     <QRCodeSVG
                       value={typeof window !== 'undefined' ? window.location.href : `https://siperu.yarsi.ac.id/verify/${data.passToken || data.bookingCode}`}
                       size={84}
@@ -458,33 +458,33 @@ export default function VerifyBookingPage({
 
                   <div className="flex-1 text-center sm:text-left space-y-1">
                     <div className="flex flex-wrap items-center justify-center sm:justify-start gap-1.5">
-                      <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded">
+                      <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded dark:bg-emerald-500/15 dark:text-emerald-200">
                         Cap Digital Resmi Universitas YARSI
                       </span>
-                      <span className="text-[9px] font-mono text-emerald-700 bg-white px-1.5 py-0.5 rounded border border-emerald-200">
+                      <span className="text-[9px] font-mono text-emerald-700 bg-white px-1.5 py-0.5 rounded border border-emerald-200 dark:text-emerald-300 dark:bg-slate-900 dark:border-emerald-500/30">
                         SHA256: VALID
                       </span>
                     </div>
-                    <p className="text-xs font-bold text-slate-800">
+                    <p className="text-xs font-bold text-slate-800 dark:text-slate-200">
                       Biro Pengelolaan Fasilitas & Logistik (LPF)
                     </p>
-                    <p className="text-[11px] text-slate-600 leading-relaxed">
+                    <p className="text-[11px] text-slate-600 leading-relaxed dark:text-slate-300">
                       Dokumen digital ini diterbitkan secara otomatis dan terotentikasi melalui basis data terpusat SIPERU. Petugas keamanan berhak mencocokkan identitas pemohon sesuai rincian di atas.
                     </p>
                   </div>
                 </div>
 
                 {/* Official Legal Protection Message */}
-                <div className="p-4 rounded-2xl bg-emerald-950/5 border border-emerald-800/15 flex items-start gap-3">
-                  <ShieldCheck className="w-5 h-5 text-emerald-700 shrink-0 mt-0.5" />
-                  <div className="text-xs leading-relaxed text-slate-700">
-                    <p className="font-bold text-emerald-900 mb-0.5">
+                <div className="p-4 rounded-2xl bg-emerald-950/5 border border-emerald-800/15 flex items-start gap-3 dark:bg-emerald-500/10 dark:border-emerald-500/30">
+                  <ShieldCheck className="w-5 h-5 text-emerald-700 shrink-0 mt-0.5 dark:text-emerald-300" />
+                  <div className="text-xs leading-relaxed text-slate-700 dark:text-slate-300">
+                    <p className="font-bold text-emerald-900 mb-0.5 dark:text-emerald-100">
                       Pernyataan Keabsahan Dokumen Digital:
                     </p>
                     <p className="italic">
                       &ldquo;{data.securityNotice}&rdquo;
                     </p>
-                    <p className="text-[11px] text-slate-500 mt-1">
+                    <p className="text-[11px] text-slate-500 mt-1 dark:text-slate-400">
                       Dokumen ini sah tanpa tanda tangan basah dan dapat diuji langsung melalui QR Code ke alamat server resmi SIPERU Universitas YARSI.
                     </p>
                   </div>
@@ -492,30 +492,30 @@ export default function VerifyBookingPage({
               </div>
 
               {/* Card Footer Actions (Hidden in Print) */}
-              <div className="p-4 sm:p-6 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3 print:hidden">
+              <div className="p-4 sm:p-6 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-between gap-3 print:hidden dark:bg-slate-800/70 dark:border-slate-700">
                 <div className="flex items-center gap-2">
                   <button
                     type="button"
                     onClick={handlePrint}
-                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 text-xs font-bold border border-slate-300 transition-all shadow-sm"
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 text-xs font-bold border border-slate-300 transition-all shadow-sm dark:bg-slate-900 dark:hover:bg-slate-700/60 dark:text-slate-200 dark:border-slate-600"
                   >
-                    <Printer className="w-4 h-4 text-slate-600" />
+                    <Printer className="w-4 h-4 text-slate-600 dark:text-slate-300" />
                     <span>Cetak Halaman</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={handleShareOrCopy}
-                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 text-xs font-bold border border-slate-300 transition-all shadow-sm"
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 text-xs font-bold border border-slate-300 transition-all shadow-sm dark:bg-slate-900 dark:hover:bg-slate-700/60 dark:text-slate-200 dark:border-slate-600"
                   >
-                    <Share2 className="w-4 h-4 text-slate-600" />
+                    <Share2 className="w-4 h-4 text-slate-600 dark:text-slate-300" />
                     <span>{copied ? 'Tautan Disalin!' : 'Bagikan Link'}</span>
                   </button>
                 </div>
 
                 <Link
                   href="/"
-                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-yarsi-primary hover:bg-yarsi-dark text-white text-xs font-bold transition-all shadow-sm"
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-yarsi-primary hover:bg-yarsi-dark text-white text-xs font-bold transition-all shadow-sm dark:bg-emerald-600 dark:hover:bg-emerald-500"
                 >
                   <span>Buka SIPERU</span>
                   <ExternalLink className="w-3.5 h-3.5" />

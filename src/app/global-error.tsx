@@ -11,22 +11,22 @@ export default function GlobalError({
 }) {
   return (
     <html lang="id">
-      <body className="min-h-screen bg-slate-50 flex items-center justify-center p-4 font-sans text-slate-900">
-        <div className="max-w-md w-full bg-white rounded-3xl border border-slate-200 shadow-2xl p-8 text-center space-y-4">
-          <div className="w-14 h-14 rounded-2xl bg-rose-50 border border-rose-200 text-rose-600 mx-auto flex items-center justify-center font-bold text-xl">
+      <body className="min-h-screen bg-slate-50 flex items-center justify-center p-4 font-sans text-slate-900 dark:bg-[#0b1120] dark:text-slate-100">
+        <div className="max-w-md w-full bg-white rounded-3xl border border-slate-200 shadow-2xl p-8 text-center space-y-4 dark:border-slate-700 dark:bg-slate-900">
+          <div className="w-14 h-14 rounded-2xl bg-rose-50 border border-rose-200 text-rose-600 mx-auto flex items-center justify-center font-bold text-xl dark:bg-rose-500/10 dark:border-rose-500/30 dark:text-rose-400">
             !
           </div>
-          <h2 className="text-xl font-black text-slate-900">
+          <h2 className="text-xl font-black text-slate-900 dark:text-slate-100">
             Terjadi Kesalahan Kritis
           </h2>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-slate-500 dark:text-slate-400">
             Sistem SIPERU mengalami kendala fatal saat merender antarmuka. Silakan coba muat ulang halaman.
           </p>
           <div className="pt-2">
             <button
               type="button"
               onClick={() => reset()}
-              className="w-full py-2.5 px-4 rounded-xl font-bold text-xs text-white bg-emerald-800 hover:bg-emerald-900 shadow-md transition-all"
+              className="w-full py-2.5 px-4 rounded-xl font-bold text-xs text-white bg-emerald-800 hover:bg-emerald-900 shadow-md transition-all dark:bg-emerald-600 dark:hover:bg-emerald-500"
             >
               Muat Ulang Aplikasi
             </button>

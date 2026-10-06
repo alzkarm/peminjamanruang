@@ -120,7 +120,7 @@ export default function CbtBookingForm({
     <form onSubmit={onSubmit} className="space-y-4">
       {/* Error alert */}
       {error && (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-xs text-red-700 animate-fade-in flex items-start gap-2">
+        <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-xs text-red-700 animate-fade-in flex items-start gap-2 dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-400">
           <AlertCircle className="w-4 h-4 text-red-500 shrink-0 mt-0.5" />
           <p>{error}</p>
         </div>
@@ -128,7 +128,7 @@ export default function CbtBookingForm({
 
       {/* Success alert */}
       {successMessage && (
-        <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-700 animate-fade-in flex items-start gap-2">
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-700 animate-fade-in flex items-start gap-2 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300">
           <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
           <p>{successMessage}</p>
         </div>
@@ -143,7 +143,7 @@ export default function CbtBookingForm({
 
         {/* 1. Tanggal Mulai */}
         <div>
-          <label className="block text-xs font-medium text-slate-500 mb-1">Tanggal Mulai</label>
+          <label className="block text-xs font-medium text-slate-500 mb-1 dark:text-slate-400">Tanggal Mulai</label>
           <input
             type="date"
             value={selectedDate}
@@ -154,7 +154,7 @@ export default function CbtBookingForm({
 
         {/* 2. Jam Mulai */}
         <div>
-          <label className="block text-xs font-medium text-slate-500 mb-1">Jam Mulai</label>
+          <label className="block text-xs font-medium text-slate-500 mb-1 dark:text-slate-400">Jam Mulai</label>
           <input
             type="time"
             value={selectedStartTime}
@@ -165,7 +165,7 @@ export default function CbtBookingForm({
 
         {/* 3. Tanggal Selesai */}
         <div>
-          <label className="block text-xs font-medium text-slate-500 mb-1">Tanggal Selesai</label>
+          <label className="block text-xs font-medium text-slate-500 mb-1 dark:text-slate-400">Tanggal Selesai</label>
           <input
             type="date"
             value={selectedEndDate}
@@ -176,7 +176,7 @@ export default function CbtBookingForm({
 
         {/* 4. Jam Selesai */}
         <div>
-          <label className="block text-xs font-medium text-slate-500 mb-1">Jam Selesai</label>
+          <label className="block text-xs font-medium text-slate-500 mb-1 dark:text-slate-400">Jam Selesai</label>
           <input
             type="time"
             value={selectedEndTime}
@@ -198,7 +198,7 @@ export default function CbtBookingForm({
 
         {/* Faculty selection with border-only faculty color and solid default theme text */}
         <div>
-          <label className="block text-xs font-medium text-slate-500 mb-1">Fakultas Pemohon</label>
+          <label className="block text-xs font-medium text-slate-500 mb-1 dark:text-slate-400">Fakultas Pemohon</label>
           <select
             value={faculty}
             onChange={(e) => onFacultyChange(e.target.value as CbtFaculty | '')}
@@ -226,7 +226,7 @@ export default function CbtBookingForm({
 
         {/* Title */}
         <div>
-          <label className="block text-xs font-medium text-slate-500 mb-1">Judul Ujian / Kegiatan</label>
+          <label className="block text-xs font-medium text-slate-500 mb-1 dark:text-slate-400">Judul Ujian / Kegiatan</label>
           <input
             type="text"
             value={title}
@@ -277,7 +277,7 @@ export default function CbtBookingForm({
                   e.stopPropagation();
                   onClearSelection();
                 }}
-                className="px-2.5 py-1 rounded-md text-[10px] font-bold text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 hover:border-red-300 transition-colors flex items-center gap-1 cursor-pointer active:scale-95"
+                className="px-2.5 py-1 rounded-md text-[10px] font-bold text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 hover:border-red-300 transition-colors flex items-center gap-1 cursor-pointer active:scale-95 dark:text-rose-400 dark:bg-rose-500/10 dark:hover:bg-rose-500/20 dark:border-rose-500/30 dark:hover:border-rose-500/40"
                 title="Hapus semua kursi yang telah dipilih"
               >
                 <Trash2 className="w-3 h-3 text-red-500" />
@@ -292,7 +292,7 @@ export default function CbtBookingForm({
               <div className="p-2.5 rounded-lg border-2 border-blue-500 bg-blue-50/70 dark:bg-blue-950/40">
                 <div className="flex items-center justify-between gap-2">
                   <div className="min-w-0">
-                    <p className="text-[10px] font-semibold text-blue-700 uppercase tracking-wider">
+                    <p className="text-[10px] font-semibold text-blue-700 uppercase tracking-wider dark:text-blue-400">
                       Daftar Kursi (Outline Biru):
                     </p>
                     <p className="text-xs font-mono font-bold text-blue-950 dark:text-blue-200 truncate mt-0.5">
@@ -307,12 +307,12 @@ export default function CbtBookingForm({
 
               {/* Validation status badge */}
               {countMatches ? (
-                <div className="flex items-center gap-1.5 text-[11px] text-blue-700 font-bold">
+                <div className="flex items-center gap-1.5 text-[11px] text-blue-700 font-bold dark:text-blue-400">
                   <CheckCircle2 className="w-3.5 h-3.5 shrink-0 text-blue-600" />
                   <span>Kapasitas lengkap! Siap melakukan booking.</span>
                 </div>
               ) : (
-                <div className="flex items-center gap-1.5 text-[11px] text-amber-700 font-medium">
+                <div className="flex items-center gap-1.5 text-[11px] text-amber-700 font-medium dark:text-amber-400">
                   <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                   <span>
                     Terpilih {selectedSeats.length} dari {capacity} kursi ({capacity > selectedSeats.length ? `kurang ${capacity - selectedSeats.length}` : `kelebihan ${selectedSeats.length - capacity}`}).
@@ -336,7 +336,7 @@ export default function CbtBookingForm({
 
         {/* Notes */}
         <div>
-          <label className="block text-xs font-medium text-slate-500 mb-1">Catatan (opsional)</label>
+          <label className="block text-xs font-medium text-slate-500 mb-1 dark:text-slate-400">Catatan (opsional)</label>
           <textarea
             value={notes}
             onChange={(e) => onNotesChange(e.target.value)}

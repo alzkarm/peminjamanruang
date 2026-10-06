@@ -17,9 +17,10 @@ export enum CbtRoomType {
 }
 
 const VALID_FACULTIES = ['FEB', 'FH', 'FTI', 'FK', 'FKG', 'FP'] as const;
-const CBT_ROOM_CAPACITIES: Record<CbtRoomType, number> = {
-  [CbtRoomType.A]: 196,
-  [CbtRoomType.B]: 159,
+// Nomor kursi fisik: Ruang A 1-196, Ruang B 197-355 (denah: CbtSeatMap.tsx).
+const CBT_ROOM_SEAT_RANGES: Record<CbtRoomType, { min: number; max: number }> = {
+  [CbtRoomType.A]: { min: 1, max: 196 },
+  [CbtRoomType.B]: { min: 197, max: 355 },
 };
 
 export class CreateCbtBookingDto {
@@ -81,19 +82,20 @@ export class QueryCbtSeatsDto {
 }
 
 export function getCbtRoomCapacity(roomId: CbtRoomType): number {
-  return CBT_ROOM_CAPACITIES[roomId];
+  const range = CBT_ROOM_SEAT_RANGES[roomId];
+  return range.max - range.min + 1;
 }
 
 export function getMaxSeatForRoom(roomId: CbtRoomType): number {
-  return CBT_ROOM_CAPACITIES[roomId];
+  return CBT_ROOM_SEAT_RANGES[roomId].max;
 }
 
 export function validateSeatRange(roomId: CbtRoomType, seatStart: number, seatEnd: number): void {
-  const maxSeat = getMaxSeatForRoom(roomId);
-  if (seatStart < 1 || seatStart > maxSeat) {
-    throw new Error(`Nomor kursi awal harus antara 1 dan ${maxSeat} untuk Ruang CBT ${roomId}.`);
+  const { min, max } = CBT_ROOM_SEAT_RANGES[roomId];
+  if (seatStart < min || seatStart > max) {
+    throw new Error(`Nomor kursi awal harus antara ${min} dan ${max} untuk Ruang CBT ${roomId}.`);
   }
-  if (seatEnd < 1 || seatEnd > maxSeat) {
-    throw new Error(`Nomor kursi akhir harus antara 1 dan ${maxSeat} untuk Ruang CBT ${roomId}.`);
+  if (seatEnd < min || seatEnd > max) {
+    throw new Error(`Nomor kursi akhir harus antara ${min} dan ${max} untuk Ruang CBT ${roomId}.`);
   }
 }

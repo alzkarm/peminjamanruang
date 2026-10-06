@@ -359,7 +359,7 @@ export function InteractiveBuilding({
             }}
             onMouseEnter={() => setHoveredHotspot(sub.id)}
             onMouseLeave={() => setHoveredHotspot(null)}
-            className="absolute z-20 -translate-x-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-400"
+            className="absolute z-20 -translate-x-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center cursor-pointer focus:outline-none focus:ring-2 focus:ring-emerald-400 dark:focus:ring-emerald-500"
             style={{ left: `${sub.x}%`, top: `${sub.y}%` }}
             aria-label={`Pilih ${sub.roomName}`}
           >

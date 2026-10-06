@@ -226,10 +226,10 @@ export default function AdminRoomsPage() {
 
   if (!isSuperadmin) {
     return (
-      <div className="rounded-2xl border border-rose-200 bg-white p-8 text-center space-y-4">
-        <ShieldAlert className="h-12 w-12 text-rose-500 mx-auto" />
-        <h2 className="text-xl font-bold text-slate-800">Akses Dibatasi</h2>
-        <p className="text-xs text-slate-500 max-w-md mx-auto">
+      <div className="rounded-2xl border border-rose-200 dark:border-rose-500/30 bg-white dark:bg-slate-900 p-8 text-center space-y-4">
+        <ShieldAlert className="h-12 w-12 text-rose-500 dark:text-rose-400 mx-auto" />
+        <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">Akses Dibatasi</h2>
+        <p className="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto">
           Halaman Pengelolaan Master Ruangan hanya dapat diakses oleh akun dengan role <strong>Superadmin</strong>.
         </p>
       </div>
@@ -239,16 +239,16 @@ export default function AdminRoomsPage() {
   return (
     <div className="space-y-6">
       {/* Top Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-[18px_4px_18px_18px] border border-slate-200/90 border-l-4 border-l-yarsi-primary bg-white p-6 shadow-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 rounded-[18px_4px_18px_18px] border border-slate-200/90 dark:border-slate-700 border-l-4 border-l-yarsi-primary bg-white dark:bg-slate-900 p-6 shadow-sm">
         <div>
-          <div className="mb-2 inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-yarsi-primary">
-            <Building2 className="w-4 h-4 text-yarsi-primary" />
+          <div className="mb-2 inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-yarsi-primary dark:text-emerald-400">
+            <Building2 className="w-4 h-4 text-yarsi-primary dark:text-emerald-400" />
             <span>Master Data Management · Superadmin</span>
           </div>
-          <h1 className="text-2xl font-black text-slate-900">
+          <h1 className="text-2xl font-black text-slate-900 dark:text-slate-100">
             Master Ruangan Dinamis
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
             Tambah, edit, hapus, dan atur status operasional/ketersediaan seluruh ruangan Universitas & Yayasan YARSI.
           </p>
         </div>
@@ -256,7 +256,7 @@ export default function AdminRoomsPage() {
         <button
           type="button"
           onClick={openCreateModal}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs text-white bg-yarsi-primary hover:bg-yarsi-dark shadow-md shadow-emerald-900/20 transition-all self-start sm:self-center"
+          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs text-white bg-yarsi-primary dark:bg-emerald-600 hover:bg-yarsi-dark dark:hover:bg-emerald-500 shadow-md shadow-emerald-900/20 transition-all self-start sm:self-center"
         >
           <Plus className="w-4 h-4" />
           <span>Tambah Ruangan Baru</span>
@@ -268,22 +268,22 @@ export default function AdminRoomsPage() {
         <div
           className={`flex items-center justify-between p-3.5 rounded-xl text-xs font-semibold ${
             notification.type === 'success'
-              ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
-              : 'bg-rose-50 text-rose-800 border border-rose-200'
+              ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-800 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-500/30'
+              : 'bg-rose-50 dark:bg-rose-500/10 text-rose-800 dark:text-rose-200 border border-rose-200 dark:border-rose-500/30'
           }`}
         >
           <div className="flex items-center gap-2">
             {notification.type === 'success' ? (
-              <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+              <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
             ) : (
-              <XCircle className="h-4 w-4 text-rose-600 shrink-0" />
+              <XCircle className="h-4 w-4 text-rose-600 dark:text-rose-400 shrink-0" />
             )}
             <span>{notification.message}</span>
           </div>
           <button
             type="button"
             onClick={() => setNotification(null)}
-            className="text-slate-400 hover:text-slate-600"
+            className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
           >
             <X className="h-4 w-4" />
           </button>
@@ -292,36 +292,36 @@ export default function AdminRoomsPage() {
 
       {/* Stats Counters */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 shadow-sm">
           <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Ruangan</p>
-          <p className="text-2xl font-black text-slate-800 mt-1">{rooms.length}</p>
-          <p className="text-[10px] text-slate-500 mt-0.5">Terdaftar di master</p>
+          <p className="text-2xl font-black text-slate-800 dark:text-slate-200 mt-1">{rooms.length}</p>
+          <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Terdaftar di master</p>
         </div>
-        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 shadow-sm">
           <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Ruangan Aktif</p>
-          <p className="text-2xl font-black text-emerald-600 mt-1">
+          <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">
             {rooms.filter((r) => r.isActive).length}
           </p>
-          <p className="text-[10px] text-emerald-700 font-medium mt-0.5">Tersedia dipinjam</p>
+          <p className="text-[10px] text-emerald-700 dark:text-emerald-300 font-medium mt-0.5">Tersedia dipinjam</p>
         </div>
-        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 shadow-sm">
           <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Ruang Khusus Yayasan</p>
-          <p className="text-2xl font-black text-amber-600 mt-1">
+          <p className="text-2xl font-black text-amber-600 dark:text-amber-400 mt-1">
             {rooms.filter((r) => r.requiresYayasanApproval).length}
           </p>
-          <p className="text-[10px] text-slate-500 mt-0.5">Butuh izin Yayasan</p>
+          <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Butuh izin Yayasan</p>
         </div>
-        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 shadow-sm">
           <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">CBT & Laboratorium</p>
-          <p className="text-2xl font-black text-blue-600 mt-1">
+          <p className="text-2xl font-black text-blue-600 dark:text-blue-400 mt-1">
             {rooms.filter((r) => r.type === 'lab' || r.name.toLowerCase().includes('cbt')).length}
           </p>
-          <p className="text-[10px] text-slate-500 mt-0.5">Fasilitas komputer/lab</p>
+          <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">Fasilitas komputer/lab</p>
         </div>
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center justify-between rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 shadow-sm">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           <input
@@ -329,15 +329,15 @@ export default function AdminRoomsPage() {
             placeholder="Cari berdasarkan nama, kode ruangan, lantai, gedung..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 rounded-lg border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-400"
+            className="w-full pl-9 pr-3 py-2 min-h-11 sm:min-h-0 rounded-lg border border-slate-200 dark:border-slate-700 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-400"
           />
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
           <select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
-            className="px-3 py-2 rounded-lg border border-slate-200 text-xs font-semibold text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-400"
+            className="flex-1 min-w-[130px] sm:flex-none min-h-11 sm:min-h-0 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-400"
           >
             <option value="ALL">Semua Tipe Ruang</option>
             {ROOM_TYPES.map((t) => (
@@ -349,8 +349,8 @@ export default function AdminRoomsPage() {
 
           <select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value as any)}
-            className="px-3 py-2 rounded-lg border border-slate-200 text-xs font-semibold text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-400"
+            onChange={(e) => setStatusFilter(e.target.value as 'ALL' | 'ACTIVE' | 'INACTIVE')}
+            className="flex-1 min-w-[130px] sm:flex-none min-h-11 sm:min-h-0 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-400"
           >
             <option value="ALL">Semua Status</option>
             <option value="ACTIVE">Hanya Aktif</option>
@@ -360,7 +360,7 @@ export default function AdminRoomsPage() {
           <button
             type="button"
             onClick={fetchRooms}
-            className="p-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
+            className="ml-auto sm:ml-0 p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors"
             title="Muat ulang"
           >
             <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
@@ -369,21 +369,22 @@ export default function AdminRoomsPage() {
       </div>
 
       {/* Rooms Table */}
-      <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+      <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
         {isLoading ? (
           <div className="py-16 text-center text-xs text-slate-400">
-            <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2 text-emerald-600" />
+            <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2 text-emerald-600 dark:text-emerald-400" />
             Memuat data master ruangan...
           </div>
         ) : filteredRooms.length === 0 ? (
-          <div className="py-16 text-center text-xs text-slate-500">
+          <div className="py-16 text-center text-xs text-slate-500 dark:text-slate-400">
             <Building2 className="h-8 w-8 text-slate-300 mx-auto mb-2" />
             Tidak ada ruangan yang cocok dengan filter pencarian.
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs text-slate-600">
-              <thead className="bg-slate-50 text-slate-700 uppercase font-semibold text-[10px] tracking-wider border-b border-slate-200">
+          <>
+          <div className="hidden md:block overflow-x-auto">
+            <table className="w-full text-left text-xs text-slate-600 dark:text-slate-300">
+              <thead className="bg-slate-50 dark:bg-slate-800/70 text-slate-700 dark:text-slate-300 uppercase font-semibold text-[10px] tracking-wider border-b border-slate-200 dark:border-slate-700">
                 <tr>
                   <th className="px-4 py-3">Ruangan</th>
                   <th className="px-4 py-3">Kode / Tipe</th>
@@ -394,33 +395,33 @@ export default function AdminRoomsPage() {
                   <th className="px-4 py-3 text-right">Aksi</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {filteredRooms.map((room) => (
-                  <tr key={room.id} className="hover:bg-slate-50/60 transition-colors">
+                  <tr key={room.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/80 transition-colors">
                     <td className="px-4 py-3">
                       <div>
-                        <p className="font-bold text-slate-900">{room.name}</p>
+                        <p className="font-bold text-slate-900 dark:text-slate-100">{room.name}</p>
                         <p className="text-[10px] text-slate-400 line-clamp-1">{room.description || 'Tidak ada deskripsi'}</p>
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <span className="font-mono font-bold text-slate-700">{room.code}</span>
+                      <span className="font-mono font-bold text-slate-700 dark:text-slate-300">{room.code}</span>
                       <span className="block text-[10px] uppercase font-bold text-slate-400">{room.type}</span>
                     </td>
                     <td className="px-4 py-3">
-                      <span className="font-medium text-slate-800">{room.floorName || `Lt. ${room.floor}`}</span>
+                      <span className="font-medium text-slate-800 dark:text-slate-200">{room.floorName || `Lt. ${room.floor}`}</span>
                       <span className="block text-[10px] text-slate-400">{room.building || 'Menara YARSI'}</span>
                     </td>
-                    <td className="px-4 py-3 font-semibold text-slate-800">
+                    <td className="px-4 py-3 font-semibold text-slate-800 dark:text-slate-200">
                       {room.capacity ? `${room.capacity} Orang / Kursi` : '-'}
                     </td>
                     <td className="px-4 py-3">
                       {room.requiresYayasanApproval ? (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-900 border border-amber-300">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 dark:bg-amber-500/15 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-500/40">
                           Wajib Yayasan
                         </span>
                       ) : (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
                           Reguler
                         </span>
                       )}
@@ -431,8 +432,8 @@ export default function AdminRoomsPage() {
                         onClick={() => handleToggleStatus(room)}
                         className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold transition-all cursor-pointer ${
                           room.isActive
-                            ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200'
-                            : 'bg-rose-100 text-rose-800 hover:bg-rose-200'
+                            ? 'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-800 dark:text-emerald-200 hover:bg-emerald-200'
+                            : 'bg-rose-100 dark:bg-rose-500/15 text-rose-800 dark:text-rose-200 hover:bg-rose-200'
                         }`}
                         title="Klik untuk mengubah ketersediaan ruangan"
                       >
@@ -444,7 +445,7 @@ export default function AdminRoomsPage() {
                       <button
                         type="button"
                         onClick={() => openEditModal(room)}
-                        className="p-1.5 rounded-lg text-slate-500 hover:text-emerald-700 hover:bg-emerald-50 transition-colors"
+                        className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-slate-500 dark:text-slate-400 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-colors"
                         title="Edit Data Ruangan"
                       >
                         <Edit2 className="h-4 w-4" />
@@ -452,7 +453,7 @@ export default function AdminRoomsPage() {
                       <button
                         type="button"
                         onClick={() => handleDeleteRoom(room)}
-                        className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                        className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors"
                         title="Hapus Ruangan"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -463,23 +464,105 @@ export default function AdminRoomsPage() {
               </tbody>
             </table>
           </div>
+
+          {/* Mobile card list */}
+          <div className="md:hidden divide-y divide-slate-100 dark:divide-slate-800">
+            {filteredRooms.map((room) => (
+              <div key={room.id} className="p-4 space-y-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="font-bold text-slate-900 dark:text-slate-100 leading-snug">{room.name}</p>
+                    <p className="text-[10px] text-slate-400 line-clamp-2 mt-0.5">
+                      {room.description || 'Tidak ada deskripsi'}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => openEditModal(room)}
+                      className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-slate-500 dark:text-slate-400 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-colors"
+                      title="Edit Data Ruangan"
+                    >
+                      <Edit2 className="h-4 w-4" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteRoom(room)}
+                      className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors"
+                      title="Hapus Ruangan"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Kode / Tipe</p>
+                    <p className="font-mono font-bold text-slate-700 dark:text-slate-300 truncate">{room.code}</p>
+                    <p className="text-[10px] uppercase font-bold text-slate-400 truncate">{room.type}</p>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Lokasi</p>
+                    <p className="font-medium text-slate-800 dark:text-slate-200 truncate">{room.floorName || `Lt. ${room.floor}`}</p>
+                    <p className="text-[10px] text-slate-400 truncate">{room.building || 'Menara YARSI'}</p>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Kapasitas</p>
+                    <p className="font-semibold text-slate-800 dark:text-slate-200">
+                      {room.capacity ? `${room.capacity} Orang` : '-'}
+                    </p>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Approval</p>
+                    {room.requiresYayasanApproval ? (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 dark:bg-amber-500/15 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-500/40 whitespace-nowrap">
+                        Wajib Yayasan
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 whitespace-nowrap">
+                        Reguler
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800">
+                  <button
+                    type="button"
+                    onClick={() => handleToggleStatus(room)}
+                    className={`inline-flex min-h-11 items-center gap-1.5 px-3 py-2 rounded-full text-[11px] font-bold transition-all cursor-pointer ${
+                      room.isActive
+                        ? 'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-800 dark:text-emerald-200 hover:bg-emerald-200'
+                        : 'bg-rose-100 dark:bg-rose-500/15 text-rose-800 dark:text-rose-200 hover:bg-rose-200'
+                    }`}
+                    title="Klik untuk mengubah ketersediaan ruangan"
+                  >
+                    <Power className="h-3 w-3" />
+                    <span>{room.isActive ? 'Tersedia' : 'Nonaktif'}</span>
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+          </>
         )}
       </div>
 
       {/* Modal Form Tambah / Edit Ruangan */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm animate-fade-in">
-          <div className="w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div className="w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-6 shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
               <div className="flex items-center gap-2">
-                <div className="p-2 rounded-xl bg-emerald-50 text-emerald-700">
+                <div className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
                   <Building2 className="h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-slate-900 leading-tight">
+                  <h3 className="font-bold text-slate-900 dark:text-slate-100 leading-tight">
                     {editingRoom ? `Edit Ruangan: ${editingRoom.name}` : 'Tambah Master Ruangan Baru'}
                   </h3>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
                     Konfigurasi spesifikasi teknis dan alur approval ruangan
                   </p>
                 </div>
@@ -487,17 +570,17 @@ export default function AdminRoomsPage() {
               <button
                 type="button"
                 onClick={() => setIsModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 p-1"
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-1"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
 
             <form onSubmit={handleFormSubmit} className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Nama Ruangan <span className="text-rose-500">*</span>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Nama Ruangan <span className="text-rose-500 dark:text-rose-400">*</span>
                   </label>
                   <input
                     type="text"
@@ -505,12 +588,12 @@ export default function AdminRoomsPage() {
                     placeholder="e.g. Ruang CBT Center Class B"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                    className="w-full px-3 py-2 min-h-11 sm:min-h-0 rounded-xl border border-slate-300 dark:border-slate-600 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-400"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Kode Ruangan <span className="text-rose-500">*</span>
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Kode Ruangan <span className="text-rose-500 dark:text-rose-400">*</span>
                   </label>
                   <input
                     type="text"
@@ -518,20 +601,20 @@ export default function AdminRoomsPage() {
                     placeholder="e.g. CBT-B atau AUD-01"
                     value={code}
                     onChange={(e) => setCode(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-mono uppercase focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                    className="w-full px-3 py-2 min-h-11 sm:min-h-0 rounded-xl border border-slate-300 dark:border-slate-600 text-xs font-mono uppercase focus:outline-none focus:ring-2 focus:ring-emerald-400"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                     Tipe Ruang
                   </label>
                   <select
                     value={type}
                     onChange={(e) => setType(e.target.value as RoomType)}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs font-semibold text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                    className="w-full px-3 py-2 min-h-11 sm:min-h-0 rounded-xl border border-slate-300 dark:border-slate-600 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-400"
                   >
                     {ROOM_TYPES.map((t) => (
                       <option key={t.value} value={t.value}>
@@ -541,7 +624,7 @@ export default function AdminRoomsPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                     Kapasitas (Orang/Kursi)
                   </label>
                   <input
@@ -549,11 +632,11 @@ export default function AdminRoomsPage() {
                     min="1"
                     value={capacity}
                     onChange={(e) => setCapacity(Number(e.target.value))}
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                    className="w-full px-3 py-2 min-h-11 sm:min-h-0 rounded-xl border border-slate-300 dark:border-slate-600 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-400"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                  <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                     Lantai
                   </label>
                   <input
@@ -561,24 +644,24 @@ export default function AdminRoomsPage() {
                     value={floorName}
                     onChange={(e) => setFloorName(e.target.value)}
                     placeholder="e.g. Lantai 3"
-                    className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                    className="w-full px-3 py-2 min-h-11 sm:min-h-0 rounded-xl border border-slate-300 dark:border-slate-600 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-400"
                   />
                 </div>
               </div>
 
-              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200">
+              <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700">
                 <label className="flex items-center gap-2.5 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={requiresYayasanApproval}
                     onChange={(e) => setRequiresYayasanApproval(e.target.checked)}
-                    className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                    className="h-4 w-4 rounded border-slate-300 dark:border-slate-700 text-emerald-600 dark:text-emerald-400 focus:ring-emerald-500"
                   />
                   <div>
-                    <span className="text-xs font-bold text-slate-800">
+                    <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
                       Wajib Rekomendasi LPF & Approval Akhir Yayasan
                     </span>
-                    <p className="text-[10px] text-slate-500">
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400">
                       Centang jika ruangan ini adalah Auditorium Ar-Rahman, Ruang Senat, atau fasilitas khusus milik Yayasan YARSI.
                     </p>
                   </div>
@@ -586,7 +669,7 @@ export default function AdminRoomsPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                   Fasilitas (Pisahkan dengan koma)
                 </label>
                 <input
@@ -594,12 +677,12 @@ export default function AdminRoomsPage() {
                   value={facilitiesText}
                   onChange={(e) => setFacilitiesText(e.target.value)}
                   placeholder="e.g. 159 PC Client, AC, Sound System, Proyektor"
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                  className="w-full px-3 py-2 min-h-11 sm:min-h-0 rounded-xl border border-slate-300 dark:border-slate-700 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-400"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                   Deskripsi Singkat
                 </label>
                 <textarea
@@ -607,22 +690,22 @@ export default function AdminRoomsPage() {
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Deskripsi peruntukan ruangan..."
-                  className="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                  className="w-full px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-400"
                 />
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+              <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition-colors"
+                  className="min-h-11 sm:min-h-0 px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/60 transition-colors"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white bg-yarsi-primary hover:bg-yarsi-dark shadow-sm transition-all disabled:opacity-50"
+                  className="inline-flex min-h-11 sm:min-h-0 items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white bg-yarsi-primary dark:bg-emerald-600 hover:bg-yarsi-dark dark:hover:bg-emerald-500 shadow-sm transition-all disabled:opacity-50"
                 >
                   {isSubmitting ? (
                     <>

@@ -169,17 +169,17 @@ export default function AcademicBulkPage() {
   return (
     <div className="space-y-6">
       {/* Top Banner */}
-      <div className="relative space-y-4 overflow-hidden rounded-[18px_4px_18px_18px] border border-slate-200/90 border-l-4 border-l-yarsi-primary bg-white p-6 shadow-sm sm:p-8">
+      <div className="relative space-y-4 overflow-hidden rounded-[18px_4px_18px_18px] border border-slate-200/90 border-l-4 border-l-yarsi-primary bg-white p-6 shadow-sm sm:p-8 dark:border-slate-800 dark:bg-slate-900">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-2">
-            <div className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-yarsi-primary">
+            <div className="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-yarsi-primary dark:text-emerald-400">
               <GraduationCap className="h-4 w-4" aria-hidden="true" />
               <span>Penjadwalan akademik</span>
             </div>
-            <h1 className="text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">
+            <h1 className="text-2xl font-black tracking-tight text-slate-950 sm:text-3xl dark:text-slate-100">
               Jadwal ruang semester
             </h1>
-            <p className="max-w-2xl text-xs text-slate-500 sm:text-sm">
+            <p className="max-w-2xl text-xs text-slate-500 sm:text-sm dark:text-slate-400">
               Tetapkan penggunaan ruang kelas dan laboratorium untuk perkuliahan berulang, lalu periksa jadwal sebelum disimpan.
             </p>
           </div>
@@ -188,7 +188,7 @@ export default function AcademicBulkPage() {
             <button
               type="button"
               onClick={handleImportSampleSchedule}
-              className="flex min-h-11 items-center gap-1.5 border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs font-bold text-slate-700 hover:border-emerald-300 hover:bg-emerald-50"
+              className="flex min-h-11 items-center gap-1.5 border border-slate-200 bg-slate-50 px-4 py-2.5 text-xs font-bold text-slate-700 hover:border-emerald-300 hover:bg-emerald-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-emerald-500/40 dark:hover:bg-emerald-500/10"
             >
               <Upload className="w-4 h-4" />
               <span>Impor template SIAKAD</span>
@@ -197,7 +197,7 @@ export default function AcademicBulkPage() {
             <button
               type="button"
               onClick={() => setIsAddModalOpen(true)}
-              className="flex min-h-11 items-center gap-1.5 rounded-[9px_2px_9px_9px] bg-yarsi-primary px-5 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-yarsi-dark"
+              className="flex min-h-11 items-center gap-1.5 rounded-[9px_2px_9px_9px] bg-yarsi-primary px-5 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-yarsi-dark dark:bg-emerald-600 dark:hover:bg-emerald-500"
             >
               <PlusCircle className="w-4 h-4" />
               <span>Tambah Jadwal Kuliah</span>
@@ -207,13 +207,13 @@ export default function AcademicBulkPage() {
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-2">
+      <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3 dark:bg-slate-900 dark:border-slate-800">
+        <div className="flex w-full flex-wrap items-center gap-2 md:w-auto">
           {/* Day filter */}
           <select
             value={filterDay}
             onChange={(e) => setFilterDay(e.target.value)}
-            className="text-xs font-semibold bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-700"
+            className="flex-1 min-w-[140px] md:flex-none min-h-11 md:min-h-0 text-xs font-semibold bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-700 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200"
           >
             <option value="all">Semua Hari (Senin - Minggu)</option>
             {daysName.map((d, i) => (
@@ -227,7 +227,7 @@ export default function AcademicBulkPage() {
           <select
             value={filterFaculty}
             onChange={(e) => setFilterFaculty(e.target.value)}
-            className="text-xs font-semibold bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-700"
+            className="flex-1 min-w-[140px] md:flex-none min-h-11 md:min-h-0 text-xs font-semibold bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-700 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-200"
           >
             <option value="all">Semua Fakultas</option>
             <option value="Kedokteran">Fakultas Kedokteran</option>
@@ -244,19 +244,19 @@ export default function AcademicBulkPage() {
             placeholder="Cari mata kuliah, dosen, ruang..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full md:w-64 pl-9 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-600"
+            className="w-full md:w-64 pl-9 pr-3 py-1.5 min-h-11 md:min-h-0 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-700"
           />
         </div>
       </div>
 
       {/* Academic Blocks Grid Table */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
-        <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden dark:bg-slate-900 dark:border-slate-800">
+        <div className="p-4 border-b border-slate-100 flex flex-wrap items-center justify-between gap-2 dark:border-slate-800">
           <div className="flex items-center gap-2">
-            <h3 className="font-bold text-slate-900 text-sm">
+            <h3 className="font-bold text-slate-900 text-sm dark:text-slate-100">
               Daftar Jadwal Kuliah Terkunci
             </h3>
-            <span className="text-xs font-bold text-purple-800 bg-purple-100 px-2 py-0.5 rounded-full">
+            <span className="text-xs font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full dark:bg-emerald-500/15 dark:text-emerald-200">
               {filteredBlocks.length} Kelas
             </span>
           </div>
@@ -265,7 +265,7 @@ export default function AcademicBulkPage() {
           </span>
         </div>
 
-        <div className="divide-y divide-slate-100">
+        <div className="divide-y divide-slate-100 dark:divide-slate-800">
           {filteredBlocks.length === 0 ? (
             <div className="p-12 text-center text-slate-400 text-xs">
               Tidak ada jadwal perkuliahan yang cocok dengan kriteria filter.
@@ -274,38 +274,38 @@ export default function AcademicBulkPage() {
             filteredBlocks.map((block) => (
               <div
                 key={block.id}
-                className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-slate-50/80 transition-colors"
+                className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-slate-50/80 transition-colors dark:hover:bg-slate-800/80"
               >
                 <div className="flex items-start gap-3.5">
-                  <div className="p-2.5 rounded-2xl bg-purple-50 text-purple-700 shrink-0">
+                  <div className="p-2.5 rounded-2xl bg-emerald-50 text-emerald-700 shrink-0 dark:bg-emerald-500/10 dark:text-emerald-300">
                     <BookOpen className="w-5 h-5" />
                   </div>
 
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <span className="text-[11px] font-mono font-bold text-purple-900 bg-purple-100 px-2 py-0.5 rounded">
+                      <span className="text-[11px] font-mono font-bold text-emerald-900 bg-emerald-100 px-2 py-0.5 rounded dark:bg-emerald-500/15 dark:text-emerald-100">
                         {block.courseCode}
                       </span>
-                      <span className="text-xs font-bold text-slate-800">
+                      <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
                         {block.title}
                       </span>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-y-1 gap-x-3 text-xs text-slate-500">
-                      <span className="font-semibold text-slate-700">
+                    <div className="flex flex-wrap items-center gap-y-1 gap-x-3 text-xs text-slate-500 dark:text-slate-400">
+                      <span className="font-semibold text-slate-700 dark:text-slate-300">
                         Dosen: {block.lecturerName}
                       </span>
                       <span>•</span>
-                      <span className="font-bold text-purple-900">
+                      <span className="font-bold text-emerald-900 dark:text-emerald-100">
                         {daysName[block.dayOfWeek - 1]}, {block.startTime} - {block.endTime} WIB
                       </span>
                       <span>•</span>
-                      <span className="text-slate-600 flex items-center gap-1">
+                      <span className="text-slate-600 flex items-center gap-1 dark:text-slate-300">
                         <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
                         <span>{block.roomName}</span>
                       </span>
                       <span>•</span>
-                      <span className="text-purple-700 font-medium">
+                      <span className="text-emerald-700 font-medium dark:text-emerald-300">
                         {block.studentGroup} ({block.faculty})
                       </span>
                     </div>
@@ -317,15 +317,15 @@ export default function AcademicBulkPage() {
                   <button
                     type="button"
                     onClick={() => toggleAcademicBlock(block.id)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors ${
+                    className={`min-h-11 sm:min-h-0 px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors ${
                       block.isActive
-                        ? 'bg-purple-100 text-purple-900 hover:bg-purple-200'
-                        : 'bg-slate-100 text-slate-500 hover:bg-slate-200'
+                        ? 'bg-emerald-100 text-emerald-900 hover:bg-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-100 dark:hover:bg-emerald-500/25'
+                        : 'bg-slate-100 text-slate-500 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:hover:bg-slate-700'
                     }`}
                   >
                     {block.isActive ? (
                       <>
-                        <ToggleRight className="w-4 h-4 text-purple-700" />
+                        <ToggleRight className="w-4 h-4 text-yarsi-primary dark:text-emerald-400" />
                         <span>Kunci Aktif</span>
                       </>
                     ) : (
@@ -343,7 +343,7 @@ export default function AcademicBulkPage() {
                         deleteAcademicBlock(block.id);
                       }
                     }}
-                    className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors"
+                    className="inline-flex h-11 w-11 items-center justify-center rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors dark:hover:text-rose-400 dark:hover:bg-rose-500/10"
                     title="Hapus Jadwal"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -365,9 +365,9 @@ export default function AcademicBulkPage() {
           maxWidth="lg"
         >
           <form onSubmit={handleAddBlock} className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-bold text-slate-700 mb-1 dark:text-slate-300">
                   Kode Mata Kuliah
                 </label>
                 <input
@@ -376,18 +376,18 @@ export default function AcademicBulkPage() {
                   placeholder="Contoh: IF2104"
                   value={courseCode}
                   onChange={(e) => setCourseCode(e.target.value)}
-                  className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-600"
+                  className="w-full px-3 py-2 min-h-11 sm:min-h-0 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-700"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-bold text-slate-700 mb-1 dark:text-slate-300">
                   Fakultas
                 </label>
                 <select
                   value={faculty}
                   onChange={(e) => setFaculty(e.target.value)}
-                  className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-600"
+                  className="w-full px-3 py-2 min-h-11 sm:min-h-0 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-700"
                 >
                   <option value="Teknologi Informasi">Fakultas Teknologi Informasi</option>
                   <option value="Kedokteran">Fakultas Kedokteran</option>
@@ -399,7 +399,7 @@ export default function AcademicBulkPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
+              <label className="block text-xs font-bold text-slate-700 mb-1 dark:text-slate-300">
                 Nama Mata Kuliah
               </label>
               <input
@@ -408,13 +408,13 @@ export default function AcademicBulkPage() {
                 placeholder="Contoh: Pemrograman Aplikasi Mobile Lanjut"
                 value={courseTitle}
                 onChange={(e) => setCourseTitle(e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-600"
+                className="w-full px-3 py-2 min-h-11 sm:min-h-0 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-700"
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-bold text-slate-700 mb-1 dark:text-slate-300">
                   Nama Dosen Pengampu
                 </label>
                 <input
@@ -423,12 +423,12 @@ export default function AcademicBulkPage() {
                   placeholder="Contoh: Dr. Irfan Hakim, M.Kom"
                   value={lecturerName}
                   onChange={(e) => setLecturerName(e.target.value)}
-                  className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-600"
+                  className="w-full px-3 py-2 min-h-11 sm:min-h-0 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-700"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-bold text-slate-700 mb-1 dark:text-slate-300">
                   Kelompok Kelas Mahasiswa
                 </label>
                 <input
@@ -437,20 +437,20 @@ export default function AcademicBulkPage() {
                   placeholder="Contoh: IF-2024-A"
                   value={studentGroup}
                   onChange={(e) => setStudentGroup(e.target.value)}
-                  className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-600"
+                  className="w-full px-3 py-2 min-h-11 sm:min-h-0 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-700"
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-bold text-slate-700 mb-1 dark:text-slate-300">
                   Ruangan Kelas / Lab
                 </label>
                 <select
                   value={selectedRoomId}
                   onChange={(e) => setSelectedRoomId(e.target.value)}
-                  className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-600"
+                  className="w-full px-3 py-2 min-h-11 sm:min-h-0 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-700"
                 >
                   {rooms.map((r) => (
                     <option key={r.id} value={r.id}>
@@ -461,13 +461,13 @@ export default function AcademicBulkPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-bold text-slate-700 mb-1 dark:text-slate-300">
                   Hari Perkuliahan
                 </label>
                 <select
                   value={dayOfWeek}
                   onChange={(e) => setDayOfWeek(Number(e.target.value))}
-                  className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-600"
+                  className="w-full px-3 py-2 min-h-11 sm:min-h-0 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-700"
                 >
                   {daysName.map((d, i) => (
                     <option key={i + 1} value={i + 1}>
@@ -478,17 +478,17 @@ export default function AcademicBulkPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div
                 className="cursor-pointer space-y-1"
                 onClick={() => {
                   const el = document.getElementById('academicStartTimeInput') as HTMLInputElement | null;
                   if (el) {
-                    try { (el as any).showPicker(); } catch (err) {}
+                    try { el.showPicker?.(); } catch (err) {}
                   }
                 }}
               >
-                <label htmlFor="academicStartTimeInput" className="block text-xs font-bold text-slate-700 mb-1 cursor-pointer">
+                <label htmlFor="academicStartTimeInput" className="block text-xs font-bold text-slate-700 mb-1 dark:text-slate-300 cursor-pointer">
                   Jam Mulai (WIB)
                 </label>
                 <input
@@ -498,9 +498,9 @@ export default function AcademicBulkPage() {
                   value={startTime}
                   onChange={(e) => setStartTime(e.target.value)}
                   onClick={(e) => {
-                    try { (e.currentTarget as any).showPicker(); } catch (err) {}
+                    try { e.currentTarget.showPicker?.(); } catch (err) {}
                   }}
-                  className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-600 cursor-pointer"
+                  className="w-full px-3 py-2 min-h-11 sm:min-h-0 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-700 cursor-pointer"
                 />
               </div>
 
@@ -509,11 +509,11 @@ export default function AcademicBulkPage() {
                 onClick={() => {
                   const el = document.getElementById('academicEndTimeInput') as HTMLInputElement | null;
                   if (el) {
-                    try { (el as any).showPicker(); } catch (err) {}
+                    try { el.showPicker?.(); } catch (err) {}
                   }
                 }}
               >
-                <label htmlFor="academicEndTimeInput" className="block text-xs font-bold text-slate-700 mb-1 cursor-pointer">
+                <label htmlFor="academicEndTimeInput" className="block text-xs font-bold text-slate-700 mb-1 dark:text-slate-300 cursor-pointer">
                   Jam Selesai (WIB)
                 </label>
                 <input
@@ -523,24 +523,24 @@ export default function AcademicBulkPage() {
                   value={endTime}
                   onChange={(e) => setEndTime(e.target.value)}
                   onClick={(e) => {
-                    try { (e.currentTarget as any).showPicker(); } catch (err) {}
+                    try { e.currentTarget.showPicker?.(); } catch (err) {}
                   }}
-                  className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-600 cursor-pointer"
+                  className="w-full px-3 py-2 min-h-11 sm:min-h-0 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-700 cursor-pointer"
                 />
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
               <button
                 type="button"
                 onClick={() => setIsAddModalOpen(false)}
-                className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl"
+                className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl dark:text-slate-300 dark:hover:bg-slate-800"
               >
                 Batal
               </button>
               <button
                 type="submit"
-                className="px-5 py-2 text-xs font-bold text-white bg-purple-700 hover:bg-purple-800 rounded-xl shadow-md"
+                className="px-5 py-2 min-h-11 sm:min-h-0 text-xs font-bold text-white bg-yarsi-primary hover:bg-yarsi-dark rounded-xl shadow-md dark:bg-emerald-600 dark:hover:bg-emerald-500"
               >
                 Simpan & Kunci Jadwal
               </button>

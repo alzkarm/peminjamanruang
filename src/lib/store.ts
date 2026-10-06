@@ -307,18 +307,26 @@ export const useAppStore = create<AppState>()(
           } else {
             await bookingsApi.cancel(bookingId, reason);
           }
-        } catch (err: any) {
-          // Client-side fallback
+
+          set((state) => ({
+            bookings: state.bookings.map((b) =>
+              relatedIds.includes(b.id)
+                ? { ...b, status: 'CANCELLED' as BookingStatus, rejectionReason: reason }
+                : b
+            ),
+            isSyncing: false,
+          }));
+        } catch (err: unknown) {
+          set({
+            isSyncing: false,
+            error:
+              err instanceof Error
+                ? err.message
+                : 'Gagal membatalkan pengajuan peminjaman.',
+          });
+          throw err;
         }
 
-        set((state) => ({
-          bookings: state.bookings.map((b) =>
-            relatedIds.includes(b.id)
-              ? { ...b, status: 'CANCELLED' as BookingStatus, rejectionReason: reason }
-              : b
-          ),
-          isSyncing: false,
-        }));
       },
 
       approveBookingLPF: async (bookingId, notes, approverName, applyToRecurringGroup = true) => {
@@ -370,26 +378,31 @@ export const useAppStore = create<AppState>()(
           } else {
             await bookingsApi.updateStatus(bookingId, targetStatus, notes, applyToRecurringGroup);
           }
-        } catch (err: any) {
-          // Fallback to client-side optimistic update
+
+          const now = new Date().toLocaleString('id-ID');
+          const approver = approverName || 'Bambang Sudibyo (LPF)';
+          set((state) => ({
+            bookings: state.bookings.map((b) =>
+              relatedIds.includes(b.id)
+                ? {
+                    ...b,
+                    status: frontendTargetStatus as BookingStatus,
+                    lpfNotes: notes || (booking?.requiresYayasanApproval ? 'Diverifikasi LPF & Direkomendasikan ke Yayasan' : 'Disetujui oleh LPF'),
+                    lpfApprovedAt: now,
+                    lpfApprovedBy: approver,
+                  }
+                : b
+            ),
+            isSyncing: false,
+          }));
+        } catch (err: unknown) {
+          set({
+            isSyncing: false,
+            error: err instanceof Error ? err.message : 'Gagal memproses persetujuan LPF.',
+          });
+          throw err;
         }
 
-        const now = new Date().toLocaleString('id-ID');
-        const approver = approverName || 'Bambang Sudibyo (LPF)';
-        set((state) => ({
-          bookings: state.bookings.map((b) =>
-            relatedIds.includes(b.id)
-              ? {
-                  ...b,
-                  status: frontendTargetStatus as BookingStatus,
-                  lpfNotes: notes || (booking?.requiresYayasanApproval ? 'Diverifikasi LPF & Direkomendasikan ke Yayasan' : 'Disetujui oleh LPF'),
-                  lpfApprovedAt: now,
-                  lpfApprovedBy: approver,
-                }
-              : b
-          ),
-          isSyncing: false,
-        }));
       },
 
       approveBookingYayasan: async (bookingId, notes, approverName, applyToRecurringGroup = true) => {
@@ -423,26 +436,31 @@ export const useAppStore = create<AppState>()(
           } else {
             await bookingsApi.updateStatus(bookingId, 'APPROVED', notes, applyToRecurringGroup);
           }
-        } catch (err: any) {
-          // Client-side fallback
+
+          const now = new Date().toLocaleString('id-ID');
+          const approver = approverName || 'Drs. H. M. Shadiq (Yayasan YARSI)';
+          set((state) => ({
+            bookings: state.bookings.map((b) =>
+              relatedIds.includes(b.id)
+                ? {
+                    ...b,
+                    status: 'APPROVED' as BookingStatus,
+                    yayasanNotes: notes || 'Disetujui oleh Sekretariat Yayasan YARSI',
+                    yayasanApprovedAt: now,
+                    yayasanApprovedBy: approver,
+                  }
+                : b
+            ),
+            isSyncing: false,
+          }));
+        } catch (err: unknown) {
+          set({
+            isSyncing: false,
+            error: err instanceof Error ? err.message : 'Gagal memproses persetujuan Yayasan.',
+          });
+          throw err;
         }
 
-        const now = new Date().toLocaleString('id-ID');
-        const approver = approverName || 'Drs. H. M. Shadiq (Yayasan YARSI)';
-        set((state) => ({
-          bookings: state.bookings.map((b) =>
-            relatedIds.includes(b.id)
-              ? {
-                  ...b,
-                  status: 'APPROVED' as BookingStatus,
-                  yayasanNotes: notes || 'Disetujui oleh Sekretariat Yayasan YARSI',
-                  yayasanApprovedAt: now,
-                  yayasanApprovedBy: approver,
-                }
-              : b
-          ),
-          isSyncing: false,
-        }));
       },
 
       rejectBooking: async (bookingId, reason, rejectedBy, applyToRecurringGroup = true) => {
@@ -476,23 +494,28 @@ export const useAppStore = create<AppState>()(
           } else {
             await bookingsApi.updateStatus(bookingId, 'REJECTED', reason, applyToRecurringGroup);
           }
-        } catch (err: any) {
-          // Client-side fallback
+
+          set((state) => ({
+            bookings: state.bookings.map((b) =>
+              relatedIds.includes(b.id)
+                ? {
+                    ...b,
+                    status: 'REJECTED' as BookingStatus,
+                    rejectionReason: reason,
+                    lpfNotes: `Ditolak oleh ${rejectedBy || 'Admin'}: ${reason}`,
+                  }
+                : b
+            ),
+            isSyncing: false,
+          }));
+        } catch (err: unknown) {
+          set({
+            isSyncing: false,
+            error: err instanceof Error ? err.message : 'Gagal memproses penolakan pengajuan.',
+          });
+          throw err;
         }
 
-        set((state) => ({
-          bookings: state.bookings.map((b) =>
-            relatedIds.includes(b.id)
-              ? {
-                  ...b,
-                  status: 'REJECTED' as BookingStatus,
-                  rejectionReason: reason,
-                  lpfNotes: `Ditolak oleh ${rejectedBy || 'Admin'}: ${reason}`,
-                }
-              : b
-          ),
-          isSyncing: false,
-        }));
       },
 
       returnBooking: async (bookingId, notes, returnedBy, applyToRecurringGroup = true) => {
@@ -526,23 +549,28 @@ export const useAppStore = create<AppState>()(
           } else {
             await bookingsApi.updateStatus(bookingId, 'RETURNED', notes, applyToRecurringGroup);
           }
-        } catch (err: any) {
-          // Client-side fallback
+
+          set((state) => ({
+            bookings: state.bookings.map((b) =>
+              relatedIds.includes(b.id)
+                ? {
+                    ...b,
+                    status: 'RETURNED' as BookingStatus,
+                    rejectionReason: notes,
+                    lpfNotes: `Dikembalikan oleh ${returnedBy || 'Admin'}: ${notes}`,
+                  }
+                : b
+            ),
+            isSyncing: false,
+          }));
+        } catch (err: unknown) {
+          set({
+            isSyncing: false,
+            error: err instanceof Error ? err.message : 'Gagal memproses pengembalian pengajuan.',
+          });
+          throw err;
         }
 
-        set((state) => ({
-          bookings: state.bookings.map((b) =>
-            relatedIds.includes(b.id)
-              ? {
-                  ...b,
-                  status: 'RETURNED' as BookingStatus,
-                  rejectionReason: notes,
-                  lpfNotes: `Dikembalikan oleh ${returnedBy || 'Admin'}: ${notes}`,
-                }
-              : b
-          ),
-          isSyncing: false,
-        }));
       },
 
       addAcademicBlock: async (blockData) => {
@@ -569,16 +597,15 @@ export const useAppStore = create<AppState>()(
             isLoading: false,
           }));
           return newBlock;
-        } catch (err: any) {
-          const newBlock: AcademicBlock = {
-            ...blockData,
-            id: `acad-${Date.now()}`,
-          };
-          set((state) => ({
-            academicBlocks: [newBlock, ...state.academicBlocks],
+        } catch (err: unknown) {
+          set({
             isLoading: false,
-          }));
-          return newBlock;
+            error:
+              err instanceof Error
+                ? err.message
+                : 'Gagal menambahkan blok jadwal perkuliahan.',
+          });
+          throw err;
         }
       },
 

@@ -115,7 +115,7 @@ function ProductPreview({ type }: { type: (typeof quickAccessItems)[number]['pre
 
   return (
     <div className="grid grid-cols-[0.55fr_1fr] gap-2" aria-hidden="true">
-      <div className="space-y-2 border-r border-emerald-900/10 pr-2">
+      <div className="space-y-2 border-r border-emerald-900/10 pr-2 dark:border-emerald-500/20">
         <span className="feature-preview-line w-full" />
         <span className="feature-preview-line w-4/5" />
         <span className="feature-preview-line w-3/5" />
@@ -271,7 +271,7 @@ export default function HomePage() {
                       e.currentTarget.showPicker?.();
                     } catch {}
                   }}
-                  className="w-full px-3 py-2.5 bg-slate-50 hover:bg-slate-100/80 focus:bg-white text-xs sm:text-sm font-medium rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-yarsi-primary text-slate-700 font-sans cursor-pointer"
+                  className="w-full px-3 py-2.5 bg-slate-50 hover:bg-slate-100/80 focus:bg-white dark:bg-slate-800/60 dark:hover:bg-slate-700/60 dark:focus:bg-slate-900 text-xs sm:text-sm font-medium rounded-xl border border-slate-200 dark:border-slate-700 focus:outline-none focus:ring-2 focus:ring-yarsi-primary dark:focus:ring-emerald-500 text-slate-700 dark:text-slate-300 font-sans cursor-pointer"
                 />
               </div>
               <div className="grid grid-cols-3 divide-x divide-white/10">
@@ -305,33 +305,33 @@ export default function HomePage() {
         </div>
 
         <div className="relative z-30 mx-auto mt-6 w-full max-w-7xl sm:mt-8 lg:mt-10">
-          <div className="search-console overflow-hidden border border-slate-200/80 bg-white text-slate-900 shadow-[0_24px_65px_-26px_rgba(1,40,30,0.48)]">
+          <div className="search-console overflow-hidden border border-slate-200/80 bg-white text-slate-900 shadow-[0_24px_65px_-26px_rgba(1,40,30,0.48)] dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100">
             <div className="grid grid-cols-[minmax(0,1fr)] lg:grid-cols-[1.05fr_1.2fr_0.78fr_0.8fr_auto]">
-              <div className="flex min-h-[76px] items-center gap-3 border-b border-slate-200 px-4 lg:border-b-0 lg:border-r sm:px-5">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-yarsi-primary">
+              <div className="flex min-h-[76px] items-center gap-3 border-b border-slate-200 px-4 lg:border-b-0 lg:border-r sm:px-5 dark:border-slate-700">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-yarsi-primary dark:bg-emerald-500/10 dark:text-emerald-400">
                   <Search className="h-5 w-5" aria-hidden="true" />
                 </span>
                 <span className="min-w-0">
-                  <strong className="block text-sm font-extrabold text-slate-900">Cek ketersediaan</strong>
-                  <small className="mt-1 block truncate text-[10px] text-slate-500">Cari ruangan yang sesuai agenda</small>
+                  <strong className="block text-sm font-extrabold text-slate-900 dark:text-slate-100">Cek ketersediaan</strong>
+                  <small className="mt-1 block truncate text-[10px] text-slate-500 dark:text-slate-400">Cari ruangan yang sesuai agenda</small>
                 </span>
               </div>
-              <label className="search-field group border-b border-slate-200 lg:border-b-0 lg:border-r">
+              <label className="search-field group border-b border-slate-200 lg:border-b-0 lg:border-r dark:border-slate-700">
                 <span className="sr-only">Cari nama atau kode ruangan</span>
                 <span className="flex items-center gap-3">
                   <Search className="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
-                  <input type="search" placeholder="Nama atau kode ruangan..." value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} className="min-w-0 flex-1 bg-transparent text-sm font-semibold text-slate-900 outline-none placeholder:font-normal placeholder:text-slate-400" />
+                  <input type="search" placeholder="Nama atau kode ruangan..." value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} className="min-w-0 flex-1 bg-transparent text-sm font-semibold text-slate-900 dark:text-slate-100 outline-none placeholder:font-normal placeholder:text-slate-400" />
                 </span>
               </label>
-              <label className="search-field border-b border-slate-200 lg:border-b-0 lg:border-r">
+              <label className="search-field border-b border-slate-200 lg:border-b-0 lg:border-r dark:border-slate-700">
                 <span className="sr-only">Pilih tanggal penggunaan</span>
                 <span className="flex items-center gap-3">
-                  <Calendar className="h-4 w-4 shrink-0 text-yarsi-primary" aria-hidden="true" />
-                  <input type="date" value={selectedDateStr} onChange={(event) => setSelectedDateStr(event.target.value)} className="min-w-0 flex-1 bg-transparent text-sm font-semibold text-slate-700 outline-none" />
+                  <Calendar className="h-4 w-4 shrink-0 text-yarsi-primary dark:text-emerald-400" aria-hidden="true" />
+                  <input type="date" value={selectedDateStr} onChange={(event) => setSelectedDateStr(event.target.value)} className="min-w-0 flex-1 bg-transparent text-sm font-semibold text-slate-700 dark:text-slate-300 outline-none" />
                 </span>
               </label>
               <div className="flex items-center p-3">
-                <Link href={`/schedule?date=${selectedDateStr}`} className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-yarsi-primary px-5 text-sm font-bold text-white shadow-sm transition hover:bg-yarsi-dark lg:w-auto">
+                <Link href={`/schedule?date=${selectedDateStr}`} className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-yarsi-primary px-5 text-sm font-bold text-white shadow-sm transition hover:bg-yarsi-dark dark:bg-emerald-600 dark:hover:bg-emerald-500 lg:w-auto">
                   Cari ruang <ArrowRight className="h-4 w-4" aria-hidden="true" />
                 </Link>
               </div>
@@ -347,26 +347,26 @@ export default function HomePage() {
         {/* SMART ROOM FINDER WIDGET (Task 1.5) */}
         <SmartRoomFinder />
 
-        <section aria-labelledby="status-ruangan-hari-ini" className="rounded-[22px_6px_22px_22px] border border-emerald-900/10 bg-white p-4 shadow-[0_28px_80px_-58px_rgba(3,47,37,0.5)] sm:p-6">
-          <div className="flex flex-col gap-4 border-b border-slate-200 pb-4 sm:flex-row sm:items-end sm:justify-between">
+        <section aria-labelledby="status-ruangan-hari-ini" className="rounded-[22px_6px_22px_22px] border border-emerald-900/10 bg-white p-4 shadow-[0_28px_80px_-58px_rgba(3,47,37,0.5)] sm:p-6 dark:border-slate-800 dark:bg-slate-900">
+          <div className="flex flex-col gap-4 border-b border-slate-200 pb-4 sm:flex-row sm:items-end sm:justify-between dark:border-slate-700">
             <div>
               <p className="section-kicker">Pantauan jadwal publik</p>
-              <h2 id="status-ruangan-hari-ini" className="mt-1 text-xl font-black tracking-tight text-slate-950 sm:text-2xl">Status Ruangan Hari Ini</h2>
-              <p className="mt-1 text-xs text-slate-500">{formatShortDateIndo(todayDateStr)} · WIB</p>
+              <h2 id="status-ruangan-hari-ini" className="mt-1 text-xl font-black tracking-tight text-slate-950 sm:text-2xl dark:text-slate-100">Status Ruangan Hari Ini</h2>
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{formatShortDateIndo(todayDateStr)} · WIB</p>
             </div>
             <div className="flex flex-col items-start gap-2 sm:items-end">
-              <span className="inline-flex items-center gap-2 text-[10px] font-bold text-slate-500">
+              <span className="inline-flex items-center gap-2 text-[10px] font-bold text-slate-500 dark:text-slate-400">
                 <span className="h-2 w-2 rounded-full bg-emerald-500" aria-hidden="true" />
                 Diperbarui otomatis · setiap 60 detik
               </span>
-              <Link href="/schedule" className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-emerald-200 px-3.5 text-xs font-extrabold text-yarsi-primary transition hover:border-emerald-400 hover:bg-emerald-50">
+              <Link href="/schedule" className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-emerald-200 px-3.5 text-xs font-extrabold text-yarsi-primary transition hover:border-emerald-400 hover:bg-emerald-50 dark:border-emerald-500/30 dark:text-emerald-400 dark:hover:border-emerald-500/40 dark:hover:bg-emerald-500/10">
                 Lihat Kalender Ruangan <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </Link>
             </div>
           </div>
 
           {todaySchedule.error && (
-            <div role="alert" className="mt-4 flex flex-col gap-3 rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-800 sm:flex-row sm:items-center sm:justify-between">
+            <div role="alert" className="mt-4 flex flex-col gap-3 rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-800 sm:flex-row sm:items-center sm:justify-between dark:border-rose-500/30 dark:bg-rose-500/10 dark:text-rose-200">
               <span>Jadwal ruangan tidak dapat dimuat. Periksa koneksi lalu coba lagi.</span>
               <button type="button" onClick={todaySchedule.retry} className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-lg bg-rose-700 px-4 font-bold text-white hover:bg-rose-800">
                 Coba Lagi
@@ -376,7 +376,7 @@ export default function HomePage() {
 
           {todaySchedule.isLoading && todaySchedule.events.length === 0 ? (
             <div className="mt-5 grid gap-4 sm:grid-cols-2" aria-live="polite" aria-busy="true">
-              {[0, 1].map((item) => <div key={item} className="h-36 animate-pulse rounded-xl bg-slate-100" />)}
+              {[0, 1].map((item) => <div key={item} className="h-36 animate-pulse rounded-xl bg-slate-100 dark:bg-slate-800" />)}
               <span className="sr-only">Memuat status ruangan</span>
             </div>
           ) : !todaySchedule.error || todaySchedule.events.length > 0 ? (
@@ -404,11 +404,11 @@ export default function HomePage() {
                       key={group.title}
                       className={`rounded-2xl border p-4 sm:p-5 ${
                         isEmerald
-                          ? 'border-emerald-200/90 bg-emerald-50/50'
-                          : 'border-amber-200/90 bg-amber-50/55'
+                          ? 'border-emerald-200/90 bg-emerald-50/50 dark:border-emerald-500/30 dark:bg-emerald-500/10'
+                          : 'border-amber-200/90 bg-amber-50/55 dark:border-amber-500/30 dark:bg-amber-500/10'
                       }`}
                     >
-                      <div className="flex items-center justify-between gap-3 border-b pb-3 border-slate-200/70">
+                      <div className="flex items-center justify-between gap-3 border-b pb-3 border-slate-200/70 dark:border-slate-700">
                         <div className="flex items-center gap-2">
                           {isEmerald ? (
                             <span className="relative flex h-2.5 w-2.5">
@@ -416,12 +416,12 @@ export default function HomePage() {
                               <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-emerald-600" />
                             </span>
                           ) : (
-                            <Clock3 className="h-4 w-4 text-amber-600" aria-hidden="true" />
+                            <Clock3 className="h-4 w-4 text-amber-600 dark:text-amber-400" aria-hidden="true" />
                           )}
-                          <h3 className="text-sm font-black text-slate-950">{group.title}</h3>
+                          <h3 className="text-sm font-black text-slate-950 dark:text-slate-100">{group.title}</h3>
                         </div>
                         <span
-                          className="inline-flex h-7 min-w-7 items-center justify-center rounded-lg bg-white px-2 text-xs font-black text-slate-800 shadow-xs border border-slate-200/60"
+                          className="inline-flex h-7 min-w-7 items-center justify-center rounded-lg bg-white px-2 text-xs font-black text-slate-800 shadow-xs border border-slate-200/60 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700"
                           aria-label={`${group.events.length} ruangan`}
                         >
                           {group.events.length}
@@ -433,41 +433,41 @@ export default function HomePage() {
                           {group.events.map((event) => (
                             <div
                               key={event.id}
-                              className={`group flex flex-col justify-between gap-3 rounded-xl border bg-white p-3.5 shadow-xs transition hover:shadow-md ${
+                              className={`group flex flex-col justify-between gap-3 rounded-xl border bg-white p-3.5 shadow-xs transition hover:shadow-md dark:bg-slate-900 ${
                                 isEmerald
-                                  ? 'border-emerald-200 hover:border-emerald-400'
-                                  : 'border-amber-200 hover:border-amber-400'
+                                  ? 'border-emerald-200 hover:border-emerald-400 dark:border-emerald-500/30 dark:hover:border-emerald-500/40'
+                                  : 'border-amber-200 hover:border-amber-400 dark:border-amber-500/30 dark:hover:border-amber-500/40'
                               }`}
                             >
                               <div>
                                 <div className="flex items-start justify-between gap-2">
-                                  <h4 className="truncate text-xs font-black text-slate-900 group-hover:text-yarsi-primary">
+                                  <h4 className="truncate text-xs font-black text-slate-900 group-hover:text-yarsi-primary dark:text-slate-100 dark:group-hover:text-emerald-400">
                                     {event.roomName}
                                   </h4>
                                   <span
                                     className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wider ${
                                       isEmerald
-                                        ? 'bg-emerald-100 text-emerald-800'
-                                        : 'bg-amber-100 text-amber-800'
+                                        ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-200'
+                                        : 'bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-200'
                                     }`}
                                   >
                                     {isEmerald ? 'Aktif' : `Mulai ${formatJakartaTime(event.startTime)}`}
                                   </span>
                                 </div>
-                                <p className="mt-1 flex items-center gap-1 text-[11px] font-medium text-slate-500">
+                                <p className="mt-1 flex items-center gap-1 text-[11px] font-medium text-slate-500 dark:text-slate-400">
                                   <MapPin className="h-3 w-3 shrink-0 text-slate-400" aria-hidden="true" />
                                   <span className="truncate">{formatFloorLabel(event.floorName)}</span>
                                 </p>
                               </div>
 
-                              <div className="flex items-center justify-between border-t border-slate-100 pt-2.5">
-                                <div className="inline-flex items-center gap-1.5 text-[11px] font-bold text-slate-700">
-                                  <Clock className={`h-3 w-3 ${isEmerald ? 'text-emerald-600' : 'text-amber-600'}`} aria-hidden="true" />
+                              <div className="flex items-center justify-between border-t border-slate-100 pt-2.5 dark:border-slate-800">
+                                <div className="inline-flex items-center gap-1.5 text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                                  <Clock className={`h-3 w-3 ${isEmerald ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'}`} aria-hidden="true" />
                                   <span>{formatJakartaTime(event.startTime)} – {formatJakartaTime(event.endTime)} WIB</span>
                                 </div>
                                 <Link
                                   href={`/schedule?roomId=${event.roomId}&date=${todayDateStr}`}
-                                  className="inline-flex items-center gap-0.5 text-[10px] font-extrabold text-yarsi-primary hover:text-emerald-800 hover:underline"
+                                  className="inline-flex items-center gap-0.5 text-[10px] font-extrabold text-yarsi-primary hover:text-emerald-800 hover:underline dark:text-emerald-400 dark:hover:text-emerald-200"
                                 >
                                   Jadwal <ArrowRight className="h-2.5 w-2.5" aria-hidden="true" />
                                 </Link>
@@ -476,15 +476,15 @@ export default function HomePage() {
                           ))}
                         </div>
                       ) : (
-                        <div className="mt-3.5 flex items-start gap-3 rounded-xl border border-dashed border-slate-300/80 bg-white/70 p-3.5 text-slate-600">
+                        <div className="mt-3.5 flex items-start gap-3 rounded-xl border border-dashed border-slate-300/80 bg-white/70 p-3.5 text-slate-600 dark:border-slate-600 dark:bg-slate-800/50 dark:text-slate-300">
                           {isEmerald ? (
-                            <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 mt-0.5" aria-hidden="true" />
+                            <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400 mt-0.5" aria-hidden="true" />
                           ) : (
-                            <Clock3 className="h-4 w-4 shrink-0 text-amber-600 mt-0.5" aria-hidden="true" />
+                            <Clock3 className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" aria-hidden="true" />
                           )}
                           <div>
-                            <p className="text-xs font-bold text-slate-800">{group.emptyTitle}</p>
-                            <p className="mt-0.5 text-[11px] text-slate-500">{group.emptySubtitle}</p>
+                            <p className="text-xs font-bold text-slate-800 dark:text-slate-200">{group.emptyTitle}</p>
+                            <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">{group.emptySubtitle}</p>
                           </div>
                         </div>
                       )}
@@ -494,11 +494,11 @@ export default function HomePage() {
               </div>
 
               {todayFinishedEvents.length > 0 && (
-                <div className="mt-4 border-t border-slate-200/80 pt-3">
+                <div className="mt-4 border-t border-slate-200/80 pt-3 dark:border-slate-700">
                   <button
                     type="button"
                     onClick={() => setShowFinishedToday((prev) => !prev)}
-                    className="inline-flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition"
+                    className="inline-flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-100 hover:text-slate-900 transition dark:text-slate-300 dark:hover:bg-slate-700/60 dark:hover:text-slate-100"
                   >
                     <Clock3 className="h-3.5 w-3.5 text-slate-400" aria-hidden="true" />
                     <span>
@@ -514,28 +514,28 @@ export default function HomePage() {
                       {todayFinishedEvents.map((event) => (
                         <div
                           key={event.id}
-                          className="flex flex-col justify-between gap-2.5 rounded-xl border border-slate-200 bg-slate-50/80 p-3 text-xs opacity-85 hover:opacity-100 transition"
+                          className="flex flex-col justify-between gap-2.5 rounded-xl border border-slate-200 bg-slate-50/80 p-3 text-xs opacity-85 hover:opacity-100 transition dark:border-slate-700 dark:bg-slate-800/40"
                         >
                           <div className="flex items-start justify-between gap-2">
                             <div className="min-w-0 flex-1">
-                              <h5 className="truncate font-bold text-slate-800">{event.roomName}</h5>
-                              <p className="mt-0.5 flex items-center gap-1 text-[11px] text-slate-500">
+                              <h5 className="truncate font-bold text-slate-800 dark:text-slate-200">{event.roomName}</h5>
+                              <p className="mt-0.5 flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400">
                                 <MapPin className="h-3 w-3 text-slate-400" aria-hidden="true" />
                                 <span className="truncate">{formatFloorLabel(event.floorName)}</span>
                               </p>
                             </div>
-                            <span className="inline-flex items-center rounded-md bg-slate-200/80 px-1.5 py-0.5 text-[10px] font-bold text-slate-600">
+                            <span className="inline-flex items-center rounded-md bg-slate-200/80 px-1.5 py-0.5 text-[10px] font-bold text-slate-600 dark:bg-slate-700 dark:text-slate-300">
                               Selesai
                             </span>
                           </div>
-                          <div className="flex items-center justify-between border-t border-slate-200/70 pt-2 text-[11px] text-slate-600">
+                          <div className="flex items-center justify-between border-t border-slate-200/70 pt-2 text-[11px] text-slate-600 dark:border-slate-700 dark:text-slate-300">
                             <span className="flex items-center gap-1 font-semibold">
                               <Clock className="h-3 w-3 text-slate-400" aria-hidden="true" />
                               {formatJakartaTime(event.startTime)} – {formatJakartaTime(event.endTime)} WIB
                             </span>
                             <Link
                               href={`/schedule?roomId=${event.roomId}&date=${todayDateStr}`}
-                              className="font-bold text-yarsi-primary hover:underline"
+                              className="font-bold text-yarsi-primary hover:underline dark:text-emerald-400"
                             >
                               Jadwal
                             </Link>
@@ -550,17 +550,17 @@ export default function HomePage() {
           ) : null}
         </section>
 
-        <section id="catalog-section" className="rounded-[22px_6px_22px_22px] border border-slate-200/90 bg-white p-4 shadow-[0_28px_80px_-58px_rgba(3,47,37,0.5)] sm:p-6">
-          <div className="flex flex-col gap-5 border-b border-slate-200 pb-5">
+        <section id="catalog-section" className="rounded-[22px_6px_22px_22px] border border-slate-200/90 bg-white p-4 shadow-[0_28px_80px_-58px_rgba(3,47,37,0.5)] sm:p-6 dark:border-slate-800 dark:bg-slate-900">
+          <div className="flex flex-col gap-5 border-b border-slate-200 pb-5 dark:border-slate-700">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <div className="flex flex-wrap items-baseline gap-3">
-                  <h2 className="text-lg font-black tracking-tight text-slate-950 sm:text-xl">Daftar Ruangan per Lantai</h2>
-                  <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-extrabold text-yarsi-primary ring-1 ring-inset ring-emerald-600/20">
+                  <h2 className="text-lg font-black tracking-tight text-slate-950 sm:text-xl dark:text-slate-100">Daftar Ruangan per Lantai</h2>
+                  <span className="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-extrabold text-yarsi-primary ring-1 ring-inset ring-emerald-600/20 dark:bg-emerald-500/10 dark:text-emerald-400 dark:ring-emerald-500/30">
                     {filteredRooms.length} ruangan ditemukan
                   </span>
                 </div>
-                <p className="mt-1 text-xs text-slate-500">Ketersediaan {formatShortDateIndo(selectedDateStr)}</p>
+                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">Ketersediaan {formatShortDateIndo(selectedDateStr)}</p>
               </div>
 
               {/* Smart Search Bar */}
@@ -571,14 +571,14 @@ export default function HomePage() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Cari nama, kode, lab, kelas..."
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50/70 py-2 pl-9 pr-9 text-xs font-semibold text-slate-900 placeholder:text-slate-400 transition-all focus:border-yarsi-primary focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/70 py-2 pl-9 pr-9 text-xs font-semibold text-slate-900 placeholder:text-slate-400 transition-all focus:border-yarsi-primary focus:bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:focus:border-emerald-500 dark:focus:bg-slate-900 dark:focus:ring-emerald-500"
                 />
                 {searchQuery && (
                   <button
                     type="button"
                     onClick={() => setSearchQuery('')}
                     aria-label="Bersihkan pencarian"
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-full p-1 text-slate-400 hover:bg-slate-200/60 hover:text-slate-700 transition"
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 rounded-full p-1 text-slate-400 hover:bg-slate-200/60 hover:text-slate-700 transition dark:hover:bg-slate-700 dark:hover:text-slate-200"
                   >
                     <X className="h-3.5 w-3.5" aria-hidden="true" />
                   </button>
@@ -612,7 +612,7 @@ export default function HomePage() {
                 ))}
               </div>
 
-              <Link href={`/schedule?date=${selectedDateStr}`} className="hidden sm:inline-flex min-h-10 shrink-0 items-center gap-1.5 text-xs font-extrabold text-slate-700 hover:text-yarsi-primary transition">
+              <Link href={`/schedule?date=${selectedDateStr}`} className="hidden sm:inline-flex min-h-10 shrink-0 items-center gap-1.5 text-xs font-extrabold text-slate-700 hover:text-yarsi-primary transition dark:text-slate-300 dark:hover:text-emerald-400">
                 Lihat kalender <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
               </Link>
             </div>
@@ -620,13 +620,13 @@ export default function HomePage() {
 
           {filteredRooms.length === 0 ? (
             <div className="py-14 text-center">
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 dark:bg-slate-800">
                 <Building2 className="h-7 w-7" aria-hidden="true" />
               </div>
-              <h3 className="mt-4 text-sm font-bold text-slate-800">
+              <h3 className="mt-4 text-sm font-bold text-slate-800 dark:text-slate-200">
                 {searchQuery ? `Tidak ada ruangan dengan kata kunci "${searchQuery}"` : 'Tidak ada ruangan pada filter ini'}
               </h3>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
                 {searchQuery
                   ? 'Coba gunakan kata kunci lain (misal: "lab", "auditorium", kode ruang) atau atur ulang pencarian.'
                   : 'Pilih lantai lain atau tampilkan "Semua" untuk melihat ruangan yang tersedia.'}
@@ -634,7 +634,7 @@ export default function HomePage() {
               <button
                 type="button"
                 onClick={() => { setSearchQuery(''); setSelectedFloor('all'); }}
-                className="mt-4 inline-flex min-h-10 items-center gap-2 rounded-xl bg-emerald-50 px-4 py-2 text-xs font-bold text-yarsi-primary hover:bg-emerald-100 transition"
+                className="mt-4 inline-flex min-h-10 items-center gap-2 rounded-xl bg-emerald-50 px-4 py-2 text-xs font-bold text-yarsi-primary hover:bg-emerald-100 transition dark:bg-emerald-500/10 dark:text-emerald-400 dark:hover:bg-emerald-500/15"
               >
                 Atur ulang pencarian & lantai
               </button>
@@ -669,17 +669,17 @@ export default function HomePage() {
                 key={item.title}
                 href={item.href}
                 onClick={(event) => handleProtectedClick(event, item.requiresAuth)}
-                className="feature-access-card group grid min-h-[190px] grid-cols-[0.75fr_1.25fr] gap-4 overflow-hidden border border-slate-200 bg-white p-4 shadow-sm focus-visible:ring-2 focus-visible:ring-yarsi-primary"
+                className="feature-access-card group grid min-h-[190px] grid-cols-[0.75fr_1.25fr] gap-4 overflow-hidden border border-slate-200 bg-white p-4 shadow-sm focus-visible:ring-2 focus-visible:ring-yarsi-primary dark:border-slate-800 dark:bg-slate-900 dark:focus-visible:ring-emerald-500"
               >
                 <span className="flex min-w-0 flex-col">
-                  <Icon className="h-5 w-5 text-yarsi-primary" aria-hidden="true" />
-                  <strong className="mt-4 text-sm font-extrabold leading-snug text-slate-900">{item.title}</strong>
-                  <small className="mt-2 text-[10px] leading-4 text-slate-500">{item.description}</small>
-                  <span className="mt-auto inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 text-yarsi-primary transition group-hover:border-emerald-300 group-hover:bg-emerald-50">
+                  <Icon className="h-5 w-5 text-yarsi-primary dark:text-emerald-400" aria-hidden="true" />
+                  <strong className="mt-4 text-sm font-extrabold leading-snug text-slate-900 dark:text-slate-100">{item.title}</strong>
+                  <small className="mt-2 text-[10px] leading-4 text-slate-500 dark:text-slate-400">{item.description}</small>
+                  <span className="mt-auto inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 text-yarsi-primary transition group-hover:border-emerald-300 group-hover:bg-emerald-50 dark:border-slate-700 dark:text-emerald-400 dark:group-hover:border-emerald-500/40 dark:group-hover:bg-emerald-500/10">
                     <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
                   </span>
                 </span>
-                <span className="feature-preview self-center border border-emerald-900/10 bg-[#f7faf8] p-3 shadow-inner">
+                <span className="feature-preview self-center border border-emerald-900/10 bg-[#f7faf8] p-3 shadow-inner dark:border-emerald-500/20 dark:bg-slate-800/60">
                   <ProductPreview type={item.preview} />
                 </span>
               </Link>

@@ -77,50 +77,50 @@ export function EventDetailModal({
         maxWidth="lg"
       >
         <div className="space-y-4">
-          <div className="bg-purple-50 border border-purple-200 rounded-xl p-4 flex items-start gap-3">
+          <div className="bg-purple-50 border border-purple-200 rounded-xl p-4 flex items-start gap-3 dark:bg-purple-500/10 dark:border-purple-500/30">
             <div className="p-2 bg-purple-600 text-white rounded-lg shrink-0 mt-0.5">
               <GraduationCap className="w-5 h-5" />
             </div>
             <div>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-purple-700 bg-purple-100 px-2 py-0.5 rounded">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-purple-700 bg-purple-100 px-2 py-0.5 rounded dark:text-purple-400 dark:bg-purple-500/15">
                 {academicBlock.courseCode}
               </span>
-              <h3 className="text-base font-bold text-purple-950 mt-1">
+              <h3 className="text-base font-bold text-purple-950 mt-1 dark:text-purple-200">
                 {academicBlock.title}
               </h3>
-              <p className="text-xs text-purple-800 font-medium">
+              <p className="text-xs text-purple-800 font-medium dark:text-purple-200">
                 {academicBlock.semester} • {academicBlock.faculty}
               </p>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 text-xs bg-slate-50 p-4 rounded-xl border border-slate-200/80">
+          <div className="grid grid-cols-2 gap-3 text-xs bg-slate-50 p-4 rounded-xl border border-slate-200/80 dark:bg-slate-800/60 dark:border-slate-700">
             <div>
               <p className="text-slate-400 font-medium">Ruangan & Lokasi</p>
-              <p className="font-semibold text-slate-800 mt-0.5">{academicBlock.roomName}</p>
-              <p className="text-slate-500">{academicBlock.building}</p>
+              <p className="font-semibold text-slate-800 mt-0.5 dark:text-slate-200">{academicBlock.roomName}</p>
+              <p className="text-slate-500 dark:text-slate-400">{academicBlock.building}</p>
             </div>
             <div>
               <p className="text-slate-400 font-medium">Waktu Perkuliahan</p>
-              <p className="font-semibold text-slate-800 mt-0.5">
+              <p className="font-semibold text-slate-800 mt-0.5 dark:text-slate-200">
                 {academicBlock.startTime} - {academicBlock.endTime} WIB
               </p>
-              <p className="text-slate-500">
+              <p className="text-slate-500 dark:text-slate-400">
                 Setiap {['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'][academicBlock.dayOfWeek - 1]}
               </p>
             </div>
             <div>
               <p className="text-slate-400 font-medium">Dosen Pengampu</p>
-              <p className="font-semibold text-slate-800 mt-0.5">{academicBlock.lecturerName}</p>
+              <p className="font-semibold text-slate-800 mt-0.5 dark:text-slate-200">{academicBlock.lecturerName}</p>
             </div>
             <div>
               <p className="text-slate-400 font-medium">Kelompok Mahasiswa</p>
-              <p className="font-semibold text-slate-800 mt-0.5">{academicBlock.studentGroup}</p>
+              <p className="font-semibold text-slate-800 mt-0.5 dark:text-slate-200">{academicBlock.studentGroup}</p>
             </div>
           </div>
 
-          <div className="bg-slate-100 p-3 rounded-xl text-xs text-slate-600 flex items-center gap-2">
-            <Info className="w-4 h-4 text-purple-600 shrink-0" />
+          <div className="bg-slate-100 p-3 rounded-xl text-xs text-slate-600 flex items-center gap-2 dark:bg-slate-800 dark:text-slate-300">
+            <Info className="w-4 h-4 text-purple-600 shrink-0 dark:text-purple-400" />
             <span>Ruangan ini dikunci untuk kegiatan perkuliahan universitas dan tidak dapat dipinjam umum pada jam ini.</span>
           </div>
         </div>
@@ -143,38 +143,38 @@ export function EventDetailModal({
         maxWidth="md"
       >
         <div className="space-y-5">
-          <div className="rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-white p-5">
+          <div className="rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-white p-5 dark:border-amber-500/30 dark:from-amber-500/10 dark:to-slate-900">
             <div className="flex items-start gap-3">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-700 ring-1 ring-amber-200">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-700 ring-1 ring-amber-200 dark:bg-amber-500/15 dark:text-amber-400 dark:ring-amber-500/30">
                 <LockKeyhole className="h-5 w-5" aria-hidden="true" />
               </div>
               <div>
-                <p className="text-xs font-bold uppercase tracking-[0.14em] text-amber-700">Slot tidak tersedia</p>
-                <h3 className="mt-1 text-lg font-extrabold text-slate-950">Waktu ini sudah terjadwal</h3>
-                <p className="mt-1 text-sm leading-relaxed text-slate-600">Detail kegiatan dan pemohon dilindungi pada kalender publik.</p>
+                <p className="text-xs font-bold uppercase tracking-[0.14em] text-amber-700 dark:text-amber-400">Slot tidak tersedia</p>
+                <h3 className="mt-1 text-lg font-extrabold text-slate-950 dark:text-slate-100">Waktu ini sudah terjadwal</h3>
+                <p className="mt-1 text-sm leading-relaxed text-slate-600 dark:text-slate-300">Detail kegiatan dan pemohon dilindungi pada kalender publik.</p>
               </div>
             </div>
           </div>
 
-          <dl className="divide-y divide-slate-100 rounded-xl border border-slate-200 bg-slate-50/70 px-4">
+          <dl className="divide-y divide-slate-100 rounded-xl border border-slate-200 bg-slate-50/70 px-4 dark:divide-slate-800 dark:border-slate-700 dark:bg-slate-800/60">
             <div className="flex items-start gap-3 py-3.5">
-              <Calendar className="mt-0.5 h-4 w-4 shrink-0 text-yarsi-primary" aria-hidden="true" />
-              <div><dt className="text-xs font-medium text-slate-500">Tanggal</dt><dd className="mt-0.5 text-sm font-bold text-slate-900">{formatDateIndo(booking.date)}</dd></div>
+              <Calendar className="mt-0.5 h-4 w-4 shrink-0 text-yarsi-primary dark:text-emerald-400" aria-hidden="true" />
+              <div><dt className="text-xs font-medium text-slate-500 dark:text-slate-400">Tanggal</dt><dd className="mt-0.5 text-sm font-bold text-slate-900 dark:text-slate-100">{formatDateIndo(booking.date)}</dd></div>
             </div>
             <div className="flex items-start gap-3 py-3.5">
-              <Clock className="mt-0.5 h-4 w-4 shrink-0 text-yarsi-primary" aria-hidden="true" />
-              <div><dt className="text-xs font-medium text-slate-500">Waktu</dt><dd className="mt-0.5 text-sm font-bold text-slate-900">{booking.startTime}–{booking.endTime} WIB</dd></div>
+              <Clock className="mt-0.5 h-4 w-4 shrink-0 text-yarsi-primary dark:text-emerald-400" aria-hidden="true" />
+              <div><dt className="text-xs font-medium text-slate-500 dark:text-slate-400">Waktu</dt><dd className="mt-0.5 text-sm font-bold text-slate-900 dark:text-slate-100">{booking.startTime}–{booking.endTime} WIB</dd></div>
             </div>
             <div className="flex items-start gap-3 py-3.5">
-              <Building2 className="mt-0.5 h-4 w-4 shrink-0 text-yarsi-primary" aria-hidden="true" />
-              <div><dt className="text-xs font-medium text-slate-500">Ruangan</dt><dd className="mt-0.5 text-sm font-bold text-slate-900">{matchedRoom ? (matchedRoom.code ? `${matchedRoom.name} (${matchedRoom.code})` : matchedRoom.name) : booking.roomName}</dd>{matchedRoom && <dd className="text-xs text-slate-500">{matchedRoom.building ? `${matchedRoom.building} · ` : ''}Lantai {matchedRoom.floorName || matchedRoom.floor}</dd>}</div>
+              <Building2 className="mt-0.5 h-4 w-4 shrink-0 text-yarsi-primary dark:text-emerald-400" aria-hidden="true" />
+              <div><dt className="text-xs font-medium text-slate-500 dark:text-slate-400">Ruangan</dt><dd className="mt-0.5 text-sm font-bold text-slate-900 dark:text-slate-100">{matchedRoom ? (matchedRoom.code ? `${matchedRoom.name} (${matchedRoom.code})` : matchedRoom.name) : booking.roomName}</dd>{matchedRoom && <dd className="text-xs text-slate-500 dark:text-slate-400">{matchedRoom.building ? `${matchedRoom.building} · ` : ''}Lantai {matchedRoom.floorName || matchedRoom.floor}</dd>}</div>
             </div>
           </dl>
 
           <Link
             href={`/dashboard/booking/new?roomId=${booking.roomId}&date=${booking.date}`}
             onClick={onClose}
-            className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-yarsi-primary px-5 text-sm font-bold text-white shadow-sm hover:bg-yarsi-dark active:bg-yarsi-darker"
+            className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-yarsi-primary px-5 text-sm font-bold text-white shadow-sm hover:bg-yarsi-dark active:bg-yarsi-darker dark:bg-emerald-600 dark:hover:bg-emerald-500"
           >
             Cari waktu lain di ruang ini
             <ArrowRight className="h-4 w-4" aria-hidden="true" />
@@ -194,20 +194,20 @@ export function EventDetailModal({
     >
       <div className="space-y-5">
         {/* Status and Title Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-slate-800">
           <div>
             <div className="flex items-center gap-2">
               <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
                 Kategori: {booking.category ? booking.category.toUpperCase() : (booking.jenisKegiatan ? booking.jenisKegiatan.toUpperCase() : '-')}
               </span>
               {isRecurringBooking(booking) && (
-                <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-teal-50 text-teal-800 border border-teal-300">
-                  <Repeat className="w-3 h-3 text-teal-600" />
+                <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-teal-50 text-teal-800 border border-teal-300 dark:bg-teal-500/10 dark:text-teal-200 dark:border-teal-500/40">
+                  <Repeat className="w-3 h-3 text-teal-600 dark:text-teal-400" />
                   <span>{getRecurringScheduleLabel(booking) || 'Multi-Hari / Rutin'}</span>
                 </span>
               )}
             </div>
-            <h2 className="text-lg font-bold text-slate-900 leading-snug mt-0.5">
+            <h2 className="text-lg font-bold text-slate-900 leading-snug mt-0.5 dark:text-slate-100">
               {booking.title}
             </h2>
           </div>
@@ -217,16 +217,16 @@ export function EventDetailModal({
         </div>
 
         {/* Schedule & Location Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200/80">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-50 p-4 rounded-xl border border-slate-200/80 dark:bg-slate-800/60 dark:border-slate-700">
           <div className="space-y-1">
             <span className="text-xs text-slate-400 font-medium flex items-center gap-1.5">
               <Calendar className="w-3.5 h-3.5 text-yarsi-primary" />
               <span>Tanggal Pelaksanaan</span>
             </span>
-            <p className="text-sm font-bold text-slate-800">
+            <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
               {formatDateIndo(booking.date)}
             </p>
-            <p className="text-xs font-semibold text-yarsi-primary flex items-center gap-1">
+            <p className="text-xs font-semibold text-yarsi-primary flex items-center gap-1 dark:text-emerald-400">
               <Clock className="w-3.5 h-3.5" />
               <span>{booking.startTime} - {booking.endTime} WIB</span>
             </p>
@@ -237,10 +237,10 @@ export function EventDetailModal({
               <Building2 className="w-3.5 h-3.5 text-yarsi-primary" />
               <span>Ruangan & Lokasi</span>
             </span>
-            <p className="text-sm font-bold text-slate-800">
+            <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
               {matchedRoom ? (matchedRoom.code ? `${matchedRoom.name} (${matchedRoom.code})` : matchedRoom.name) : booking.roomName}
             </p>
-            <p className="text-xs text-slate-600">
+            <p className="text-xs text-slate-600 dark:text-slate-300">
               {matchedRoom?.building || booking.building ? `${matchedRoom?.building || booking.building} · ` : ''}Lantai {matchedRoom?.floorName || matchedRoom?.floor || booking.floor}
             </p>
           </div>
@@ -253,11 +253,11 @@ export function EventDetailModal({
 
         {/* Dedicated Recurring Information Box */}
         {isRecurringBooking(booking) && (
-          <div className="flex items-start sm:items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-teal-50/90 border border-teal-200 text-xs text-teal-950 font-medium">
-            <Repeat className="w-4 h-4 text-teal-600 shrink-0 mt-0.5 sm:mt-0" />
+          <div className="flex items-start sm:items-center gap-2.5 px-3.5 py-2.5 rounded-xl bg-teal-50/90 border border-teal-200 text-xs text-teal-950 font-medium dark:bg-teal-500/10 dark:border-teal-500/30 dark:text-teal-200">
+            <Repeat className="w-4 h-4 text-teal-600 shrink-0 mt-0.5 sm:mt-0 dark:text-teal-400" />
             <div className="flex-1 flex flex-wrap items-center gap-x-2 gap-y-0.5">
-              <span className="font-bold text-teal-900">Jadwal Rutin Pertemuan:</span>
-              <span className="text-teal-800 font-semibold">
+              <span className="font-bold text-teal-900 dark:text-teal-200">Jadwal Rutin Pertemuan:</span>
+              <span className="text-teal-800 font-semibold dark:text-teal-200">
                 {getRecurringScheduleLabel(booking)}
               </span>
             </div>
@@ -265,29 +265,29 @@ export function EventDetailModal({
         )}
 
         {/* Applicant Details */}
-        <div className="border border-slate-200/80 rounded-xl p-4 space-y-3">
-          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+        <div className="border border-slate-200/80 rounded-xl p-4 space-y-3 dark:border-slate-700">
+          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5 dark:text-slate-400">
             <User className="w-3.5 h-3.5 text-yarsi-primary" />
             <span>Informasi Pemohon / Penanggung Jawab</span>
           </h4>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
             <div>
               <p className="text-slate-400 font-medium">Nama Pemohon</p>
-              <p className="font-semibold text-slate-800 mt-0.5">{booking.userName}</p>
-              <p className="text-[11px] text-slate-500 font-mono">{displayNim}</p>
+              <p className="font-semibold text-slate-800 mt-0.5 dark:text-slate-200">{booking.userName}</p>
+              <p className="text-[11px] text-slate-500 font-mono dark:text-slate-400">{displayNim}</p>
             </div>
             <div>
               <p className="text-slate-400 font-medium">Unit / Ormawa</p>
-              <p className="font-semibold text-slate-800 mt-0.5">{booking.userOrganization}</p>
-              <p className="text-[11px] text-slate-500">{booking.department}</p>
+              <p className="font-semibold text-slate-800 mt-0.5 dark:text-slate-200">{booking.userOrganization}</p>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">{booking.department}</p>
             </div>
             <div>
               <p className="text-slate-400 font-medium">Kontak & Peserta</p>
-              <p className="font-semibold text-slate-800 mt-0.5 flex items-center gap-1">
+              <p className="font-semibold text-slate-800 mt-0.5 flex items-center gap-1 dark:text-slate-200">
                 <Phone className="w-3 h-3 text-emerald-600" />
                 <span>{displayPhone}</span>
               </p>
-              <p className="text-[11px] text-slate-500 flex items-center gap-1">
+              <p className="text-[11px] text-slate-500 flex items-center gap-1 dark:text-slate-400">
                 <Users className="w-3 h-3 text-slate-400" />
                 <span>~{booking.estimatedAttendees} Peserta</span>
               </p>
@@ -298,20 +298,20 @@ export function EventDetailModal({
         {/* Description & Equipment */}
         <div className="space-y-3 text-xs">
           <div>
-            <h4 className="font-bold text-slate-700 mb-1">Deskripsi Kegiatan:</h4>
-            <p className="text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100 leading-relaxed">
+            <h4 className="font-bold text-slate-700 mb-1 dark:text-slate-300">Deskripsi Kegiatan:</h4>
+            <p className="text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100 leading-relaxed dark:text-slate-300 dark:bg-slate-800/60 dark:border-slate-800">
               {booking.description}
             </p>
           </div>
 
           {booking.equipments && booking.equipments.length > 0 && (
             <div>
-              <h4 className="font-bold text-slate-700 mb-1.5">Fasilitas / Peralatan Tambahan:</h4>
+              <h4 className="font-bold text-slate-700 mb-1.5 dark:text-slate-300">Fasilitas / Peralatan Tambahan:</h4>
               <div className="flex flex-wrap gap-1.5">
                 {booking.equipments.map((eq, i) => (
                   <span
                     key={i}
-                    className="bg-emerald-50 text-emerald-800 border border-emerald-200 px-2.5 py-1 rounded-lg text-xs font-medium flex items-center gap-1"
+                    className="bg-emerald-50 text-emerald-800 border border-emerald-200 px-2.5 py-1 rounded-lg text-xs font-medium flex items-center gap-1 dark:bg-emerald-500/10 dark:text-emerald-200 dark:border-emerald-500/30"
                   >
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                     <span>{eq.equipmentName} ({eq.quantity} unit)</span>
@@ -322,12 +322,12 @@ export function EventDetailModal({
           )}
 
           {booking.documentName && (
-            <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200">
+            <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200 dark:bg-slate-800/60 dark:border-slate-700">
               <div className="flex items-center gap-2">
                 <FileText className="w-4 h-4 text-rose-500" />
-                <span className="font-medium text-slate-700">{booking.documentName}</span>
+                <span className="font-medium text-slate-700 dark:text-slate-300">{booking.documentName}</span>
               </div>
-              <span className="text-[11px] font-bold text-yarsi-primary bg-emerald-50 px-2 py-0.5 rounded">
+              <span className="text-[11px] font-bold text-yarsi-primary bg-emerald-50 px-2 py-0.5 rounded dark:text-emerald-400 dark:bg-emerald-500/10">
                 Dokumen Terlampir
               </span>
             </div>
@@ -335,38 +335,38 @@ export function EventDetailModal({
         </div>
 
         {/* Approval Timeline / Verification Notes */}
-        <div className="bg-slate-50 rounded-xl p-4 border border-slate-200 space-y-2 text-xs">
-          <h4 className="font-bold text-slate-800 flex items-center gap-1.5">
+        <div className="bg-slate-50 rounded-xl p-4 border border-slate-200 space-y-2 text-xs dark:bg-slate-800/60 dark:border-slate-700">
+          <h4 className="font-bold text-slate-800 flex items-center gap-1.5 dark:text-slate-200">
             <ShieldCheck className="w-4 h-4 text-yarsi-primary" />
             <span>Catatan Verifikasi & Persetujuan</span>
           </h4>
 
           {booking.lpfNotes && (
-            <div className="bg-white p-2.5 rounded-lg border border-slate-200">
+            <div className="bg-white p-2.5 rounded-lg border border-slate-200 dark:bg-slate-900 dark:border-slate-700">
               <div className="flex items-center justify-between">
-                <span className="font-bold text-emerald-800">Review LPF Universitas</span>
+                <span className="font-bold text-emerald-800 dark:text-emerald-200">Review LPF Universitas</span>
                 <span className="text-[10px] text-slate-400">{booking.lpfApprovedAt}</span>
               </div>
-              <p className="text-slate-600 mt-1">{booking.lpfNotes}</p>
+              <p className="text-slate-600 mt-1 dark:text-slate-300">{booking.lpfNotes}</p>
               <p className="text-[10px] text-slate-400 mt-0.5">Petugas: {booking.lpfApprovedBy}</p>
             </div>
           )}
 
           {booking.yayasanNotes && (
-            <div className="bg-white p-2.5 rounded-lg border border-slate-200">
+            <div className="bg-white p-2.5 rounded-lg border border-slate-200 dark:bg-slate-900 dark:border-slate-700">
               <div className="flex items-center justify-between">
-                <span className="font-bold text-amber-800">Persetujuan Sekretariat Yayasan</span>
+                <span className="font-bold text-amber-800 dark:text-amber-200">Persetujuan Sekretariat Yayasan</span>
                 <span className="text-[10px] text-slate-400">{booking.yayasanApprovedAt}</span>
               </div>
-              <p className="text-slate-600 mt-1">{booking.yayasanNotes}</p>
+              <p className="text-slate-600 mt-1 dark:text-slate-300">{booking.yayasanNotes}</p>
               <p className="text-[10px] text-slate-400 mt-0.5">Petugas: {booking.yayasanApprovedBy}</p>
             </div>
           )}
 
           {booking.rejectionReason && (
-            <div className="bg-rose-50 text-rose-800 p-2.5 rounded-lg border border-rose-200">
+            <div className="bg-rose-50 text-rose-800 p-2.5 rounded-lg border border-rose-200 dark:bg-rose-500/10 dark:text-rose-200 dark:border-rose-500/30">
               <div className="flex items-center gap-1 font-bold">
-                <XCircle className="w-4 h-4 text-rose-600" />
+                <XCircle className="w-4 h-4 text-rose-600 dark:text-rose-400" />
                 <span>Alasan Penolakan</span>
               </div>
               <p className="mt-1">{booking.rejectionReason}</p>

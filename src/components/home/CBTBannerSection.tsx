@@ -278,7 +278,7 @@ export function CBTBannerSection() {
 
             <Link
               href={`/cbt-room?room=${selectedRoomId}`}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm bg-emerald-400 hover:bg-emerald-300 text-emerald-950 shadow-lg hover:shadow-emerald-400/30 transition-all"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm bg-emerald-400 hover:bg-emerald-300 text-emerald-950 shadow-lg hover:shadow-emerald-400/30 transition-all dark:bg-emerald-500 dark:hover:bg-emerald-400"
             >
               <Monitor className="w-4 h-4" />
               <span>Buka Denah &amp; Booking {activeConfig.name}</span>

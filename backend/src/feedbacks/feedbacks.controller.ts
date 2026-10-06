@@ -10,6 +10,7 @@ import { FeedbacksService } from './feedbacks.service';
 import { CreateFeedbackDto } from './dto/create-feedback.dto';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
+import { Role } from '@/common/types';
 
 @Controller('feedbacks')
 @UseGuards(JwtAuthGuard)
@@ -18,10 +19,10 @@ export class FeedbacksController {
 
   @Post()
   async create(
-    @CurrentUser('id') userId: string,
+    @CurrentUser() currentUser: { id: string; role: Role },
     @Body() dto: CreateFeedbackDto,
   ) {
-    return this.feedbacksService.create(userId, dto);
+    return this.feedbacksService.create(currentUser.id, dto, currentUser.role);
   }
 
   @Get()

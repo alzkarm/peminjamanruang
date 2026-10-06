@@ -3,15 +3,17 @@ import {
   NotFoundException,
   BadRequestException,
   ConflictException,
+  ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
 import { CreateFeedbackDto } from './dto/create-feedback.dto';
+import { Role } from '@/common/types';
 
 @Injectable()
 export class FeedbacksService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(userId: string, dto: CreateFeedbackDto) {
+  async create(userId: string, dto: CreateFeedbackDto, userRole?: Role) {
     const booking = await this.prisma.booking.findUnique({
       where: { id: dto.bookingId },
       include: { feedback: true },
@@ -19,6 +21,10 @@ export class FeedbacksService {
 
     if (!booking) {
       throw new NotFoundException('Data peminjaman tidak ditemukan.');
+    }
+
+    if (booking.userId !== userId && userRole !== Role.SUPERADMIN) {
+      throw new ForbiddenException('Anda tidak berhak mengisi feedback untuk peminjaman milik pengguna lain.');
     }
 
     if (booking.feedback) {

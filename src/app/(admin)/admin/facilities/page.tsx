@@ -384,15 +384,15 @@ export default function AdminFacilitiesPage() {
             placeholder="Cari berdasarkan nama, kategori, atau deskripsi..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 rounded-lg border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-400"
+            className="w-full pl-9 pr-3 py-2 min-h-11 sm:min-h-0 rounded-lg border border-slate-200 dark:border-slate-700 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-400"
           />
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">
           <select
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
-            className="px-3 py-2 rounded-lg border border-slate-200 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-400 bg-white"
+            className="flex-1 min-w-[130px] sm:flex-none min-h-11 sm:min-h-0 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-400 bg-white dark:bg-slate-900"
           >
             <option value="ALL">Semua Kategori</option>
             <option value="audio_visual">Audio Visual &amp; Multimedia</option>
@@ -405,7 +405,7 @@ export default function AdminFacilitiesPage() {
           <button
             type="button"
             onClick={fetchFacilities}
-            className="p-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
+            className="ml-auto sm:ml-0 p-2.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/80 transition-colors"
             title="Muat ulang data"
           >
             <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
@@ -426,7 +426,8 @@ export default function AdminFacilitiesPage() {
             Tidak ada fasilitas yang cocok dengan kriteria pencarian.
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <>
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-left text-xs text-slate-600">
               <thead className="bg-slate-50 text-slate-700 uppercase font-semibold text-[10px] tracking-wider border-b border-slate-200">
                 <tr>
@@ -504,7 +505,7 @@ export default function AdminFacilitiesPage() {
                           <button
                             type="button"
                             onClick={() => openEditModal(fac)}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-yarsi-primary hover:bg-emerald-50 transition-colors"
+                            className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-slate-400 hover:text-yarsi-primary hover:bg-emerald-50 transition-colors"
                             title="Edit Fasilitas"
                           >
                             <Edit2 className="h-4 w-4" />
@@ -512,7 +513,7 @@ export default function AdminFacilitiesPage() {
                           <button
                             type="button"
                             onClick={() => setFacilityToDelete(fac)}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                            className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
                             title="Hapus Fasilitas"
                           >
                             <Trash2 className="h-4 w-4" />
@@ -525,6 +526,101 @@ export default function AdminFacilitiesPage() {
               </tbody>
             </table>
           </div>
+
+          {/* Mobile card list */}
+          <div className="md:hidden divide-y divide-slate-100 dark:divide-slate-800">
+            {filteredFacilities.map((fac) => {
+              const IconComponent = getFacilityIcon(fac.icon);
+              const catConfig = CATEGORY_MAP[fac.category] || CATEGORY_MAP.umum;
+
+              return (
+                <div key={fac.id} className="p-4 space-y-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div
+                        className={`w-10 h-10 rounded-xl flex items-center justify-center border shrink-0 ${
+                          fac.isActive
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                            : 'bg-slate-100 text-slate-400 border-slate-200'
+                        }`}
+                      >
+                        <IconComponent className="w-5 h-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-bold text-slate-900 dark:text-slate-100 leading-tight">{fac.name}</p>
+                        <p className="text-[10px] text-slate-400 font-mono mt-0.5">
+                          ID: {fac.id.slice(0, 8)}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => openEditModal(fac)}
+                        className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-slate-400 hover:text-yarsi-primary hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-colors"
+                        title="Edit Fasilitas"
+                      >
+                        <Edit2 className="h-4 w-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setFacilityToDelete(fac)}
+                        className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors"
+                        title="Hapus Fasilitas"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-xs">
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Kategori</p>
+                      <span
+                        className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold border ${catConfig.badgeClass}`}
+                      >
+                        {catConfig.label}
+                      </span>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Sifat Fasilitas</p>
+                      {fac.isSpecial ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-500/15 dark:text-rose-200 dark:border-rose-500/40 whitespace-nowrap">
+                          <Sparkles className="w-3 h-3 text-rose-500" />
+                          Khusus
+                        </span>
+                      ) : (
+                        <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Standar</span>
+                      )}
+                    </div>
+                    <div className="min-w-0 col-span-2">
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Deskripsi / Spesifikasi</p>
+                      <p className="text-slate-500 dark:text-slate-400 leading-snug line-clamp-2">
+                        {fac.description || '-'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800">
+                    <button
+                      type="button"
+                      onClick={() => handleToggleStatus(fac)}
+                      className={`inline-flex min-h-11 items-center gap-1.5 px-3 py-2 rounded-full text-[11px] font-bold border transition-all active:scale-95 ${
+                        fac.isActive
+                          ? 'bg-emerald-50 dark:bg-emerald-500/15 text-emerald-800 dark:text-emerald-200 border-emerald-300 dark:border-emerald-500/40 hover:bg-emerald-100'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-700 hover:bg-slate-200'
+                      }`}
+                      title={fac.isActive ? 'Klik untuk non-aktifkan' : 'Klik untuk aktifkan'}
+                    >
+                      <Power className={`w-3 h-3 ${fac.isActive ? 'text-emerald-600' : 'text-slate-400'}`} />
+                      <span>{fac.isActive ? 'Aktif' : 'Non-Aktif'}</span>
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          </>
         )}
       </div>
 
@@ -567,7 +663,7 @@ export default function AdminFacilitiesPage() {
                   placeholder="e.g. Laser Projector & Motorized Screen"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 transition-all font-medium"
+                  className="w-full px-3.5 py-2.5 min-h-11 sm:min-h-0 rounded-xl border border-slate-300 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 transition-all font-medium"
                 />
               </div>
 
@@ -580,7 +676,7 @@ export default function AdminFacilitiesPage() {
                   <select
                     value={category}
                     onChange={(e) => setCategory(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-semibold text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-400 transition-all"
+                    className="w-full px-3.5 py-2.5 min-h-11 sm:min-h-0 rounded-xl border border-slate-300 text-xs font-semibold text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-400 transition-all"
                   >
                     <option value="audio_visual">Audio Visual &amp; Multimedia</option>
                     <option value="furniture">Furniture &amp; Perabot</option>
@@ -597,7 +693,7 @@ export default function AdminFacilitiesPage() {
                   <select
                     value={icon}
                     onChange={(e) => setIcon(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-semibold text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-400 transition-all"
+                    className="w-full px-3.5 py-2.5 min-h-11 sm:min-h-0 rounded-xl border border-slate-300 text-xs font-semibold text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-400 transition-all"
                   >
                     {ICON_PRESETS.map((p) => (
                       <option key={p.id} value={p.id}>
@@ -664,14 +760,14 @@ export default function AdminFacilitiesPage() {
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition-colors"
+                  className="px-4 py-2.5 min-h-11 sm:min-h-0 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition-colors"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-yarsi-primary hover:bg-yarsi-dark shadow-sm shadow-emerald-900/20 transition-all disabled:opacity-50"
+                  className="inline-flex min-h-11 sm:min-h-0 items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-yarsi-primary hover:bg-yarsi-dark shadow-sm shadow-emerald-900/20 transition-all disabled:opacity-50"
                 >
                   {isSubmitting ? (
                     <>
@@ -732,7 +828,7 @@ export default function AdminFacilitiesPage() {
                 type="button"
                 onClick={() => setFacilityToDelete(null)}
                 disabled={isDeleting}
-                className="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition-colors disabled:opacity-50"
+                className="px-4 py-2.5 min-h-11 sm:min-h-0 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 transition-colors disabled:opacity-50"
               >
                 Batal
               </button>
@@ -740,7 +836,7 @@ export default function AdminFacilitiesPage() {
                 type="button"
                 onClick={handleDelete}
                 disabled={isDeleting}
-                className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 shadow-sm shadow-rose-900/20 active:scale-95 transition-all disabled:opacity-50"
+                className="inline-flex min-h-11 sm:min-h-0 items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 shadow-sm shadow-rose-900/20 active:scale-95 transition-all disabled:opacity-50"
               >
                 {isDeleting ? (
                   <>

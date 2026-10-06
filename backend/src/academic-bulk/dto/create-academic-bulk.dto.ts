@@ -8,6 +8,7 @@ import {
   IsDateString,
   IsOptional,
   IsBoolean,
+  ArrayUnique,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -23,6 +24,7 @@ export class CreateAcademicBulkDto {
   @IsNotEmpty({ message: 'Daftar ID Ruangan wajib diisi.' })
   @IsArray()
   @IsString({ each: true })
+  @ArrayUnique({ message: 'Daftar ID Ruangan tidak boleh mengandung duplikat.' })
   roomIds: string[];
 
   @IsNotEmpty({ message: 'Hari dalam seminggu wajib diisi (1=Senin, 5=Jumat).' })

@@ -216,13 +216,13 @@ export default function UserDashboardPage() {
 
     if (booking.status === 'RETURNED') {
       return (
-        <div className="p-3.5 bg-amber-50 border-2 border-amber-300 rounded-2xl text-xs text-amber-950 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div className="p-3.5 bg-amber-50 dark:bg-amber-500/10 border-2 border-amber-300 dark:border-amber-500/40 rounded-2xl text-xs text-amber-950 dark:text-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div className="flex items-start gap-2">
-            <RotateCcw className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+            <RotateCcw className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
             <div>
               <span className="font-bold">Permohonan Dikembalikan untuk Revisi</span>
               {booking.rejectionReason && (
-                <p className="text-[11px] text-amber-900 mt-0.5">
+                <p className="text-[11px] text-amber-900 dark:text-amber-200 mt-0.5">
                   <strong>Catatan Verifikator:</strong> {booking.rejectionReason}
                 </p>
               )}
@@ -240,15 +240,15 @@ export default function UserDashboardPage() {
 
     if (booking.status === 'REJECTED' || booking.status === 'CANCELLED') {
       return (
-        <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800 flex items-center justify-between">
+        <div className="p-3 bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/30 rounded-xl text-xs text-rose-800 dark:text-rose-200 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+            <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
             <span className="font-bold">
               {booking.status === 'REJECTED' ? 'Permohonan Ditolak' : 'Peminjaman Dibatalkan'}
             </span>
           </div>
           {booking.rejectionReason && (
-            <span className="text-[11px] text-rose-700 italic max-w-md truncate">
+            <span className="text-[11px] text-rose-700 dark:text-rose-400 italic max-w-md truncate">
               Alasan: {booking.rejectionReason}
             </span>
           )}
@@ -260,9 +260,9 @@ export default function UserDashboardPage() {
       <div className="py-2">
         <div className="flex items-center justify-between relative">
           {/* Progress bar line */}
-          <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-1 bg-slate-200 z-0" />
+          <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-1 bg-slate-200 dark:bg-slate-700 z-0" />
           <div
-            className="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-yarsi-primary z-0 transition-all duration-500"
+            className="absolute left-0 top-1/2 -translate-y-1/2 h-1 bg-yarsi-primary dark:bg-emerald-500 z-0 transition-all duration-500"
             style={{
               width: `${(currentStepIndex / (steps.length - 1)) * 100}%`,
             }}
@@ -277,8 +277,8 @@ export default function UserDashboardPage() {
                 <div
                   className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all shadow-sm ${
                     isCompleted
-                      ? 'bg-yarsi-primary text-white ring-4 ring-emerald-100'
-                      : 'bg-white border-2 border-slate-300 text-slate-400'
+                      ? 'bg-yarsi-primary dark:bg-emerald-600 text-white ring-4 ring-emerald-100 dark:ring-emerald-500/30'
+                      : 'bg-white dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-600 text-slate-400'
                   }`}
                 >
                   {isCompleted ? <CheckCircle2 className="w-4 h-4" /> : idx + 1}
@@ -286,9 +286,9 @@ export default function UserDashboardPage() {
                 <span
                   className={`text-[10px] mt-1 font-semibold text-center whitespace-nowrap ${
                     isCurrent
-                      ? 'text-yarsi-primary font-bold'
+                      ? 'text-yarsi-primary dark:text-emerald-400 font-bold'
                       : isCompleted
-                      ? 'text-slate-700'
+                      ? 'text-slate-700 dark:text-slate-300'
                       : 'text-slate-400'
                   }`}
                 >
@@ -308,7 +308,7 @@ export default function UserDashboardPage() {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 flex items-center justify-center">
         <div className="animate-pulse space-y-4 text-center">
-          <div className="w-12 h-12 rounded-full bg-emerald-100 mx-auto" />
+          <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-500/15 mx-auto" />
           <p className="text-xs text-slate-400 font-medium">Memuat data sesi SIPERU...</p>
         </div>
       </div>
@@ -318,19 +318,19 @@ export default function UserDashboardPage() {
   if (isGuest) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-16">
-        <div className="bg-white rounded-3xl border border-slate-200/80 shadow-2xl p-8 sm:p-12 text-center space-y-6">
-          <div className="w-16 h-16 rounded-3xl bg-emerald-50 border border-emerald-200 text-yarsi-primary mx-auto flex items-center justify-center shadow-inner">
+        <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-700 shadow-2xl p-8 sm:p-12 text-center space-y-6">
+          <div className="w-16 h-16 rounded-3xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/30 text-yarsi-primary dark:text-emerald-400 mx-auto flex items-center justify-center shadow-inner">
             <ShieldCheck className="w-8 h-8" />
           </div>
 
           <div className="max-w-md mx-auto space-y-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-yarsi-primary bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
+            <span className="text-xs font-bold uppercase tracking-wider text-yarsi-primary dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-200 dark:border-emerald-500/30">
               Autentikasi Diperlukan
             </span>
-            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 mt-2">
+            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-slate-100 mt-2">
               Masuk ke Akun Anda
             </h2>
-            <p className="text-xs sm:text-sm text-slate-500">
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
               Halaman ini menampilkan seluruh riwayat peminjaman ruangan dan E-Ticket akses Anda.
             </p>
           </div>
@@ -338,7 +338,7 @@ export default function UserDashboardPage() {
           <div className="pt-2">
             <Link
               href="/auth/login"
-              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-yarsi-primary hover:bg-yarsi-dark text-white font-bold text-sm shadow-md transition-all"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-yarsi-primary dark:bg-emerald-600 hover:bg-yarsi-dark dark:hover:bg-emerald-500 text-white font-bold text-sm shadow-md transition-all"
             >
               <span>Login Akun SSO</span>
             </Link>
@@ -351,23 +351,23 @@ export default function UserDashboardPage() {
   return (
     <div className="space-y-6 pb-12 mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
       {/* Top Welcome Header */}
-      <header className="space-y-4 rounded-[18px_4px_18px_18px] border border-slate-200/90 border-l-4 border-l-yarsi-primary bg-white p-6 shadow-sm sm:p-8">
+      <header className="space-y-4 rounded-[18px_4px_18px_18px] border border-slate-200/90 dark:border-slate-700 border-l-4 border-l-yarsi-primary bg-white dark:bg-slate-900 p-6 shadow-sm sm:p-8">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <span className="text-[11px] font-bold text-yarsi-primary uppercase tracking-wider bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
+            <span className="text-[11px] font-bold text-yarsi-primary dark:text-emerald-400 uppercase tracking-wider bg-emerald-50 dark:bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-200 dark:border-emerald-500/30">
               Dashboard Mahasiswa & Civitas
             </span>
-            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 mt-2">
+            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-slate-100 mt-2">
               Selamat datang, {currentUser.name}
             </h1>
-            <p className="text-xs sm:text-sm text-slate-500 font-mono mt-1">
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-mono mt-1">
               NIM/NIDN: {currentUser.identifier} • {currentUser.organization || currentUser.department}
             </p>
           </div>
 
           <Link
             href="/dashboard/booking/new"
-            className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-yarsi-primary hover:bg-yarsi-dark text-white font-bold text-xs shadow-md transition-all shrink-0"
+            className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-yarsi-primary dark:bg-emerald-600 hover:bg-yarsi-dark dark:hover:bg-emerald-500 text-white font-bold text-xs shadow-md transition-all shrink-0"
           >
             <PlusCircle className="w-4 h-4" />
             <span>Ajukan Peminjaman Baru</span>
@@ -377,12 +377,12 @@ export default function UserDashboardPage() {
 
       {/* Active Penalty Warning Banner (Task 2.2) */}
       {activePenalties.length > 0 && (
-        <div className="rounded-2xl border-2 border-rose-300 bg-rose-50 p-5 shadow-sm space-y-2">
-          <div className="flex items-center gap-2 text-rose-800 font-bold text-sm">
-            <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0" />
+        <div className="rounded-2xl border-2 border-rose-300 dark:border-rose-500/40 bg-rose-50 dark:bg-rose-500/10 p-5 shadow-sm space-y-2">
+          <div className="flex items-center gap-2 text-rose-800 dark:text-rose-200 font-bold text-sm">
+            <AlertTriangle className="w-5 h-5 text-rose-600 dark:text-rose-400 shrink-0" />
             <span>Pemberitahuan Sanksi Cooling-Down (No-Show Ruangan)</span>
           </div>
-          <p className="text-xs text-rose-700 leading-relaxed">
+          <p className="text-xs text-rose-700 dark:text-rose-400 leading-relaxed">
             Akun Anda terdeteksi tidak hadir pada jadwal peminjaman yang telah disetujui sebelumnya tanpa melakukan pembatalan. Hak pengajuan peminjaman ruangan baru ditangguhkan sementara hingga{' '}
             <span className="font-bold underline">
               {new Date(activePenalties[0].coolingDownUntil).toLocaleDateString('id-ID', {
@@ -422,9 +422,9 @@ export default function UserDashboardPage() {
             <button
               type="button"
               onClick={() => setSelectedTicket(upcomingBooking)}
-              className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-white text-emerald-800 font-bold text-xs shadow hover:bg-emerald-50 transition-all shrink-0"
+              className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-white dark:bg-slate-900 text-emerald-800 dark:text-emerald-200 font-bold text-xs shadow hover:bg-emerald-50 dark:hover:bg-slate-800 transition-all shrink-0"
             >
-              <QrCode className="w-4 h-4 text-emerald-600" />
+              <QrCode className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               <span>Buka E-Ticket & QR Check-in</span>
             </button>
           </div>
@@ -434,7 +434,7 @@ export default function UserDashboardPage() {
       {/* Booking History & Tabs */}
       <div className="space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <h2 className="text-lg font-black text-slate-900">
+          <h2 className="text-lg font-black text-slate-900 dark:text-slate-100">
             Riwayat & Status Peminjaman Ruang
           </h2>
 
@@ -454,8 +454,8 @@ export default function UserDashboardPage() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all border ${
                   activeTab === tab.id
-                    ? 'bg-yarsi-primary text-white border-yarsi-primary shadow-sm'
-                    : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                    ? 'bg-yarsi-primary dark:bg-emerald-600 text-white border-yarsi-primary dark:border-emerald-600 shadow-sm'
+                    : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800/80'
                 }`}
               >
                 {tab.label}
@@ -466,15 +466,15 @@ export default function UserDashboardPage() {
 
         {/* Bookings Card List */}
         {groupedBookings.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center space-y-4">
-            <Calendar className="w-12 h-12 text-slate-300 mx-auto" />
-            <h3 className="text-base font-bold text-slate-700">Belum ada data peminjaman</h3>
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700 p-12 text-center space-y-4">
+            <Calendar className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto" />
+            <h3 className="text-base font-bold text-slate-700 dark:text-slate-300">Belum ada data peminjaman</h3>
             <p className="text-xs text-slate-400 max-w-sm mx-auto">
               Silakan ajukan permohonan peminjaman ruangan baru untuk kegiatan akademik atau organisasi Anda.
             </p>
             <Link
               href="/dashboard/booking/new"
-              className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-white bg-yarsi-primary hover:bg-yarsi-dark rounded-xl shadow-sm transition-all"
+              className="inline-flex items-center gap-2 px-4 py-2 text-xs font-bold text-white bg-yarsi-primary dark:bg-emerald-600 hover:bg-yarsi-dark dark:hover:bg-emerald-500 rounded-xl shadow-sm transition-all"
             >
               <PlusCircle className="w-4 h-4" />
               <span>Buat Pengajuan Baru</span>
@@ -490,16 +490,16 @@ export default function UserDashboardPage() {
               return (
                 <div
                   key={group.groupId}
-                  className={`space-y-4 rounded-[16px_4px_16px_16px] border bg-white p-5 shadow-sm transition-colors ${
+                  className={`space-y-4 rounded-[16px_4px_16px_16px] border bg-white dark:bg-slate-900 p-5 shadow-sm transition-colors ${
                     isGroup
-                      ? 'border-teal-200 hover:border-teal-400'
-                      : 'border-slate-200/90 hover:border-emerald-300'
+                      ? 'border-teal-200 dark:border-teal-500/40 hover:border-teal-400'
+                      : 'border-slate-200/90 dark:border-slate-700 hover:border-emerald-300 dark:hover:border-emerald-500/50'
                   }`}
                 >
                   {/* Header Row */}
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100 dark:border-slate-800">
                     <div className="flex items-center gap-2">
-                      <span className="font-mono text-xs font-bold text-yarsi-primary bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                      <span className="font-mono text-xs font-bold text-yarsi-primary dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-200 dark:border-emerald-500/30">
                         {booking.bookingCode}
                       </span>
                       <span className="text-[11px] text-slate-400">
@@ -516,32 +516,32 @@ export default function UserDashboardPage() {
                   <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
                     <div className="md:col-span-8 space-y-2">
                       <div className="flex items-center gap-2">
-                        <h3 className="text-base font-bold text-slate-900 leading-snug">
+                        <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 leading-snug">
                           {booking.title}
                         </h3>
                         {booking.jenisKegiatan && (
-                          <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-emerald-100 text-yarsi-primary border border-emerald-300">
+                          <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-emerald-100 dark:bg-emerald-500/15 text-yarsi-primary dark:text-emerald-200 border border-emerald-300 dark:border-emerald-500/40">
                             {booking.jenisKegiatan}
                           </span>
                         )}
                         {isRecurringBooking(booking) && !isGroup && (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-teal-50 text-teal-800 border border-teal-300 shadow-2xs">
-                            <Repeat className="w-3 h-3 text-teal-600" />
+                          <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-teal-50 dark:bg-teal-500/10 text-teal-800 dark:text-teal-200 border border-teal-300 dark:border-teal-500/40 shadow-2xs">
+                            <Repeat className="w-3 h-3 text-teal-600 dark:text-teal-400" />
                             <span>Rutin Per Semester</span>
                           </span>
                         )}
                       </div>
 
-                      <div className="flex flex-wrap items-center gap-y-1 gap-x-4 text-xs text-slate-600">
-                        <span className="flex items-center gap-1 font-semibold text-slate-800">
-                          <Building2 className="w-4 h-4 text-yarsi-primary" />
+                      <div className="flex flex-wrap items-center gap-y-1 gap-x-4 text-xs text-slate-600 dark:text-slate-300">
+                        <span className="flex items-center gap-1 font-semibold text-slate-800 dark:text-slate-200">
+                          <Building2 className="w-4 h-4 text-yarsi-primary dark:text-emerald-400" />
                           <span>{booking.roomName} (Lt. {booking.floor})</span>
                         </span>
 
-                        <span className="flex items-center gap-1 text-slate-700">
-                          <Calendar className="w-4 h-4 text-yarsi-primary" />
+                        <span className="flex items-center gap-1 text-slate-700 dark:text-slate-300">
+                          <Calendar className="w-4 h-4 text-yarsi-primary dark:text-emerald-400" />
                           {isGroup ? (
-                            <span className="font-semibold text-slate-800">
+                            <span className="font-semibold text-slate-800 dark:text-slate-200">
                               {formatDateIndo(group.startDate)} s.d. {formatDateIndo(group.endDate)} ({group.totalSessions} Sesi)
                             </span>
                           ) : (
@@ -549,12 +549,12 @@ export default function UserDashboardPage() {
                           )}
                         </span>
 
-                        <span className="flex items-center gap-1 font-semibold text-yarsi-primary">
+                        <span className="flex items-center gap-1 font-semibold text-yarsi-primary dark:text-emerald-400">
                           <Clock className="w-4 h-4" />
                           <span>{booking.startTime} - {booking.endTime} WIB</span>
                         </span>
 
-                        <span className="flex items-center gap-1 text-slate-500">
+                        <span className="flex items-center gap-1 text-slate-500 dark:text-slate-400">
                           <Users className="w-3.5 h-3.5 text-slate-400" />
                           <span>~{booking.estimatedAttendees} Peserta</span>
                         </span>
@@ -562,15 +562,15 @@ export default function UserDashboardPage() {
 
                       {/* Dedicated Recurring Information Box */}
                       {isRecurringBooking(booking) && (
-                        <div className="flex items-start sm:items-center gap-2 px-3.5 py-2 rounded-xl bg-teal-50/90 border border-teal-200 text-xs text-teal-950 font-medium">
-                          <Repeat className="w-4 h-4 text-teal-600 shrink-0 mt-0.5 sm:mt-0" />
+                        <div className="flex items-start sm:items-center gap-2 px-3.5 py-2 rounded-xl bg-teal-50/90 dark:bg-teal-500/10 border border-teal-200 dark:border-teal-500/30 text-xs text-teal-950 dark:text-teal-100 font-medium">
+                          <Repeat className="w-4 h-4 text-teal-600 dark:text-teal-400 shrink-0 mt-0.5 sm:mt-0" />
                           <div className="flex-1 flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                            <span className="font-bold text-teal-900">Jadwal Rutin Pertemuan:</span>
-                            <span className="text-teal-800 font-semibold">
+                            <span className="font-bold text-teal-900 dark:text-teal-200">Jadwal Rutin Pertemuan:</span>
+                            <span className="text-teal-800 dark:text-teal-300 font-semibold">
                               {getRecurringScheduleLabel(booking)}
                             </span>
                             {isGroup && (
-                              <span className="bg-teal-200/70 text-teal-900 text-[11px] font-extrabold px-2 py-0.5 rounded-full ml-1">
+                              <span className="bg-teal-200/70 dark:bg-teal-500/20 text-teal-900 dark:text-teal-200 text-[11px] font-extrabold px-2 py-0.5 rounded-full ml-1">
                                 Total: {group.totalSessions} Sesi Pertemuan
                               </span>
                             )}
@@ -578,7 +578,7 @@ export default function UserDashboardPage() {
                         </div>
                       )}
 
-                      <p className="text-xs text-slate-500 line-clamp-2 pt-1 leading-relaxed">
+                      <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-2 pt-1 leading-relaxed">
                         {booking.description}
                       </p>
 
@@ -588,9 +588,9 @@ export default function UserDashboardPage() {
                           {booking.logistik.map((l, i) => (
                             <span
                               key={i}
-                              className="inline-flex items-center gap-1 text-[10px] bg-slate-100 text-slate-700 border border-slate-200 px-2 py-0.5 rounded font-medium"
+                              className="inline-flex items-center gap-1 text-[10px] bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 px-2 py-0.5 rounded font-medium"
                             >
-                              <Check className="w-2.5 h-2.5 text-emerald-600 shrink-0" />
+                              <Check className="w-2.5 h-2.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                               <span>{l.jenisItem} ({l.jumlah}x)</span>
                             </span>
                           ))}
@@ -599,14 +599,14 @@ export default function UserDashboardPage() {
 
                       {/* Expandable Sessions List for Grouped Recurring Bookings */}
                       {isGroup && (
-                        <div className="pt-2 border-t border-slate-100">
+                        <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
                           <button
                             type="button"
                             onClick={() => toggleGroupExpand(group.groupId)}
-                            className="w-full flex items-center justify-between px-3 py-2 text-xs font-semibold text-slate-700 bg-slate-50 hover:bg-slate-100 rounded-xl border border-slate-200/80 transition-colors"
+                            className="w-full flex items-center justify-between px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/70 hover:bg-slate-100 dark:hover:bg-slate-700/60 rounded-xl border border-slate-200/80 dark:border-slate-700 transition-colors"
                           >
                             <span className="flex items-center gap-2">
-                              <CalendarRange className="w-4 h-4 text-yarsi-primary" />
+                              <CalendarRange className="w-4 h-4 text-yarsi-primary dark:text-emerald-400" />
                               <span>
                                 {isExpanded
                                   ? `Sembunyikan Rincian Sesi (${group.totalSessions} Pertemuan)`
@@ -621,16 +621,16 @@ export default function UserDashboardPage() {
                               {group.bookings.map((session, idx) => (
                                 <div
                                   key={session.id}
-                                  className="flex items-center justify-between p-2 rounded-lg border bg-white border-slate-200"
+                                  className="flex items-center justify-between p-2 rounded-lg border bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700"
                                 >
                                   <div className="flex items-center gap-2">
-                                    <span className="font-bold text-slate-500 text-[11px] w-12">
+                                    <span className="font-bold text-slate-500 dark:text-slate-400 text-[11px] w-12">
                                       #{idx + 1}
                                     </span>
-                                    <span className="font-semibold text-slate-800">
+                                    <span className="font-semibold text-slate-800 dark:text-slate-200">
                                       {formatDateIndo(session.date)}
                                     </span>
-                                    <span className="text-slate-500 font-mono text-[11px]">
+                                    <span className="text-slate-500 dark:text-slate-400 font-mono text-[11px]">
                                       ({session.startTime} - {session.endTime} WIB)
                                     </span>
                                     <span className="text-[10px] font-mono text-slate-400">
@@ -647,7 +647,7 @@ export default function UserDashboardPage() {
                     </div>
 
                     {/* Right Actions & QR Preview */}
-                    <div className="md:col-span-4 flex flex-col justify-between border-t md:border-t-0 md:border-l border-slate-100 pt-3 md:pt-0 md:pl-4 space-y-3">
+                    <div className="md:col-span-4 flex flex-col justify-between border-t md:border-t-0 md:border-l border-slate-100 dark:border-slate-800 pt-3 md:pt-0 md:pl-4 space-y-3">
                       {booking.status === 'APPROVED' ? (
                         <div className="space-y-2">
                           <button
@@ -662,16 +662,16 @@ export default function UserDashboardPage() {
                           <button
                             type="button"
                             onClick={() => setRescheduleTarget(booking)}
-                            className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-xs border border-blue-200 transition-colors"
+                            className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-blue-50 dark:bg-blue-500/10 hover:bg-blue-100 dark:hover:bg-blue-500/20 text-blue-700 dark:text-blue-400 font-bold text-xs border border-blue-200 dark:border-blue-500/30 transition-colors"
                           >
-                            <CalendarClock className="w-3.5 h-3.5 text-blue-600" />
+                            <CalendarClock className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                             <span>Ajukan Pindah Jadwal</span>
                           </button>
 
                           <button
                             type="button"
                             onClick={() => setCancelTargetId(booking.id)}
-                            className="w-full text-center text-xs font-medium text-rose-600 hover:text-rose-800 py-1 hover:underline"
+                            className="w-full text-center text-xs font-medium text-rose-600 dark:text-rose-400 hover:text-rose-800 dark:hover:text-rose-300 py-1 hover:underline"
                           >
                             Batalkan Peminjaman
                           </button>
@@ -679,8 +679,8 @@ export default function UserDashboardPage() {
                       ) : booking.status === 'COMPLETED' ? (
                         <div className="space-y-2">
                           {booking.feedbackSubmitted ? (
-                            <div className="p-2 bg-emerald-50 text-emerald-800 border border-emerald-200 rounded-xl text-center text-xs font-bold flex items-center justify-center gap-1">
-                              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                            <div className="p-2 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-800 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-500/30 rounded-xl text-center text-xs font-bold flex items-center justify-center gap-1">
+                              <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                               <span>Feedback Telah Terisi</span>
                             </div>
                           ) : (
@@ -695,7 +695,7 @@ export default function UserDashboardPage() {
                           <button
                             type="button"
                             onClick={() => setSelectedTicket(booking)}
-                            className="w-full text-center text-xs font-medium text-slate-500 hover:text-slate-800"
+                            className="w-full text-center text-xs font-medium text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"
                           >
                             Lihat Arsip Tiket
                           </button>
@@ -705,7 +705,7 @@ export default function UserDashboardPage() {
                           <button
                             type="button"
                             onClick={() => setSelectedTicket(booking)}
-                            className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs transition-colors"
+                            className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-xs transition-colors"
                           >
                             <FileText className="w-4 h-4" />
                             <span>Detail Pengajuan</span>
@@ -717,15 +717,15 @@ export default function UserDashboardPage() {
                             <button
                               type="button"
                               onClick={() => setRescheduleTarget(booking)}
-                              className="w-full flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-xs border border-blue-200 transition-colors"
+                              className="w-full flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-xl bg-blue-50 dark:bg-blue-500/10 hover:bg-blue-100 dark:hover:bg-blue-500/20 text-blue-700 dark:text-blue-400 font-bold text-xs border border-blue-200 dark:border-blue-500/30 transition-colors"
                             >
-                              <CalendarClock className="w-3.5 h-3.5 text-blue-600" />
+                              <CalendarClock className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                               <span>Pindah Jadwal</span>
                             </button>
                           )}
 
                           {(booking.status as string) === 'RESCHEDULE_PENDING' && (
-                            <div className="p-2 rounded-xl bg-blue-50 border border-blue-200 text-blue-800 text-[11px] font-semibold text-center">
+                            <div className="p-2 rounded-xl bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/30 text-blue-800 dark:text-blue-300 text-[11px] font-semibold text-center">
                               Pindah jadwal sedang ditinjau LPF
                             </div>
                           )}
@@ -736,7 +736,7 @@ export default function UserDashboardPage() {
                             <button
                               type="button"
                               onClick={() => setCancelTargetId(booking.id)}
-                              className="w-full text-center text-xs font-medium text-rose-600 hover:text-rose-800 py-1 hover:underline"
+                              className="w-full text-center text-xs font-medium text-rose-600 dark:text-rose-400 hover:text-rose-800 dark:hover:text-rose-300 py-1 hover:underline"
                             >
                               Batalkan Permohonan
                             </button>
@@ -747,7 +747,7 @@ export default function UserDashboardPage() {
                   </div>
 
                   {/* Progress Stepper Bar */}
-                  <div className="pt-2 border-t border-slate-100">
+                  <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
                     {renderStepper(booking)}
                   </div>
                 </div>
@@ -884,7 +884,7 @@ export default function UserDashboardPage() {
                 type="button"
                 onClick={handleDownloadTicketImage}
                 disabled={isDownloading}
-                className="flex-1 py-2.5 px-4 bg-yarsi-primary hover:bg-yarsi-dark disabled:opacity-60 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition-all"
+                className="flex-1 py-2.5 px-4 bg-yarsi-primary dark:bg-emerald-600 hover:bg-yarsi-dark dark:hover:bg-emerald-500 disabled:opacity-60 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition-all"
               >
                 {isDownloading ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -898,17 +898,17 @@ export default function UserDashboardPage() {
                 href={getTicketVerificationUrl(selectedTicket)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="py-2.5 px-4 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors"
+                className="py-2.5 px-4 bg-emerald-50 dark:bg-emerald-500/10 hover:bg-emerald-100 dark:hover:bg-emerald-500/20 text-emerald-800 dark:text-emerald-200 border border-emerald-200 dark:border-emerald-500/30 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors"
                 title="Buka Halaman Bukti Verifikasi Resmi"
               >
-                <ExternalLink className="w-4 h-4 text-emerald-600" />
+                <ExternalLink className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                 <span>Uji Scan QR</span>
               </a>
 
               <button
                 type="button"
                 onClick={() => setSelectedTicket(null)}
-                className="py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold"
+                className="py-2.5 px-4 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-semibold"
               >
                 Tutup
               </button>
@@ -926,18 +926,18 @@ export default function UserDashboardPage() {
           maxWidth="sm"
         >
           <div className="space-y-4">
-            <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800 space-y-1">
+            <div className="p-3 bg-rose-50 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/30 rounded-xl text-xs text-rose-800 dark:text-rose-200 space-y-1">
               <div className="flex items-center gap-1.5 font-bold">
-                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
                 <span>Apakah Anda yakin ingin membatalkan permohonan ini?</span>
               </div>
-              <p className="text-[11px] text-rose-700 leading-relaxed">
+              <p className="text-[11px] text-rose-700 dark:text-rose-400 leading-relaxed">
                 Slot ruangan akan segera dibebaskan kembali secara real-time di kalender dan riwayat pembatalan dicatat di Audit Log sistem.
               </p>
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
                 Alasan Pembatalan:
               </label>
               <textarea
@@ -945,7 +945,7 @@ export default function UserDashboardPage() {
                 value={cancelReason}
                 onChange={(e) => setCancelReason(e.target.value)}
                 placeholder="Contoh: Agenda acara dipindahkan atau dibatalkan..."
-                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 text-slate-800"
+                className="w-full px-3 py-2 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-rose-500 text-slate-800 dark:text-slate-200"
               />
             </div>
 
@@ -953,7 +953,7 @@ export default function UserDashboardPage() {
               <button
                 type="button"
                 onClick={() => setCancelTargetId(null)}
-                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100"
+                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
               >
                 Kembali
               </button>

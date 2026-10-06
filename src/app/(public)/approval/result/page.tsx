@@ -46,7 +46,7 @@ function QuickApprovalContent() {
   }, [token]);
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col justify-between">
+    <div className="min-h-screen bg-slate-50 flex flex-col justify-between dark:bg-[#0b1120]">
       {/* Header */}
       <header className="bg-yarsi-dark text-white border-b border-emerald-800/40">
         <div className="max-w-2xl mx-auto px-4 py-3 flex items-center justify-between">
@@ -67,24 +67,24 @@ function QuickApprovalContent() {
       {/* Main Container */}
       <main className="flex-1 max-w-xl w-full mx-auto p-4 sm:p-6 flex items-center justify-center">
         {loading ? (
-          <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-200/80 text-center space-y-4 w-full">
-            <div className="w-14 h-14 mx-auto rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center animate-spin">
-              <ShieldCheck className="w-7 h-7 text-emerald-600" />
+          <div className="bg-white rounded-3xl p-8 shadow-sm border border-slate-200/80 text-center space-y-4 w-full dark:bg-slate-900 dark:border-slate-800">
+            <div className="w-14 h-14 mx-auto rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center animate-spin dark:bg-emerald-500/10 dark:border-emerald-500/30">
+              <ShieldCheck className="w-7 h-7 text-emerald-600 dark:text-emerald-400" />
             </div>
-            <h2 className="text-base font-bold text-slate-800">
+            <h2 className="text-base font-bold text-slate-800 dark:text-slate-200">
               Memproses Otorisasi Pimpinan...
             </h2>
-            <p className="text-xs text-slate-500 max-w-sm mx-auto">
+            <p className="text-xs text-slate-500 max-w-sm mx-auto dark:text-slate-400">
               Memverifikasi tanda tangan digital token persetujuan di server terpusat SIPERU YARSI.
             </p>
           </div>
         ) : error ? (
-          <div className="bg-white rounded-3xl p-8 shadow-sm border border-rose-200 text-center space-y-4 w-full">
-            <div className="w-16 h-16 mx-auto rounded-2xl bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-600">
+          <div className="bg-white rounded-3xl p-8 shadow-sm border border-rose-200 text-center space-y-4 w-full dark:bg-slate-900 dark:border-rose-500/40">
+            <div className="w-16 h-16 mx-auto rounded-2xl bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-600 dark:bg-rose-500/10 dark:border-rose-500/40 dark:text-rose-400">
               <AlertTriangle className="w-8 h-8" />
             </div>
-            <h2 className="text-lg font-black text-rose-700">Persetujuan Tidak Dapat Diproses</h2>
-            <p className="text-xs text-slate-600 max-w-sm mx-auto">
+            <h2 className="text-lg font-black text-rose-700 dark:text-rose-400">Persetujuan Tidak Dapat Diproses</h2>
+            <p className="text-xs text-slate-600 max-w-sm mx-auto dark:text-slate-300">
               {error}
             </p>
             <div className="pt-2">
@@ -97,65 +97,65 @@ function QuickApprovalContent() {
             </div>
           </div>
         ) : result?.alreadyProcessed ? (
-          <div className="bg-white rounded-3xl p-8 shadow-sm border border-amber-200 text-center space-y-4 w-full">
-            <div className="w-16 h-16 mx-auto rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600">
+          <div className="bg-white rounded-3xl p-8 shadow-sm border border-amber-200 text-center space-y-4 w-full dark:bg-slate-900 dark:border-amber-500/30">
+            <div className="w-16 h-16 mx-auto rounded-2xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 dark:bg-amber-500/10 dark:border-amber-500/30 dark:text-amber-400">
               <Clock className="w-8 h-8" />
             </div>
-            <h2 className="text-lg font-black text-amber-800">Permohonan Telah Diproses</h2>
-            <p className="text-xs text-slate-600 max-w-sm mx-auto">
+            <h2 className="text-lg font-black text-amber-800 dark:text-amber-200">Permohonan Telah Diproses</h2>
+            <p className="text-xs text-slate-600 max-w-sm mx-auto dark:text-slate-300">
               {result.message}
             </p>
             <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-2.5">
               <Link
                 href={`/verify/${result.booking?.id || ''}`}
-                className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-sm"
+                className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-sm dark:hover:bg-emerald-500"
               >
                 Lihat Status Permohonan
               </Link>
               <Link
                 href="/"
-                className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold"
+                className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200"
               >
                 Ke Beranda
               </Link>
             </div>
           </div>
         ) : (
-          <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-200/80 text-center space-y-5 w-full">
-            <div className="w-16 h-16 mx-auto rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 shadow-inner">
+          <div className="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-200/80 text-center space-y-5 w-full dark:bg-slate-900 dark:border-slate-800">
+            <div className="w-16 h-16 mx-auto rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 shadow-inner dark:bg-emerald-500/10 dark:border-emerald-500/30 dark:text-emerald-400">
               <CheckCircle2 className="w-9 h-9" />
             </div>
 
             <div>
-              <span className="text-[10px] font-black uppercase tracking-wider text-emerald-700 bg-emerald-100 px-2.5 py-0.5 rounded-full">
+              <span className="text-[10px] font-black uppercase tracking-wider text-emerald-700 bg-emerald-100 px-2.5 py-0.5 rounded-full dark:text-emerald-200 dark:bg-emerald-500/15">
                 OTORISASI 1-KLIK BERHASIL
               </span>
-              <h2 className="text-lg sm:text-xl font-black text-slate-900 mt-2">
+              <h2 className="text-lg sm:text-xl font-black text-slate-900 mt-2 dark:text-slate-100">
                 Persetujuan Resmi Berhasil Diterbitkan
               </h2>
-              <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+              <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto dark:text-slate-400">
                 Status permohonan peminjaman ruangan telah diperbarui dan tercatat pada riwayat audit resmi kampus YARSI.
               </p>
             </div>
 
             {/* Summary Details */}
-            <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200 text-left space-y-2.5 text-xs">
-              <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+            <div className="bg-slate-50 rounded-2xl p-4 border border-slate-200 text-left space-y-2.5 text-xs dark:bg-slate-800/70 dark:border-slate-700">
+              <div className="flex items-center justify-between border-b border-slate-200 pb-2 dark:border-slate-700">
                 <span className="text-slate-400 font-medium">Kode Permohonan:</span>
-                <span className="font-mono font-bold text-slate-800">{result.bookingCode}</span>
+                <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{result.bookingCode}</span>
               </div>
-              <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+              <div className="flex items-center justify-between border-b border-slate-200 pb-2 dark:border-slate-700">
                 <span className="text-slate-400 font-medium">Ruangan:</span>
-                <strong className="text-slate-800">{result.roomName}</strong>
+                <strong className="text-slate-800 dark:text-slate-200">{result.roomName}</strong>
               </div>
-              <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+              <div className="flex items-center justify-between border-b border-slate-200 pb-2 dark:border-slate-700">
                 <span className="text-slate-400 font-medium">Penanggung Jawab:</span>
-                <span className="font-semibold text-slate-800">{result.applicantName}</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200">{result.applicantName}</span>
               </div>
               {result.passToken && (
                 <div className="flex items-center justify-between">
                   <span className="text-slate-400 font-medium">Security Pass:</span>
-                  <span className="font-mono text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded">
+                  <span className="font-mono text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded dark:text-emerald-300 dark:bg-emerald-500/10">
                     {result.passToken}
                   </span>
                 </div>
@@ -166,14 +166,14 @@ function QuickApprovalContent() {
             <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-2.5">
               <Link
                 href={`/verify/${result.passToken || result.bookingCode}`}
-                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-yarsi-primary hover:bg-yarsi-dark text-white text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1.5"
+                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-yarsi-primary hover:bg-yarsi-dark text-white text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-1.5 dark:bg-emerald-600 dark:hover:bg-emerald-500"
               >
                 <span>Lihat Bukti Verifikasi Resmi</span>
                 <ExternalLink className="w-3.5 h-3.5" />
               </Link>
               <Link
                 href="/"
-                className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold"
+                className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200"
               >
                 Beranda SIPERU
               </Link>
@@ -193,7 +193,7 @@ export default function QuickApprovalResultPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4 dark:bg-[#0b1120]">
           <div className="w-8 h-8 border-3 border-emerald-600 border-t-transparent rounded-full animate-spin" />
         </div>
       }

@@ -13,14 +13,15 @@ import {
   BadRequestException,
   NotFoundException,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { BookingsService } from './bookings.service';
 import {
   CreateBookingDto,
+  QueryBookingDto,
   UpdateBookingStatusDto,
   UpdateBatchStatusDto,
-  QueryBookingDto,
+  RescheduleBookingDto,
 } from './dto/create-booking.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { BookingsService } from './bookings.service';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { RolesGuard } from '@/common/guards/roles.guard';
 import { Roles } from '@/common/decorators/roles.decorator';
@@ -117,7 +118,7 @@ export class BookingsController {
   @UseGuards(JwtAuthGuard)
   async toggleRunsheetCheck(
     @Param('bookingId') bookingId: string,
-    @CurrentUser() currentUser: { fullName: string },
+    @CurrentUser() currentUser: { id: string; role: Role; fullName: string },
     @Body()
     body: {
       item: 'ac' | 'audio' | 'logistics' | 'cleanliness';
@@ -172,14 +173,7 @@ export class BookingsController {
   async requestReschedule(
     @Param('id') id: string,
     @CurrentUser() currentUser: { id: string; role: Role; fullName: string },
-    @Body()
-    dto: {
-      newDate: string;
-      newStartTime: string;
-      newEndTime: string;
-      reason: string;
-      newRoomId?: string;
-    },
+    @Body() dto: RescheduleBookingDto,
   ) {
     return this.bookingsService.requestReschedule(id, currentUser, dto);
   }

@@ -18,9 +18,20 @@ async function bootstrap() {
   // Global Prefix
   app.setGlobalPrefix('api');
 
+  // CORS: explicit allowlist only. An empty CORS_ORIGINS falls back to the
+  // local dev frontend so credentials are never reflected to arbitrary origins.
+  const configuredOrigins = (process.env.CORS_ORIGINS || '')
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter((origin) => origin.length > 0);
+  const allowedOrigins =
+    configuredOrigins.length > 0 ? configuredOrigins : ['http://localhost:3000'];
+
+  logger.log(`🔐 CORS allowed origins: ${allowedOrigins.join(', ')}`);
+
   // CORS
   app.enableCors({
-    origin: true,
+    origin: allowedOrigins,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
   });

@@ -175,7 +175,7 @@ export default function LpfApprovalsPage() {
       if (b.bulkGroupId) {
         key = `bulk_${b.bulkGroupId}`;
       } else if (isRecurringBooking(b)) {
-        const userKey = b.userId || b.userNimNidn || (b as any).userEmail || b.userName || 'user';
+        const userKey = b.userId || b.userNimNidn || (b as Booking & { userEmail?: string }).userEmail || b.userName || 'user';
         key = `recur_${userKey}_${b.roomId}_${b.title}_${b.status}`;
       }
 
@@ -316,10 +316,10 @@ export default function LpfApprovalsPage() {
   return (
     <div className="space-y-6">
       {/* Top Header */}
-      <header className="flex flex-col justify-between gap-4 rounded-[18px_4px_18px_18px] border border-slate-200/90 border-l-4 border-l-yarsi-primary bg-white p-6 shadow-sm sm:p-8 md:flex-row md:items-center">
+      <header className="flex flex-col justify-between gap-4 rounded-[18px_4px_18px_18px] border border-slate-200/90 border-l-4 border-l-yarsi-primary bg-white p-6 shadow-sm sm:p-8 md:flex-row md:items-center dark:border-slate-800 dark:bg-slate-900">
         <div>
-          <div className="mb-2 inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-yarsi-primary">
-            <ShieldCheck className="w-4 h-4 text-yarsi-primary" />
+          <div className="mb-2 inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-yarsi-primary dark:text-emerald-400">
+            <ShieldCheck className="w-4 h-4 text-yarsi-primary dark:text-emerald-400" />
             <span>
               {isAdminUmum
                 ? 'Verifikator Ruang Umum'
@@ -328,14 +328,14 @@ export default function LpfApprovalsPage() {
                 : 'Biro Layanan Pengelolaan Fasilitas (LPF Univ)'}
             </span>
           </div>
-          <h1 className="text-2xl font-black text-slate-900">
+          <h1 className="text-2xl font-black text-slate-900 dark:text-slate-100">
             {isAdminUmum
               ? 'Verifikasi Peminjaman Ruang Umum'
               : isSuperadmin
               ? 'Persetujuan Akhir Ruang Umum & Rekap'
               : 'Antrean Persetujuan LPF'}
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+          <p className="text-xs sm:text-sm text-slate-500 mt-0.5 dark:text-slate-400">
             {isAdminUmum
               ? 'Verifikasi kelengkapan pengajuan ruang kuliah reguler, laboratorium, dan CBT.'
               : isSuperadmin
@@ -345,14 +345,14 @@ export default function LpfApprovalsPage() {
         </div>
 
         {selectedIds.length > 0 && (
-          <div className="flex items-center gap-2 bg-emerald-50 p-2 rounded-2xl border border-emerald-300 animate-fade-in">
-            <span className="text-xs font-bold text-emerald-900 px-2">
+          <div className="flex items-center gap-2 bg-emerald-50 p-2 rounded-2xl border border-emerald-300 animate-fade-in dark:bg-emerald-500/10 dark:border-emerald-500/40">
+            <span className="text-xs font-bold text-emerald-900 px-2 dark:text-emerald-200">
               {selectedIds.length} dipilih
             </span>
             <button
               type="button"
               onClick={handleBulkApprove}
-              className="min-h-10 rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-emerald-700"
+              className="min-h-10 rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-emerald-700 dark:hover:bg-emerald-500"
             >
               {isAdminUmum ? 'Verifikasi Semua Terpilih' : 'Setujui Semua Terpilih'}
             </button>
@@ -361,7 +361,7 @@ export default function LpfApprovalsPage() {
       </header>
 
       {/* Filter Tabs, Grouping Toggle & Search */}
-      <div className="sticky top-[104px] z-20 flex flex-col justify-between gap-3 rounded-[14px_3px_14px_14px] border border-slate-200/80 bg-white/95 p-3 shadow-[0_14px_30px_-24px_rgba(15,23,42,0.5)] backdrop-blur sm:flex-row sm:items-center sm:p-4">
+      <div className="sticky top-[104px] z-20 flex flex-col justify-between gap-3 rounded-[14px_3px_14px_14px] border border-slate-200/80 bg-white/95 p-3 shadow-[0_14px_30px_-24px_rgba(15,23,42,0.5)] backdrop-blur sm:flex-row sm:items-center sm:p-4 dark:border-slate-700 dark:bg-slate-900/95">
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
           {/* Verified Tab: for Superadmin and Admin Umum */}
           {(isSuperadmin || isAdminUmum) && (
@@ -371,8 +371,8 @@ export default function LpfApprovalsPage() {
               aria-pressed={activeFilter === 'verified'}
               className={`min-h-11 whitespace-nowrap border px-3.5 py-2 text-xs font-bold rounded-lg ${
                 activeFilter === 'verified'
-                  ? 'bg-yarsi-primary text-white border-yarsi-primary shadow-sm'
-                  : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                  ? 'bg-yarsi-primary text-white border-yarsi-primary shadow-sm dark:bg-emerald-600 dark:border-emerald-600'
+                  : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100 dark:bg-slate-800/60 dark:text-slate-200 dark:border-slate-700 dark:hover:bg-slate-700/60'
               }`}
             >
               {isSuperadmin ? 'Siap Disetujui (Verified)' : 'Terverifikasi'} ({verifiedCount})
@@ -385,8 +385,8 @@ export default function LpfApprovalsPage() {
             aria-pressed={activeFilter === 'pending'}
             className={`min-h-11 whitespace-nowrap border px-3.5 py-2 text-xs font-bold rounded-lg ${
               activeFilter === 'pending'
-                ? 'bg-yarsi-primary text-white border-yarsi-primary shadow-sm'
-                : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                ? 'bg-yarsi-primary text-white border-yarsi-primary shadow-sm dark:bg-emerald-600 dark:border-emerald-600'
+                : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100 dark:bg-slate-800/60 dark:text-slate-200 dark:border-slate-700 dark:hover:bg-slate-700/60'
             }`}
           >
             {isAdminUmum ? 'Menunggu Verifikasi' : 'Antrean Baru'} ({pendingCount})
@@ -400,8 +400,8 @@ export default function LpfApprovalsPage() {
               aria-pressed={activeFilter === 'yayasan'}
               className={`min-h-11 whitespace-nowrap border px-3.5 py-2 text-xs font-bold rounded-lg ${
                 activeFilter === 'yayasan'
-                  ? 'bg-yarsi-primary text-white border-yarsi-primary shadow-sm'
-                  : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                  ? 'bg-yarsi-primary text-white border-yarsi-primary shadow-sm dark:bg-emerald-600 dark:border-emerald-600'
+                  : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100 dark:bg-slate-800/60 dark:text-slate-200 dark:border-slate-700 dark:hover:bg-slate-700/60'
               }`}
             >
               Rekomendasi Yayasan ({yayasanCount})
@@ -414,8 +414,8 @@ export default function LpfApprovalsPage() {
             aria-pressed={activeFilter === 'all'}
             className={`min-h-11 whitespace-nowrap border px-3.5 py-2 text-xs font-bold rounded-lg ${
               activeFilter === 'all'
-                ? 'bg-yarsi-primary text-white border-yarsi-primary shadow-sm'
-                : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                ? 'bg-yarsi-primary text-white border-yarsi-primary shadow-sm dark:bg-emerald-600 dark:border-emerald-600'
+                : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100 dark:bg-slate-800/60 dark:text-slate-200 dark:border-slate-700 dark:hover:bg-slate-700/60'
             }`}
           >
             Semua Riwayat ({totalCount})
@@ -430,8 +430,8 @@ export default function LpfApprovalsPage() {
             title="Kelompokkan sesi pengulangan rutin menjadi satu pengajuan master"
             className={`flex items-center gap-1.5 min-h-11 px-3 py-2 text-xs font-bold rounded-xl border transition-colors ${
               isGroupRecurring
-                ? 'bg-teal-50 text-teal-800 border-teal-300 shadow-xs'
-                : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                ? 'bg-teal-50 text-teal-800 border-teal-300 shadow-xs dark:bg-teal-500/10 dark:text-teal-200 dark:border-teal-500/40'
+                : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100 dark:bg-slate-800/60 dark:text-slate-300 dark:border-slate-700 dark:hover:bg-slate-700/60'
             }`}
           >
             <Layers className="w-4 h-4 text-teal-600" />
@@ -447,7 +447,7 @@ export default function LpfApprovalsPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               aria-label="Cari permohonan"
-              className="min-h-11 w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-9 pr-3 text-sm outline-none hover:border-slate-300 focus:border-yarsi-primary focus:bg-white focus:ring-4 focus:ring-emerald-100 sm:w-64"
+              className="min-h-11 w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-9 pr-3 text-sm outline-none hover:border-slate-300 focus:border-yarsi-primary focus:bg-white focus:ring-4 focus:ring-emerald-100 sm:w-64 dark:border-slate-700 dark:bg-slate-800/60 dark:hover:border-slate-600 dark:focus:bg-slate-900"
             />
           </div>
         </div>
@@ -455,15 +455,15 @@ export default function LpfApprovalsPage() {
 
       {/* Approvals Table / Card Queue */}
       {groupedQueue.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center space-y-3">
+        <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center space-y-3 dark:bg-slate-900 dark:border-slate-700">
           {searchQuery ? <Search className="mx-auto h-10 w-10 text-slate-300" aria-hidden="true" /> : <CheckCircle2 className="mx-auto h-12 w-12 text-emerald-500" aria-hidden="true" />}
-          <h3 className="text-base font-bold text-slate-800">
+          <h3 className="text-base font-bold text-slate-800 dark:text-slate-200">
             {searchQuery ? 'Permohonan tidak ditemukan' : 'Tidak ada permohonan dalam antrean ini'}
           </h3>
           <p className="text-xs text-slate-400">
             {searchQuery ? `Tidak ada hasil yang cocok dengan “${searchQuery}”.` : 'Semua permohonan peminjaman ruangan telah selesai diverifikasi oleh Admin LPF.'}
           </p>
-          {searchQuery && <button type="button" onClick={() => setSearchQuery('')} className="min-h-10 rounded-lg border border-slate-300 bg-white px-4 text-xs font-bold text-slate-700 hover:border-emerald-300 hover:text-yarsi-primary">Hapus pencarian</button>}
+          {searchQuery && <button type="button" onClick={() => setSearchQuery('')} className="min-h-10 rounded-lg border border-slate-300 bg-white px-4 text-xs font-bold text-slate-700 hover:border-emerald-300 hover:text-yarsi-primary dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-emerald-500 dark:hover:text-emerald-400">Hapus pencarian</button>}
         </div>
       ) : (
         <div className="space-y-4">
@@ -475,18 +475,18 @@ export default function LpfApprovalsPage() {
             return (
               <div
                 key={group.groupId}
-                className={`bg-white rounded-2xl border transition-all p-5 shadow-sm space-y-4 ${
+                className={`bg-white rounded-2xl border transition-all p-5 shadow-sm space-y-4 dark:bg-slate-900 ${
                   group.hasClash
-                    ? 'border-amber-400 ring-2 ring-amber-500/10'
+                    ? 'border-amber-400 ring-2 ring-amber-500/10 dark:border-amber-500/40 dark:ring-amber-500/10'
                     : isGroup
-                    ? 'border-teal-200 ring-1 ring-teal-500/10 hover:border-teal-400'
-                    : 'border-slate-200/80 hover:border-emerald-300'
+                    ? 'border-teal-200 ring-1 ring-teal-500/10 hover:border-teal-400 dark:border-teal-500/40 dark:hover:border-teal-400'
+                    : 'border-slate-200/80 hover:border-emerald-300 dark:border-slate-700 dark:hover:border-emerald-500'
                 }`}
               >
                 {/* Top Row: Code, Group Badge, Status, and Potential Clash */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100 dark:border-slate-800">
                   <div className="flex items-center gap-3">
-                    <span className="font-mono text-xs font-bold text-yarsi-primary bg-emerald-50 px-2.5 py-0.5 rounded border border-emerald-200">
+                    <span className="font-mono text-xs font-bold text-yarsi-primary bg-emerald-50 px-2.5 py-0.5 rounded border border-emerald-200 dark:text-emerald-400 dark:bg-emerald-500/10 dark:border-emerald-500/30">
                       {booking.bookingCode}
                     </span>
 
@@ -497,8 +497,8 @@ export default function LpfApprovalsPage() {
 
                   <div className="flex items-center gap-2">
                     {group.hasClash && (
-                      <span className="flex items-center gap-1 rounded-lg border border-amber-300 bg-amber-100 px-2.5 py-1 text-[11px] font-bold text-amber-900">
-                        <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
+                      <span className="flex items-center gap-1 rounded-lg border border-amber-300 bg-amber-100 px-2.5 py-1 text-[11px] font-bold text-amber-900 dark:border-amber-500/40 dark:bg-amber-500/15 dark:text-amber-200">
+                        <AlertTriangle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
                         <span>Bentrok Waktu ({group.clashingBookings.length} Sesi)</span>
                       </span>
                     )}
@@ -511,32 +511,32 @@ export default function LpfApprovalsPage() {
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
                   <div className="lg:col-span-8 space-y-2">
                     <div className="flex items-center gap-2">
-                      <h3 className="text-base font-bold text-slate-900 leading-snug">
+                      <h3 className="text-base font-bold text-slate-900 leading-snug dark:text-slate-100">
                         {booking.title}
                       </h3>
                       {booking.jenisKegiatan && (
-                        <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-emerald-100 text-yarsi-primary border border-emerald-300">
+                        <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-emerald-100 text-yarsi-primary border border-emerald-300 dark:bg-emerald-500/15 dark:text-emerald-200 dark:border-emerald-500/40">
                           {booking.jenisKegiatan}
                         </span>
                       )}
                       {isRecurringBooking(booking) && !isGroup && (
-                        <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-teal-50 text-teal-800 border border-teal-300">
-                          <Repeat className="w-3 h-3 text-teal-600" />
+                        <span className="inline-flex items-center gap-1 text-[10px] font-extrabold uppercase px-2 py-0.5 rounded-full bg-teal-50 text-teal-800 border border-teal-300 dark:bg-teal-500/10 dark:text-teal-200 dark:border-teal-500/40">
+                          <Repeat className="w-3 h-3 text-teal-600 dark:text-teal-400" />
                           <span>Rutin Per Semester</span>
                         </span>
                       )}
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-y-1 gap-x-4 text-xs text-slate-600">
-                      <span className="font-semibold text-slate-800 flex items-center gap-1">
-                        <Building2 className="w-4 h-4 text-yarsi-primary" />
+                    <div className="flex flex-wrap items-center gap-y-1 gap-x-4 text-xs text-slate-600 dark:text-slate-300">
+                      <span className="font-semibold text-slate-800 flex items-center gap-1 dark:text-slate-200">
+                        <Building2 className="w-4 h-4 text-yarsi-primary dark:text-emerald-400" />
                         <span>{booking.roomName} (Lt. {booking.floor})</span>
                       </span>
 
                       <span className="flex items-center gap-1">
-                        <Calendar className="w-4 h-4 text-yarsi-primary" />
+                        <Calendar className="w-4 h-4 text-yarsi-primary dark:text-emerald-400" />
                         {isGroup ? (
-                          <span className="font-semibold text-slate-800">
+                          <span className="font-semibold text-slate-800 dark:text-slate-200">
                             {formatDateIndo(group.startDate)} s.d. {formatDateIndo(group.endDate)} ({group.totalSessions} Sesi)
                           </span>
                         ) : (
@@ -544,12 +544,12 @@ export default function LpfApprovalsPage() {
                         )}
                       </span>
 
-                      <span className="font-bold text-yarsi-primary flex items-center gap-1">
+                      <span className="font-bold text-yarsi-primary flex items-center gap-1 dark:text-emerald-400">
                         <Clock className="w-4 h-4" />
                         <span>{booking.startTime} - {booking.endTime} WIB</span>
                       </span>
 
-                      <span className="flex items-center gap-1 text-slate-500">
+                      <span className="flex items-center gap-1 text-slate-500 dark:text-slate-400">
                         <Users className="w-3.5 h-3.5" />
                         <span>~{booking.estimatedAttendees} Peserta</span>
                       </span>
@@ -557,15 +557,15 @@ export default function LpfApprovalsPage() {
 
                     {/* Dedicated Recurring Information Box */}
                     {isRecurringBooking(booking) && (
-                      <div className="flex items-start sm:items-center gap-2 px-3 py-2 rounded-xl bg-teal-50/90 border border-teal-200 text-xs text-teal-950 font-medium">
-                        <Repeat className="w-4 h-4 text-teal-600 shrink-0 mt-0.5 sm:mt-0" />
+                      <div className="flex items-start sm:items-center gap-2 px-3 py-2 rounded-xl bg-teal-50/90 border border-teal-200 text-xs text-teal-950 font-medium dark:bg-teal-500/10 dark:border-teal-500/30 dark:text-teal-100">
+                        <Repeat className="w-4 h-4 text-teal-600 shrink-0 mt-0.5 sm:mt-0 dark:text-teal-400" />
                         <div className="flex-1 flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                          <span className="font-bold text-teal-900">Jadwal Rutin Pertemuan:</span>
-                          <span className="text-teal-800 font-semibold">
+                          <span className="font-bold text-teal-900 dark:text-teal-200">Jadwal Rutin Pertemuan:</span>
+                          <span className="text-teal-800 font-semibold dark:text-teal-200">
                             {getRecurringScheduleLabel(booking)}
                           </span>
                           {isGroup && (
-                            <span className="bg-teal-200/70 text-teal-900 text-[11px] font-extrabold px-2 py-0.5 rounded-full ml-1">
+                            <span className="bg-teal-200/70 text-teal-900 text-[11px] font-extrabold px-2 py-0.5 rounded-full ml-1 dark:bg-teal-500/20 dark:text-teal-200">
                               Total: {group.totalSessions} Sesi Pertemuan
                             </span>
                           )}
@@ -573,14 +573,14 @@ export default function LpfApprovalsPage() {
                       </div>
                     )}
 
-                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 text-xs text-slate-600">
+                    <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 text-xs text-slate-600 dark:bg-slate-800/60 dark:border-slate-800 dark:text-slate-300">
                       <p><strong>Deskripsi:</strong> {booking.description}</p>
                     </div>
 
                     {/* Logistics items */}
                     {booking.logistik && booking.logistik.length > 0 && (
                       <div className="pt-1">
-                        <p className="text-[11px] font-bold text-slate-500 mb-1 flex items-center gap-1">
+                        <p className="text-[11px] font-bold text-slate-500 mb-1 flex items-center gap-1 dark:text-slate-400">
                           <PackageCheck className="w-3.5 h-3.5 text-emerald-600" />
                           <span>Kebutuhan Logistik & Fasilitas:</span>
                         </p>
@@ -588,9 +588,9 @@ export default function LpfApprovalsPage() {
                           {booking.logistik.map((l, i) => (
                             <span
                               key={i}
-                              className="inline-flex items-center gap-1 text-[11px] bg-emerald-50 text-emerald-900 border border-emerald-200 px-2 py-0.5 rounded-lg font-medium"
+                              className="inline-flex items-center gap-1 text-[11px] bg-emerald-50 text-emerald-900 border border-emerald-200 px-2 py-0.5 rounded-lg font-medium dark:bg-emerald-500/10 dark:text-emerald-100 dark:border-emerald-500/30"
                             >
-                              <Check className="w-3 h-3 text-emerald-600 shrink-0" />
+                              <Check className="w-3 h-3 text-emerald-600 shrink-0 dark:text-emerald-400" />
                               <span>{l.jenisItem} ({l.jumlah}x) {l.catatan ? `— ${l.catatan}` : ''}</span>
                             </span>
                           ))}
@@ -600,14 +600,14 @@ export default function LpfApprovalsPage() {
 
                     {/* Expandable Sessions List for Grouped Recurring Bookings */}
                     {isGroup && (
-                      <div className="pt-2 border-t border-slate-100">
+                      <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
                         <button
                           type="button"
                           onClick={() => toggleGroupExpand(group.groupId)}
-                          className="w-full flex items-center justify-between px-3 py-2 text-xs font-semibold text-slate-700 bg-slate-50 hover:bg-slate-100 rounded-xl border border-slate-200/80 transition-colors"
+                          className="w-full flex items-center justify-between px-3 py-2 text-xs font-semibold text-slate-700 bg-slate-50 hover:bg-slate-100 rounded-xl border border-slate-200/80 transition-colors dark:text-slate-300 dark:bg-slate-800/60 dark:hover:bg-slate-700/60 dark:border-slate-700"
                         >
                           <span className="flex items-center gap-2">
-                            <CalendarRange className="w-4 h-4 text-yarsi-primary" />
+                            <CalendarRange className="w-4 h-4 text-yarsi-primary dark:text-emerald-400" />
                             <span>
                               {isExpanded
                                 ? `Sembunyikan Rincian Sesi (${group.totalSessions} Pertemuan)`
@@ -626,18 +626,18 @@ export default function LpfApprovalsPage() {
                                   key={session.id}
                                   className={`flex items-center justify-between p-2 rounded-lg border ${
                                     sessionClash
-                                      ? 'bg-amber-50/80 border-amber-300'
-                                      : 'bg-white border-slate-200'
+                                      ? 'bg-amber-50/80 border-amber-300 dark:bg-amber-500/10 dark:border-amber-500/40'
+                                      : 'bg-white border-slate-200 dark:bg-slate-900 dark:border-slate-700'
                                   }`}
                                 >
-                                  <div className="flex items-center gap-2">
-                                    <span className="font-bold text-slate-500 text-[11px] w-12">
+                                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1 min-w-0">
+                                    <span className="font-bold text-slate-500 text-[11px] w-12 dark:text-slate-400">
                                       #{idx + 1}
                                     </span>
-                                    <span className="font-semibold text-slate-800">
+                                    <span className="font-semibold text-slate-800 dark:text-slate-200">
                                       {formatDateIndo(session.date)}
                                     </span>
-                                    <span className="text-slate-500 font-mono text-[11px]">
+                                    <span className="text-slate-500 font-mono text-[11px] dark:text-slate-400">
                                       ({session.startTime} - {session.endTime} WIB)
                                     </span>
                                     <span className="text-[10px] font-mono text-slate-400">
@@ -645,9 +645,9 @@ export default function LpfApprovalsPage() {
                                     </span>
                                   </div>
 
-                                  <div className="flex items-center gap-2">
+                                  <div className="flex items-center gap-2 shrink-0">
                                     {sessionClash && (
-                                      <span className="text-[10px] font-bold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded border border-amber-300">
+                                      <span className="text-[10px] font-bold text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded border border-amber-300 dark:text-amber-400 dark:bg-amber-500/15 dark:border-amber-500/40">
                                         Bentrok: {sessionClash.bookingCode}
                                       </span>
                                     )}
@@ -663,16 +663,16 @@ export default function LpfApprovalsPage() {
                   </div>
 
                   {/* Right Col: Applicant Info & Actions */}
-                  <div className="lg:col-span-4 bg-slate-50 p-4 rounded-2xl border border-slate-200/80 flex flex-col justify-between space-y-4">
+                  <div className="lg:col-span-4 bg-slate-50 p-4 rounded-2xl border border-slate-200/80 flex flex-col justify-between space-y-4 dark:bg-slate-800/60 dark:border-slate-700">
                     <div className="space-y-1 text-xs">
                       <p className="text-slate-400 font-bold uppercase tracking-wider text-[10px]">
                         Pemohon:
                       </p>
-                      <p className="font-bold text-slate-900 text-sm">{booking.userName}</p>
-                      <p className="text-slate-500 font-mono text-[11px]">
+                      <p className="font-bold text-slate-900 text-sm dark:text-slate-100">{booking.userName}</p>
+                      <p className="text-slate-500 font-mono text-[11px] dark:text-slate-400">
                         {booking.userNimNidn} • {booking.userOrganization}
                       </p>
-                      <p className="text-slate-600 flex items-center gap-1 mt-1">
+                      <p className="text-slate-600 flex items-center gap-1 mt-1 dark:text-slate-300">
                         <Phone className="w-3 h-3 text-emerald-600" />
                         <span>{booking.userPhone}</span>
                       </p>
@@ -680,10 +680,10 @@ export default function LpfApprovalsPage() {
 
                     {/* Action Buttons */}
                     {booking.status === 'VERIFIED' ? (
-                      <div className="space-y-2 pt-2 border-t border-slate-200">
+                      <div className="space-y-2 pt-2 border-t border-slate-200 dark:border-slate-700">
                         {isSuperadmin ? (
                           <>
-                            <div className="p-2 bg-indigo-50 border border-indigo-200 rounded-xl text-[11px] text-indigo-900 font-medium">
+                            <div className="p-2 bg-indigo-50 border border-indigo-200 rounded-xl text-[11px] text-indigo-900 font-medium dark:bg-indigo-500/20 dark:border-indigo-500/30 dark:text-indigo-200">
                               ✓ Telah diverifikasi oleh Admin Umum. Menunggu approval akhir Superadmin.
                             </div>
                             <button
@@ -697,7 +697,7 @@ export default function LpfApprovalsPage() {
                                 );
                                 setApplyApprovalToGroup(true);
                               }}
-                              className="flex min-h-11 w-full items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-emerald-700 transition-all"
+                              className="flex min-h-11 w-full items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-emerald-700 transition-all dark:hover:bg-emerald-500"
                             >
                               <CheckCircle2 className="w-4 h-4" />
                               <span>
@@ -714,20 +714,20 @@ export default function LpfApprovalsPage() {
                                 setRejectionReason('');
                                 setApplyRejectionToGroup(true);
                               }}
-                              className="w-full py-1.5 px-2 bg-white hover:bg-rose-50 text-rose-600 border border-rose-200 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1"
+                              className="w-full py-1.5 px-2 min-h-11 bg-white hover:bg-rose-50 text-rose-600 border border-rose-200 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1 dark:bg-slate-900 dark:hover:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/30"
                             >
                               <XCircle className="w-3.5 h-3.5" />
                               <span>Tolak Pengajuan</span>
                             </button>
                           </>
                         ) : (
-                          <div className="p-2.5 bg-indigo-50 border border-indigo-200 rounded-xl text-xs text-indigo-900 font-semibold text-center">
+                          <div className="p-2.5 bg-indigo-50 border border-indigo-200 rounded-xl text-xs text-indigo-900 font-semibold text-center dark:bg-indigo-500/20 dark:border-indigo-500/30 dark:text-indigo-200">
                             ✓ Telah Diverifikasi Admin Umum (Menunggu Approval Akhir Superadmin)
                           </div>
                         )}
                       </div>
                     ) : booking.status === 'PENDING_LPF' ? (
-                      <div className="space-y-2 pt-2 border-t border-slate-200">
+                      <div className="space-y-2 pt-2 border-t border-slate-200 dark:border-slate-700">
                         {booking.requiresYayasanApproval ? (
                           <button
                             type="button"
@@ -740,7 +740,7 @@ export default function LpfApprovalsPage() {
                               );
                               setApplyApprovalToGroup(true);
                             }}
-                            className="flex min-h-11 w-full items-center justify-center gap-1.5 rounded-xl bg-sky-600 px-3 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-sky-700 transition-all"
+                            className="flex min-h-11 w-full items-center justify-center gap-1.5 rounded-xl bg-sky-600 px-3 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-sky-700 transition-all dark:hover:bg-sky-500"
                           >
                             <Send className="w-4 h-4" />
                             <span>
@@ -761,7 +761,7 @@ export default function LpfApprovalsPage() {
                               );
                               setApplyApprovalToGroup(true);
                             }}
-                            className="flex min-h-11 w-full items-center justify-center gap-1.5 rounded-xl bg-indigo-600 px-3 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-indigo-700 transition-all"
+                            className="flex min-h-11 w-full items-center justify-center gap-1.5 rounded-xl bg-indigo-600 px-3 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-indigo-700 transition-all dark:hover:bg-indigo-500"
                           >
                             <ShieldCheck className="w-4 h-4" />
                             <span>
@@ -782,7 +782,7 @@ export default function LpfApprovalsPage() {
                               );
                               setApplyApprovalToGroup(true);
                             }}
-                            className="flex min-h-11 w-full items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-emerald-700 transition-all"
+                            className="flex min-h-11 w-full items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-emerald-700 transition-all dark:hover:bg-emerald-500"
                           >
                             <CheckCircle2 className="w-4 h-4" />
                             <span>
@@ -801,7 +801,7 @@ export default function LpfApprovalsPage() {
                               setReturnNotes('');
                               setApplyReturnToGroup(true);
                             }}
-                            className="py-1.5 px-2 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1"
+                            className="py-1.5 px-2 min-h-11 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1 dark:bg-amber-500/10 dark:hover:bg-amber-500/20 dark:text-amber-300 dark:border-amber-500/30"
                           >
                             <RotateCcw className="w-3.5 h-3.5" />
                             <span>Kembalikan</span>
@@ -814,7 +814,7 @@ export default function LpfApprovalsPage() {
                               setRejectionReason('');
                               setApplyRejectionToGroup(true);
                             }}
-                            className="py-1.5 px-2 bg-white hover:bg-rose-50 text-rose-600 border border-rose-200 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1"
+                            className="py-1.5 px-2 min-h-11 bg-white hover:bg-rose-50 text-rose-600 border border-rose-200 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1 dark:bg-slate-900 dark:hover:bg-rose-500/10 dark:text-rose-400 dark:border-rose-500/30"
                           >
                             <XCircle className="w-3.5 h-3.5" />
                             <span>Tolak</span>
@@ -822,7 +822,7 @@ export default function LpfApprovalsPage() {
                         </div>
                       </div>
                     ) : (
-                      <div className="text-right text-xs text-slate-500 font-medium">
+                      <div className="text-right text-xs text-slate-500 font-medium dark:text-slate-400">
                         {booking.lpfNotes && <p className="italic">"{booking.lpfNotes}"</p>}
                       </div>
                     )}
@@ -854,27 +854,27 @@ export default function LpfApprovalsPage() {
           maxWidth="md"
         >
           <div className="space-y-4">
-            <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-900 space-y-1">
+            <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-900 space-y-1 dark:bg-emerald-500/10 dark:border-emerald-500/30 dark:text-emerald-100">
               <p className="font-bold">{approvalTarget.title}</p>
               <p>{approvalTarget.roomName} • {formatDateIndo(approvalTarget.date)} ({approvalTarget.startTime} - {approvalTarget.endTime})</p>
             </div>
 
             {/* Recurring Group Notification Box in Modal */}
             {isRecurringBooking(approvalTarget) && targetGroupBookings.length > 1 && (
-              <div className="p-3 bg-teal-50 border border-teal-200 rounded-xl space-y-2">
-                <div className="flex items-center gap-2 text-teal-900 font-bold text-xs">
-                  <Repeat className="w-4 h-4 text-teal-600" />
+              <div className="p-3 bg-teal-50 border border-teal-200 rounded-xl space-y-2 dark:bg-teal-500/10 dark:border-teal-500/30">
+                <div className="flex items-center gap-2 text-teal-900 font-bold text-xs dark:text-teal-200">
+                  <Repeat className="w-4 h-4 text-teal-600 dark:text-teal-400" />
                   <span>Pengajuan Peminjaman Rutin ({targetGroupBookings.length} Sesi Terjadwal)</span>
                 </div>
-                <p className="text-[11px] text-teal-800">
+                <p className="text-[11px] text-teal-800 dark:text-teal-200">
                   Jadwal: {getRecurringScheduleLabel(approvalTarget)}
                 </p>
-                <label className="flex items-center gap-2 pt-1 text-xs font-bold text-teal-950 cursor-pointer">
+                <label className="flex items-center gap-2 pt-1 text-xs font-bold text-teal-950 cursor-pointer dark:text-teal-100">
                   <input
                     type="checkbox"
                     checked={applyApprovalToGroup}
                     onChange={(e) => setApplyApprovalToGroup(e.target.checked)}
-                    className="rounded border-teal-400 text-yarsi-primary focus:ring-yarsi-primary h-4 w-4"
+                    className="rounded border-teal-400 text-yarsi-primary focus:ring-yarsi-primary h-4 w-4 dark:text-emerald-400"
                   />
                   <span>Terapkan persetujuan untuk seluruh {targetGroupBookings.length} sesi pertemuan sekaligus</span>
                 </label>
@@ -882,14 +882,14 @@ export default function LpfApprovalsPage() {
             )}
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
+              <label className="block text-xs font-bold text-slate-700 mb-1 dark:text-slate-300">
                 {isAdminUmum ? 'Catatan Verifikasi Admin Umum:' : 'Catatan Persetujuan:'}
               </label>
               <textarea
                 rows={3}
                 value={approvalNotes}
                 onChange={(e) => setApprovalNotes(e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yarsi-primary"
+                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yarsi-primary dark:bg-slate-800/60 dark:border-slate-700 dark:text-slate-100"
               />
             </div>
 
@@ -897,14 +897,14 @@ export default function LpfApprovalsPage() {
               <button
                 type="button"
                 onClick={() => setApprovalTarget(null)}
-                className="min-h-10 px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg"
+                className="min-h-10 px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg dark:text-slate-300 dark:hover:bg-slate-800"
               >
                 Batal
               </button>
               <button
                 type="button"
                 onClick={() => handleApprove(approvalTarget)}
-                className="min-h-10 px-5 py-2.5 text-xs font-bold text-white bg-yarsi-primary hover:bg-yarsi-dark rounded-lg shadow-sm transition-all"
+                className="min-h-10 px-5 py-2.5 text-xs font-bold text-white bg-yarsi-primary hover:bg-yarsi-dark rounded-lg shadow-sm transition-all dark:bg-emerald-600 dark:hover:bg-emerald-500"
               >
                 {approvalTarget.requiresYayasanApproval
                   ? applyApprovalToGroup && targetGroupBookings.length > 1
@@ -937,23 +937,23 @@ export default function LpfApprovalsPage() {
           maxWidth="md"
         >
           <div className="space-y-4">
-            <div className="p-3 bg-amber-50 border border-amber-300 rounded-lg text-xs text-amber-950">
+            <div className="p-3 bg-amber-50 border border-amber-300 rounded-lg text-xs text-amber-950 dark:bg-amber-500/10 dark:border-amber-500/40 dark:text-amber-100">
               <p className="font-bold">{returnTarget.title}</p>
               <p>{returnTarget.userName} ({returnTarget.userOrganization})</p>
             </div>
 
             {isRecurringBooking(returnTarget) && returnGroupBookings.length > 1 && (
-              <div className="p-3 bg-teal-50 border border-teal-200 rounded-xl space-y-2">
-                <div className="flex items-center gap-2 text-teal-900 font-bold text-xs">
-                  <Repeat className="w-4 h-4 text-teal-600" />
+              <div className="p-3 bg-teal-50 border border-teal-200 rounded-xl space-y-2 dark:bg-teal-500/10 dark:border-teal-500/30">
+                <div className="flex items-center gap-2 text-teal-900 font-bold text-xs dark:text-teal-200">
+                  <Repeat className="w-4 h-4 text-teal-600 dark:text-teal-400" />
                   <span>Pengajuan Peminjaman Rutin ({returnGroupBookings.length} Sesi)</span>
                 </div>
-                <label className="flex items-center gap-2 pt-1 text-xs font-bold text-teal-950 cursor-pointer">
+                <label className="flex items-center gap-2 pt-1 text-xs font-bold text-teal-950 cursor-pointer dark:text-teal-100">
                   <input
                     type="checkbox"
                     checked={applyReturnToGroup}
                     onChange={(e) => setApplyReturnToGroup(e.target.checked)}
-                    className="rounded border-teal-400 text-yarsi-primary focus:ring-yarsi-primary h-4 w-4"
+                    className="rounded border-teal-400 text-yarsi-primary focus:ring-yarsi-primary h-4 w-4 dark:text-emerald-400"
                   />
                   <span>Terapkan catatan revisi untuk seluruh {returnGroupBookings.length} sesi pertemuan sekaligus</span>
                 </label>
@@ -961,7 +961,7 @@ export default function LpfApprovalsPage() {
             )}
 
             <div>
-              <label htmlFor="returnNotesInput" className="block text-xs font-bold text-slate-700 mb-1">
+              <label htmlFor="returnNotesInput" className="block text-xs font-bold text-slate-700 mb-1 dark:text-slate-300">
                 Catatan Revisi / Hal yang Perlu Diperbaiki (Wajib Diisi) *
               </label>
               <textarea
@@ -971,9 +971,9 @@ export default function LpfApprovalsPage() {
                 value={returnNotes}
                 onChange={(e) => setReturnNotes(e.target.value)}
                 placeholder="Contoh: Mohon perbaiki estimasi jumlah peserta dan lampirkan surat rekomendasi resmi Dekanat..."
-                className="w-full px-3 py-2 text-xs bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 text-slate-800"
+                className="w-full px-3 py-2 text-xs bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 text-slate-800 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100"
               />
-              <p className="text-[11px] text-slate-500 mt-1">
+              <p className="text-[11px] text-slate-500 mt-1 dark:text-slate-400">
                 Catatan ini akan tampil langsung di halaman dashboard pemohon.
               </p>
             </div>
@@ -982,7 +982,7 @@ export default function LpfApprovalsPage() {
               <button
                 type="button"
                 onClick={() => setReturnTarget(null)}
-                className="min-h-10 px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg"
+                className="min-h-10 px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg dark:text-slate-300 dark:hover:bg-slate-800"
               >
                 Batal
               </button>
@@ -1015,23 +1015,23 @@ export default function LpfApprovalsPage() {
           maxWidth="md"
         >
           <div className="space-y-4">
-            <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg text-xs text-rose-900">
+            <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg text-xs text-rose-900 dark:bg-rose-500/10 dark:border-rose-500/30 dark:text-rose-100">
               <p className="font-bold">{rejectionTarget.title}</p>
               <p>{rejectionTarget.userName} ({rejectionTarget.userOrganization})</p>
             </div>
 
             {isRecurringBooking(rejectionTarget) && rejectionGroupBookings.length > 1 && (
-              <div className="p-3 bg-teal-50 border border-teal-200 rounded-xl space-y-2">
-                <div className="flex items-center gap-2 text-teal-900 font-bold text-xs">
-                  <Repeat className="w-4 h-4 text-teal-600" />
+              <div className="p-3 bg-teal-50 border border-teal-200 rounded-xl space-y-2 dark:bg-teal-500/10 dark:border-teal-500/30">
+                <div className="flex items-center gap-2 text-teal-900 font-bold text-xs dark:text-teal-200">
+                  <Repeat className="w-4 h-4 text-teal-600 dark:text-teal-400" />
                   <span>Pengajuan Peminjaman Rutin ({rejectionGroupBookings.length} Sesi)</span>
                 </div>
-                <label className="flex items-center gap-2 pt-1 text-xs font-bold text-teal-950 cursor-pointer">
+                <label className="flex items-center gap-2 pt-1 text-xs font-bold text-teal-950 cursor-pointer dark:text-teal-100">
                   <input
                     type="checkbox"
                     checked={applyRejectionToGroup}
                     onChange={(e) => setApplyRejectionToGroup(e.target.checked)}
-                    className="rounded border-teal-400 text-rose-600 focus:ring-rose-500 h-4 w-4"
+                    className="rounded border-teal-400 text-rose-600 focus:ring-rose-500 h-4 w-4 dark:text-rose-400"
                   />
                   <span>Terapkan penolakan untuk seluruh {rejectionGroupBookings.length} sesi pertemuan sekaligus</span>
                 </label>
@@ -1039,7 +1039,7 @@ export default function LpfApprovalsPage() {
             )}
 
             <div>
-              <label htmlFor="rejectReasonInput" className="block text-xs font-bold text-slate-700 mb-1">
+              <label htmlFor="rejectReasonInput" className="block text-xs font-bold text-slate-700 mb-1 dark:text-slate-300">
                 Alasan Penolakan Resmi (Wajib Diisi) *
               </label>
               <textarea
@@ -1049,9 +1049,9 @@ export default function LpfApprovalsPage() {
                 value={rejectionReason}
                 onChange={(e) => setRejectionReason(e.target.value)}
                 placeholder="Tuliskan alasan penolakan secara jelas agar pemohon memahami pertimbangan LPF..."
-                className="w-full px-3 py-2 text-xs bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 text-slate-800"
+                className="w-full px-3 py-2 text-xs bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 text-slate-800 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100"
               />
-              <p className="text-[11px] text-slate-500 mt-1">
+              <p className="text-[11px] text-slate-500 mt-1 dark:text-slate-400">
                 Alasan ini akan disimpan di Audit Log dan ditampilkan ke pemohon.
               </p>
             </div>
@@ -1060,7 +1060,7 @@ export default function LpfApprovalsPage() {
               <button
                 type="button"
                 onClick={() => setRejectionTarget(null)}
-                className="min-h-10 px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg"
+                className="min-h-10 px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg dark:text-slate-300 dark:hover:bg-slate-800"
               >
                 Batal
               </button>

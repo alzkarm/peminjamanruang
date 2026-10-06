@@ -92,21 +92,21 @@ export function Modal({
         aria-labelledby={title ? titleId : undefined}
         aria-label={title ? undefined : 'Dialog SIPERU'}
         aria-describedby={subtitle ? subtitleId : undefined}
-        className={`relative z-10 my-4 w-full ${maxWidthClasses[maxWidth]} overflow-hidden rounded-[18px_4px_18px_18px] border border-white/80 bg-white shadow-[0_28px_80px_-24px_rgba(2,44,34,0.5)] sm:my-8 animate-slide-up`}
+        className={`relative z-10 my-4 w-full ${maxWidthClasses[maxWidth]} overflow-hidden rounded-[18px_4px_18px_18px] border border-white/80 bg-white shadow-[0_28px_80px_-24px_rgba(2,44,34,0.5)] sm:my-8 animate-slide-up dark:border-slate-700 dark:bg-slate-900`}
         onClick={(e) => e.stopPropagation()}
       >
         {title ? (
-          <div className="flex items-center justify-between gap-4 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-emerald-50/40 px-4 py-4 sm:px-6">
+          <div className="flex items-center justify-between gap-4 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-emerald-50/40 px-4 py-4 sm:px-6 dark:border-slate-700 dark:from-slate-800/70 dark:to-emerald-500/10">
           <div className="min-w-0">
-            <h3 id={titleId} className="text-lg font-extrabold leading-snug tracking-tight text-slate-950">{title}</h3>
-            {subtitle && <p id={subtitleId} className="mt-0.5 truncate text-xs text-slate-500">{subtitle}</p>}
+            <h3 id={titleId} className="text-lg font-extrabold leading-snug tracking-tight text-slate-950 dark:text-slate-100">{title}</h3>
+            {subtitle && <p id={subtitleId} className="mt-0.5 truncate text-xs text-slate-500 dark:text-slate-400">{subtitle}</p>}
           </div>
           <button
             type="button"
             ref={closeButtonRef}
             onClick={onClose}
             aria-label="Tutup dialog"
-            className="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-xl text-slate-500 hover:bg-white hover:text-slate-900 hover:shadow-sm"
+            className="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-xl text-slate-500 hover:bg-white hover:text-slate-900 hover:shadow-sm dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
           >
             <X className="w-5 h-5" />
           </button>

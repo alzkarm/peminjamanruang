@@ -108,25 +108,25 @@ export default function ReportsAnalyticsPage() {
   return (
     <div className="space-y-6">
       {/* Header Banner */}
-      <div className="flex flex-col justify-between gap-4 rounded-[18px_4px_18px_18px] border border-slate-200/90 border-l-4 border-l-yarsi-primary bg-white p-6 shadow-sm sm:p-8 md:flex-row md:items-center">
+      <div className="flex flex-col justify-between gap-4 rounded-[18px_4px_18px_18px] border border-slate-200/90 border-l-4 border-l-yarsi-primary bg-white p-6 shadow-sm sm:p-8 md:flex-row md:items-center dark:border-slate-700 dark:bg-slate-900">
         <div>
-          <div className="mb-2 inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-yarsi-primary">
-            <BarChart3 className="w-4 h-4 text-yarsi-primary" />
+          <div className="mb-2 inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.14em] text-yarsi-primary dark:text-emerald-400">
+            <BarChart3 className="w-4 h-4 text-yarsi-primary dark:text-emerald-400" />
             <span>Laporan dan ekspor</span>
           </div>
-          <h1 className="text-2xl font-black text-slate-900">
+          <h1 className="text-2xl font-black text-slate-900 dark:text-slate-100">
             Laporan pemanfaatan ruang
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+          <p className="text-xs sm:text-sm text-slate-500 mt-0.5 dark:text-slate-400">
             Saring periode dan ruang, lalu unduh rekapitulasi dalam format Excel.
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-stretch gap-2">
           <button
             type="button"
             onClick={handlePrint}
-            className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors"
+            className="flex-1 sm:flex-none px-4 py-2.5 min-h-11 sm:min-h-0 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors dark:bg-slate-800 dark:hover:bg-slate-700/60 dark:text-slate-200"
           >
             <Printer className="w-4 h-4" />
             <span>Cetak PDF</span>
@@ -135,7 +135,7 @@ export default function ReportsAnalyticsPage() {
           <button
             type="button"
             onClick={handleExportExcel}
-            className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-md transition-all"
+            className="flex-1 sm:flex-none px-5 py-2.5 min-h-11 sm:min-h-0 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-md transition-all dark:bg-emerald-600 dark:hover:bg-emerald-500"
           >
             <Download className="w-4 h-4" />
             <span>Unduh Excel (.xlsx)</span>
@@ -144,9 +144,9 @@ export default function ReportsAnalyticsPage() {
       </div>
 
       {/* Filter Bar */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-sm grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="bg-white rounded-2xl border border-slate-200/80 p-4 shadow-sm grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 dark:bg-slate-900 dark:border-slate-700">
         <div>
-          <label className="block text-[11px] font-bold text-slate-500 mb-1">
+          <label className="block text-[11px] font-bold text-slate-500 mb-1 dark:text-slate-400">
             Dari Tanggal:
           </label>
           <input
@@ -158,12 +158,12 @@ export default function ReportsAnalyticsPage() {
                 e.currentTarget.showPicker?.();
               } catch {}
             }}
-            className="w-full px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yarsi-primary font-sans cursor-pointer"
+            className="w-full px-3 py-1.5 min-h-11 sm:min-h-0 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yarsi-primary font-sans cursor-pointer dark:bg-slate-800 dark:border-slate-700"
           />
         </div>
 
         <div>
-          <label className="block text-[11px] font-bold text-slate-500 mb-1">
+          <label className="block text-[11px] font-bold text-slate-500 mb-1 dark:text-slate-400">
             Sampai Tanggal:
           </label>
           <input
@@ -175,18 +175,18 @@ export default function ReportsAnalyticsPage() {
                 e.currentTarget.showPicker?.();
               } catch {}
             }}
-            className="w-full px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yarsi-primary font-sans cursor-pointer"
+            className="w-full px-3 py-1.5 min-h-11 sm:min-h-0 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yarsi-primary font-sans cursor-pointer dark:bg-slate-800 dark:border-slate-700"
           />
         </div>
 
         <div>
-          <label className="block text-[11px] font-bold text-slate-500 mb-1">
+          <label className="block text-[11px] font-bold text-slate-500 mb-1 dark:text-slate-400">
             Filter Status:
           </label>
           <select
             value={selectedStatus}
             onChange={(e) => setSelectedStatus(e.target.value)}
-            className="w-full px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yarsi-primary font-sans"
+            className="w-full px-3 py-1.5 min-h-11 sm:min-h-0 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yarsi-primary font-sans dark:bg-slate-800 dark:border-slate-700"
           >
             <option value="all">Semua Status</option>
             <option value="APPROVED">Disetujui</option>
@@ -199,50 +199,50 @@ export default function ReportsAnalyticsPage() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-3">
-          <div className="p-3 bg-emerald-50 text-yarsi-primary rounded-xl">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-3 dark:bg-slate-900 dark:border-slate-700">
+          <div className="p-3 bg-emerald-50 text-yarsi-primary rounded-xl dark:bg-emerald-500/10 dark:text-emerald-400">
             <Building2 className="w-5 h-5" />
           </div>
           <div>
             <p className="text-xs text-slate-400 font-semibold">Total Peminjaman</p>
-            <h3 className="text-xl font-black text-slate-800">{totalBookings} Acara</h3>
+            <h3 className="text-xl font-black text-slate-800 dark:text-slate-200">{totalBookings} Acara</h3>
             <p className="text-[10px] text-slate-400">Periode Terpilih</p>
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-3">
-          <div className="p-3 bg-teal-50 text-teal-700 rounded-xl">
+        <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-3 dark:bg-slate-900 dark:border-slate-700">
+          <div className="p-3 bg-teal-50 text-teal-700 rounded-xl dark:bg-teal-500/10 dark:text-teal-400">
             <TrendingUp className="w-5 h-5" />
           </div>
           <div>
             <p className="text-xs text-slate-400 font-semibold">Approval Rate</p>
-            <h3 className="text-xl font-black text-emerald-600">{approvalRate}%</h3>
-            <p className="text-[10px] text-emerald-600 font-medium">Tingkat Persetujuan</p>
+            <h3 className="text-xl font-black text-emerald-600 dark:text-emerald-400">{approvalRate}%</h3>
+            <p className="text-[10px] text-emerald-600 font-medium dark:text-emerald-400">Tingkat Persetujuan</p>
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-3">
-          <div className="p-3 bg-amber-50 text-amber-600 rounded-xl">
+        <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-3 dark:bg-slate-900 dark:border-slate-700">
+          <div className="p-3 bg-amber-50 text-amber-600 rounded-xl dark:bg-amber-500/10 dark:text-amber-400">
             <Star className="w-5 h-5 fill-amber-500" />
           </div>
           <div>
             <p className="text-xs text-slate-400 font-semibold">Kepuasan Fasilitas</p>
-            <h3 className="text-xl font-black text-amber-700">{avgRating} / 5.0</h3>
-            <p className="text-[10px] text-amber-600 font-medium">{feedbacks.length} Feedback Masuk</p>
+            <h3 className="text-xl font-black text-amber-700 dark:text-amber-400">{avgRating} / 5.0</h3>
+            <p className="text-[10px] text-amber-600 font-medium dark:text-amber-400">{feedbacks.length} Feedback Masuk</p>
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-3">
-          <div className="p-3 bg-purple-50 text-purple-700 rounded-xl">
+        <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs flex items-center gap-3 dark:bg-slate-900 dark:border-slate-700">
+          <div className="p-3 bg-purple-50 text-purple-700 rounded-xl dark:bg-purple-500/10 dark:text-purple-400">
             <Users className="w-5 h-5" />
           </div>
           <div>
             <p className="text-xs text-slate-400 font-semibold">Total Partisipan</p>
-            <h3 className="text-xl font-black text-purple-900">
+            <h3 className="text-xl font-black text-purple-900 dark:text-purple-200">
               {filteredBookings.reduce((a, c) => a + (c.estimatedAttendees || 0), 0)} Orang
             </h3>
-            <p className="text-[10px] text-purple-700">Estimasi Pengguna</p>
+            <p className="text-[10px] text-purple-700 dark:text-purple-400">Estimasi Pengguna</p>
           </div>
         </div>
       </div>
@@ -250,10 +250,10 @@ export default function ReportsAnalyticsPage() {
       {/* Analytics Visual Charts Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Most Utilized Rooms */}
-        <div className="bg-white rounded-xl border border-slate-200/80 shadow-sm p-6 space-y-4">
+        <div className="bg-white rounded-xl border border-slate-200/80 shadow-sm p-6 space-y-4 dark:bg-slate-900 dark:border-slate-700">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
-              <Building2 className="w-4 h-4 text-yarsi-primary" />
+            <h3 className="text-sm font-black text-slate-900 flex items-center gap-2 dark:text-slate-100">
+              <Building2 className="w-4 h-4 text-yarsi-primary dark:text-emerald-400" />
               <span>Pemanfaatan Ruangan Terpopuler</span>
             </h3>
             <span className="text-xs text-slate-400">Total Sesi</span>
@@ -268,10 +268,10 @@ export default function ReportsAnalyticsPage() {
               return (
                 <div key={room.id} className="space-y-1">
                   <div className="flex items-center justify-between text-xs font-semibold">
-                    <span className="text-slate-800 truncate">{room.name}</span>
-                    <span className="text-yarsi-primary font-bold">{count} Sesi</span>
+                    <span className="text-slate-800 truncate dark:text-slate-200">{room.name}</span>
+                    <span className="text-yarsi-primary font-bold dark:text-emerald-400">{count} Sesi</span>
                   </div>
-                  <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                  <div className="w-full h-2.5 bg-slate-100 rounded-full overflow-hidden dark:bg-slate-800">
                     <div
                       className="h-full bg-gradient-to-r from-yarsi-primary to-emerald-400 rounded-full transition-all duration-700"
                       style={{ width: `${Math.max(percentage, 8)}%` }}
@@ -284,10 +284,10 @@ export default function ReportsAnalyticsPage() {
         </div>
 
         {/* Categories Breakdown */}
-        <div className="bg-white rounded-xl border border-slate-200/80 shadow-sm p-6 space-y-4">
+        <div className="bg-white rounded-xl border border-slate-200/80 shadow-sm p-6 space-y-4 dark:bg-slate-900 dark:border-slate-700">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-black text-slate-900 flex items-center gap-2">
-              <PieChart className="w-4 h-4 text-yarsi-primary" />
+            <h3 className="text-sm font-black text-slate-900 flex items-center gap-2 dark:text-slate-100">
+              <PieChart className="w-4 h-4 text-yarsi-primary dark:text-emerald-400" />
               <span>Distribusi Kategori Kegiatan</span>
             </h3>
             <span className="text-xs text-slate-400">Proporsi</span>
@@ -306,13 +306,13 @@ export default function ReportsAnalyticsPage() {
               return (
                 <div
                   key={cat.key}
-                  className="p-3 bg-slate-50 rounded-2xl border border-slate-200/80 flex items-center justify-between"
+                  className="p-3 bg-slate-50 rounded-2xl border border-slate-200/80 flex items-center justify-between dark:bg-slate-800/60 dark:border-slate-700"
                 >
                   <div className="flex items-center gap-2">
                     <span className={`w-3 h-3 rounded-full ${cat.color}`} />
-                    <span className="text-xs font-semibold text-slate-700">{cat.label}</span>
+                    <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">{cat.label}</span>
                   </div>
-                  <span className="text-xs font-black text-slate-900">{count}</span>
+                  <span className="text-xs font-black text-slate-900 dark:text-slate-100">{count}</span>
                 </div>
               );
             })}
@@ -321,9 +321,9 @@ export default function ReportsAnalyticsPage() {
       </div>
 
       {/* Data Table */}
-      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden">
-        <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between">
-          <h3 className="font-bold text-slate-900 text-sm">
+      <div className="bg-white rounded-2xl border border-slate-200/80 shadow-sm overflow-hidden dark:bg-slate-900 dark:border-slate-700">
+        <div className="p-4 sm:p-5 border-b border-slate-100 flex flex-wrap items-center justify-between gap-2 dark:border-slate-800">
+          <h3 className="font-bold text-slate-900 text-sm dark:text-slate-100">
             Tabel Rekapitulasi Peminjaman ({filteredBookings.length} Data)
           </h3>
           <span className="text-xs text-slate-400">
@@ -331,9 +331,9 @@ export default function ReportsAnalyticsPage() {
           </span>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50 text-slate-500 font-bold uppercase border-b border-slate-200">
+            <thead className="bg-slate-50 text-slate-500 font-bold uppercase border-b border-slate-200 dark:bg-slate-800/70 dark:text-slate-400 dark:border-slate-700">
               <tr>
                 <th className="p-3.5">Kode & Tanggal</th>
                 <th className="p-3.5">Ruangan</th>
@@ -343,7 +343,7 @@ export default function ReportsAnalyticsPage() {
                 <th className="p-3.5">Status</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 text-slate-700">
+            <tbody className="divide-y divide-slate-100 text-slate-700 dark:divide-slate-800 dark:text-slate-300">
               {filteredBookings.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="p-8 text-center text-slate-400">
@@ -352,24 +352,24 @@ export default function ReportsAnalyticsPage() {
                 </tr>
               ) : (
                 filteredBookings.map((b) => (
-                  <tr key={b.id} className="hover:bg-slate-50/80 transition-colors">
+                  <tr key={b.id} className="hover:bg-slate-50/80 transition-colors dark:hover:bg-slate-800/80">
                     <td className="p-3.5">
-                      <span className="font-mono font-bold text-yarsi-primary bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                      <span className="font-mono font-bold text-yarsi-primary bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 dark:text-emerald-400 dark:bg-emerald-500/10 dark:border-emerald-500/30">
                         {b.bookingCode}
                       </span>
                       <p className="text-[10px] text-slate-400 mt-0.5">{b.date}</p>
                     </td>
                     <td className="p-3.5">
-                      <p className="font-bold text-slate-900">{b.roomName}</p>
+                      <p className="font-bold text-slate-900 dark:text-slate-100">{b.roomName}</p>
                       
                     </td>
                     <td className="p-3.5">
-                      <p className="font-semibold text-slate-800 line-clamp-1">{b.title}</p>
+                      <p className="font-semibold text-slate-800 line-clamp-1 dark:text-slate-200">{b.title}</p>
                       <p className="text-[10px] text-slate-400 uppercase">{b.category}</p>
                     </td>
                     <td className="p-3.5">
-                      <p className="font-semibold text-slate-800">{b.userName}</p>
-                      <p className="text-[10px] text-slate-500">{b.userOrganization}</p>
+                      <p className="font-semibold text-slate-800 dark:text-slate-200">{b.userName}</p>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400">{b.userOrganization}</p>
                     </td>
                     <td className="p-3.5 font-medium whitespace-nowrap">
                       {b.startTime} - {b.endTime} WIB
@@ -382,6 +382,38 @@ export default function ReportsAnalyticsPage() {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile recap cards */}
+        <div className="md:hidden divide-y divide-slate-100 dark:divide-slate-800">
+          {filteredBookings.length === 0 ? (
+            <p className="p-8 text-center text-slate-400 text-xs">
+              Tidak ada data peminjaman dalam rentang filter ini.
+            </p>
+          ) : (
+            filteredBookings.map((b) => (
+              <div key={b.id} className="p-4 space-y-2.5">
+                <div className="flex items-start justify-between gap-2">
+                  <span className="font-mono font-bold text-yarsi-primary bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 dark:text-emerald-400 dark:bg-emerald-500/10 dark:border-emerald-500/30">
+                    {b.bookingCode}
+                  </span>
+                  <StatusBadge status={b.status} size="sm" />
+                </div>
+                <div>
+                  <p className="font-bold text-slate-900 dark:text-slate-100 leading-snug">{b.roomName}</p>
+                  <p className="text-[10px] text-slate-400 mt-0.5">{b.date} • {b.startTime} - {b.endTime} WIB</p>
+                </div>
+                <div>
+                  <p className="font-semibold text-slate-800 line-clamp-2 dark:text-slate-200">{b.title}</p>
+                  <p className="text-[10px] text-slate-400 uppercase">{b.category}</p>
+                </div>
+                <div className="pt-1.5 border-t border-slate-100 dark:border-slate-800 text-xs flex items-center justify-between gap-2">
+                  <span className="font-semibold text-slate-800 dark:text-slate-200">{b.userName}</span>
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 truncate">{b.userOrganization}</span>
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
     </div>

@@ -810,8 +810,6 @@ function NewBookingForm() {
           equipments: equipmentsList,
           logistik: combinedLogistik,
           documentName: uploadedFileName || undefined,
-          dokumenUrl: selectedFile ? `/uploads/${uploadedFileName}` : undefined,
-          documentUrl: selectedFile ? `/uploads/${uploadedFileName}` : undefined,
         },
         selectedFile || undefined
       );
@@ -858,31 +856,31 @@ function NewBookingForm() {
 
     return (
       <div className="max-w-3xl mx-auto px-4 py-16">
-        <div className="bg-white rounded-3xl border border-slate-200/80 shadow-2xl p-8 sm:p-12 text-center space-y-6">
-          <div className="w-16 h-16 rounded-3xl bg-emerald-50 border border-emerald-200 text-yarsi-primary mx-auto flex items-center justify-center shadow-inner">
+        <div className="bg-white rounded-3xl border border-slate-200/80 shadow-2xl p-8 sm:p-12 text-center space-y-6 dark:bg-slate-900 dark:border-slate-700">
+          <div className="w-16 h-16 rounded-3xl bg-emerald-50 border border-emerald-200 text-yarsi-primary mx-auto flex items-center justify-center shadow-inner dark:bg-emerald-500/10 dark:border-emerald-500/30 dark:text-emerald-400">
             <Building2 className="w-8 h-8" />
           </div>
 
           <div className="max-w-lg mx-auto space-y-2">
-            <span className="text-xs font-bold uppercase tracking-wider text-yarsi-primary bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
+            <span className="text-xs font-bold uppercase tracking-wider text-yarsi-primary bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200 dark:text-emerald-300 dark:bg-emerald-500/10 dark:border-emerald-500/30">
               Autentikasi LDAP SSO Diperlukan
             </span>
-            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 mt-2">
+            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 mt-2 dark:text-slate-100">
               Pengajuan Peminjaman Ruangan
             </h2>
-            <p className="text-xs sm:text-sm text-slate-500 leading-relaxed">
+            <p className="text-xs sm:text-sm text-slate-500 leading-relaxed dark:text-slate-400">
               Anda sedang menjelajah dalam Mode Tamu. Untuk mengisi formulir reservasi ruangan, memilih logistik, dan mengunggah dokumen persetujuan, silakan masuk dengan akun SSO LDAP YARSI Anda.
             </p>
           </div>
 
           {selectedRoom && (
-            <div className="bg-emerald-50/60 border border-emerald-200/80 rounded-2xl p-4 max-w-md mx-auto text-left flex items-center justify-between gap-3">
+            <div className="bg-emerald-50/60 border border-emerald-200/80 rounded-2xl p-4 max-w-md mx-auto text-left flex items-center justify-between gap-3 dark:bg-emerald-500/10 dark:border-emerald-500/30">
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-700">Ruangan Terpilih</p>
-                <p className="text-sm font-extrabold text-slate-900 mt-0.5">{selectedRoom.name}</p>
-                <p className="text-xs text-slate-500">Kapasitas {selectedRoom.capacity !== null ? `${selectedRoom.capacity} Orang` : 'belum tersedia'}</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-300">Ruangan Terpilih</p>
+                <p className="text-sm font-extrabold text-slate-900 mt-0.5 dark:text-slate-100">{selectedRoom.name}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-400">Kapasitas {selectedRoom.capacity !== null ? `${selectedRoom.capacity} Orang` : 'belum tersedia'}</p>
               </div>
-              <span className="text-[11px] font-bold text-yarsi-primary bg-white px-2.5 py-1 rounded-full border border-emerald-200 shadow-xs shrink-0">
+              <span className="text-[11px] font-bold text-yarsi-primary bg-white px-2.5 py-1 rounded-full border border-emerald-200 shadow-xs shrink-0 dark:text-emerald-300 dark:bg-slate-900 dark:border-emerald-500/30">
                 Tersimpan
               </span>
             </div>
@@ -891,7 +889,7 @@ function NewBookingForm() {
           <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link
               href="/"
-              className="w-full sm:w-auto px-6 py-3 rounded-xl font-bold text-xs sm:text-sm text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors text-center"
+              className="w-full sm:w-auto px-6 py-3 rounded-xl font-bold text-xs sm:text-sm text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors text-center dark:text-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700"
             >
               Kembali ke Katalog
             </Link>
@@ -916,40 +914,40 @@ function NewBookingForm() {
         <div className="flex items-center gap-2">
           <Link
             href="/dashboard"
-            className="text-xs font-semibold text-slate-500 hover:text-yarsi-primary"
+            className="text-xs font-semibold text-slate-500 hover:text-yarsi-primary dark:text-slate-400 dark:hover:text-emerald-300"
           >
             ← Kembali ke Dashboard
           </Link>
         </div>
-        <p className="mt-3 text-[10px] font-bold uppercase tracking-[0.16em] text-yarsi-primary">Pengajuan baru</p>
-        <h1 className="mt-1 text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">
+        <p className="mt-3 text-[10px] font-bold uppercase tracking-[0.16em] text-yarsi-primary dark:text-emerald-400">Pengajuan baru</p>
+        <h1 className="mt-1 text-2xl font-black tracking-tight text-slate-950 sm:text-3xl dark:text-slate-100">
           Ajukan peminjaman ruang
         </h1>
-        <p className="mt-2 text-xs text-slate-500 sm:text-sm">
+        <p className="mt-2 text-xs text-slate-500 sm:text-sm dark:text-slate-400">
           Tentukan jadwal, jelaskan kegiatan, lalu lengkapi fasilitas dan dokumen yang diperlukan.
         </p>
       </div>
 
       {/* Error Alert */}
       {errorMessage && (
-        <div className="p-4 bg-rose-50 border-2 border-rose-400 rounded-2xl text-xs text-rose-900 flex items-start gap-3 animate-shake">
-          <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+        <div className="p-4 bg-rose-50 border-2 border-rose-400 rounded-2xl text-xs text-rose-900 flex items-start gap-3 animate-shake dark:bg-rose-500/10 dark:border-rose-500/50 dark:text-rose-400">
+          <AlertCircle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5 dark:text-rose-400" />
           <div>
-            <p className="font-bold text-rose-950">Validasi Pengajuan</p>
-            <p className="mt-0.5 text-rose-800">{errorMessage}</p>
+            <p className="font-bold text-rose-950 dark:text-rose-300">Validasi Pengajuan</p>
+            <p className="mt-0.5 text-rose-800 dark:text-rose-300">{errorMessage}</p>
           </div>
         </div>
       )}
 
       {submitSuccess && (
-        <div className="p-6 bg-emerald-50 border-2 border-emerald-400 rounded-3xl text-center space-y-2 animate-fade-in shadow-xl">
+        <div className="p-6 bg-emerald-50 border-2 border-emerald-400 rounded-3xl text-center space-y-2 animate-fade-in shadow-xl dark:bg-emerald-500/10 dark:border-emerald-500/50">
           <div className="w-12 h-12 rounded-full bg-emerald-600 text-white mx-auto flex items-center justify-center">
             <CheckCircle2 className="w-8 h-8" />
           </div>
-          <h2 className="text-lg font-black text-emerald-950">
+          <h2 className="text-lg font-black text-emerald-950 dark:text-emerald-400">
             Permohonan berhasil dikirim
           </h2>
-          <p className="text-xs text-emerald-800">
+          <p className="text-xs text-emerald-800 dark:text-emerald-200">
             Permohonan Anda telah masuk ke antrean LPF. Anda akan dialihkan ke dashboard.
           </p>
         </div>
@@ -957,13 +955,13 @@ function NewBookingForm() {
 
       <form onSubmit={handleSubmit} noValidate className="space-y-8">
         {/* STEP 1: ROOM & TIME SELECTION */}
-        <div className="space-y-6 rounded-[18px_4px_18px_18px] border border-slate-200/90 bg-white p-6 shadow-card sm:p-8">
-          <div className="flex items-center gap-2.5 pb-4 border-b border-slate-100">
-            <div className="p-2 rounded-xl bg-emerald-50 text-yarsi-primary">
+        <div className="space-y-6 rounded-[18px_4px_18px_18px] border border-slate-200/90 bg-white p-6 shadow-card sm:p-8 dark:border-slate-700 dark:bg-slate-900">
+          <div className="flex items-center gap-2.5 pb-4 border-b border-slate-100 dark:border-slate-800">
+            <div className="p-2 rounded-xl bg-emerald-50 text-yarsi-primary dark:bg-emerald-500/10 dark:text-emerald-400">
               <Building2 className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-slate-900">
+              <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
                 1. Ruangan & Jadwal Pelaksanaan
               </h2>
               <p className="text-xs text-slate-400">
@@ -975,14 +973,14 @@ function NewBookingForm() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Room Selector */}
             <div className="min-w-0 space-y-3" ref={roomSelectorRef}>
-              <label htmlFor="room-search" className="block text-xs font-bold text-slate-700">
+              <label htmlFor="room-search" className="block text-xs font-bold text-slate-700 dark:text-slate-300">
                 Pilih Ruangan *
               </label>
 
               {roomsError ? (
-                <div className="rounded-xl border border-rose-300 bg-rose-50 p-3 text-xs text-rose-900" role="alert">
+                <div className="rounded-xl border border-rose-300 bg-rose-50 p-3 text-xs text-rose-900 dark:border-rose-500/40 dark:bg-rose-500/10 dark:text-rose-400" role="alert">
                   <p className="font-bold">{roomsError}</p>
-                  <button type="button" onClick={() => void loadRooms()} className="mt-2 min-h-10 rounded-lg bg-white px-3 font-bold text-rose-700 ring-1 ring-rose-200 hover:bg-rose-100">
+                  <button type="button" onClick={() => void loadRooms()} className="mt-2 min-h-10 rounded-lg bg-white px-3 font-bold text-rose-700 ring-1 ring-rose-200 hover:bg-rose-100 dark:bg-slate-900 dark:text-rose-400 dark:ring-rose-500/30 dark:hover:bg-rose-500/15">
                     Coba Lagi
                   </button>
                 </div>
@@ -1033,12 +1031,12 @@ function NewBookingForm() {
                         aria-activedescendant={activeResultIndex >= 0 ? `room-result-${matchingRooms[activeResultIndex]?.id}` : undefined}
                         className={`w-full rounded-xl border py-3 pl-10 pr-10 text-xs font-medium outline-none transition-all disabled:cursor-wait disabled:opacity-60 sm:text-sm ${
                           fieldErrors.room
-                            ? 'border-red-500 ring-2 ring-red-500 bg-red-50/40 text-red-900 placeholder:text-red-300'
-                            : 'border-slate-200 bg-slate-50 text-slate-900 focus:border-yarsi-primary focus:ring-2 focus:ring-yarsi-primary'
+                            ? 'border-red-500 ring-2 ring-red-500 bg-red-50/40 text-red-900 placeholder:text-red-300 dark:border-rose-500 dark:ring-rose-500/40 dark:bg-rose-500/10 dark:text-rose-400'
+                            : 'border-slate-200 bg-slate-50 text-slate-900 focus:border-yarsi-primary focus:ring-2 focus:ring-yarsi-primary dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-100'
                         }`}
                       />
                       {roomSearch && (
-                        <button type="button" onClick={() => { setRoomSearch(''); setRoomId(''); clearFieldError('room'); }} className="absolute right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-200 hover:text-slate-800" aria-label="Hapus pencarian ruangan">
+                        <button type="button" onClick={() => { setRoomSearch(''); setRoomId(''); clearFieldError('room'); }} className="absolute right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-lg text-slate-500 hover:bg-slate-200 hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-700 dark:hover:text-slate-200" aria-label="Hapus pencarian ruangan">
                           <X className="h-4 w-4" aria-hidden="true" />
                         </button>
                       )}
@@ -1047,7 +1045,7 @@ function NewBookingForm() {
                       value={selectedFloor}
                       onChange={(event) => { setSelectedFloor(event.target.value); setIsRoomMenuOpen(true); }}
                       aria-label="Filter lantai"
-                      className="min-h-11 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 outline-none focus:border-yarsi-primary focus:ring-2 focus:ring-yarsi-primary"
+                      className="min-h-11 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 outline-none focus:border-yarsi-primary focus:ring-2 focus:ring-yarsi-primary dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
                     >
                       <option value="all">Semua lantai</option>
                       {floors.map((floor) => (
@@ -1057,33 +1055,33 @@ function NewBookingForm() {
                   </div>
 
                   {fieldErrors.room && (
-                    <p className="text-[11px] font-semibold text-red-600 mt-1">
+                    <p className="text-[11px] font-semibold text-red-600 mt-1 dark:text-rose-400">
                       {!selectedRoom
                         ? 'Silakan pilih ruangan yang tersedia terlebih dahulu.'
                         : 'Ruangan yang dipilih sedang tidak tersedia atau dalam verifikasi.'}
                     </p>
                   )}
 
-                  <label className="flex min-h-10 items-center gap-2 text-xs font-medium text-slate-600">
+                  <label className="flex min-h-10 items-center gap-2 text-xs font-medium text-slate-600 dark:text-slate-300">
                     <input
                       type="checkbox"
                       checked={showUnavailable}
                       onChange={(event) => { setShowUnavailable(event.target.checked); setIsRoomMenuOpen(true); }}
                       disabled={!hasCompleteSchedule || isAvailabilityLoading}
-                      className="h-4 w-4 rounded border-slate-300 text-yarsi-primary focus:ring-yarsi-primary disabled:cursor-not-allowed"
+                      className="h-4 w-4 rounded border-slate-300 text-yarsi-primary focus:ring-yarsi-primary disabled:cursor-not-allowed dark:border-slate-600 dark:text-emerald-400"
                     />
                     Tampilkan ruangan yang tidak tersedia
                   </label>
 
                   <div className="relative">
                     {isRoomMenuOpen && (
-                      <div id="room-results" role="listbox" aria-label="Hasil pencarian ruangan" className="max-h-72 overflow-y-auto rounded-xl border border-slate-200 bg-white p-1 shadow-lg">
+                      <div id="room-results" role="listbox" aria-label="Hasil pencarian ruangan" className="max-h-72 overflow-y-auto rounded-xl border border-slate-200 bg-white p-1 shadow-lg dark:border-slate-700 dark:bg-slate-900">
                         {isRoomsLoading ? (
-                          <p className="p-3 text-xs text-slate-500">Memuat daftar ruangan...</p>
+                          <p className="p-3 text-xs text-slate-500 dark:text-slate-400">Memuat daftar ruangan...</p>
                         ) : isAvailabilityLoading ? (
-                          <p className="p-3 text-xs text-slate-500" aria-live="polite">Memeriksa ketersediaan ruangan...</p>
+                          <p className="p-3 text-xs text-slate-500 dark:text-slate-400" aria-live="polite">Memeriksa ketersediaan ruangan...</p>
                         ) : matchingRooms.length === 0 ? (
-                          <p className="p-3 text-xs text-slate-500">
+                          <p className="p-3 text-xs text-slate-500 dark:text-slate-400">
                             {hasCompleteSchedule && !isAvailabilityLoading && !availabilityError
                               ? 'Tidak ada ruangan yang tersedia pada waktu tersebut'
                               : 'Ruangan tidak ditemukan'}
@@ -1094,7 +1092,7 @@ function NewBookingForm() {
                             if (floorRooms.length === 0) return null;
                             return (
                               <div key={floor} className="py-1">
-                                <p className="px-3 py-1 text-[10px] font-extrabold uppercase tracking-wide text-slate-500">{`Lantai ${floor}`}</p>
+                                <p className="px-3 py-1 text-[10px] font-extrabold uppercase tracking-wide text-slate-500 dark:text-slate-400">{`Lantai ${floor}`}</p>
                                 {floorRooms.map((room) => {
                                   const resultIndex = matchingRooms.findIndex((item) => item.id === room.id);
                                   const availability = availabilityByRoom[room.id];
@@ -1125,17 +1123,17 @@ function NewBookingForm() {
                                         clearFieldError('room');
                                       }}
                                       className={`flex w-full items-start justify-between gap-3 rounded-lg px-3 py-2.5 text-left text-xs transition-colors ${isAvailable
-                                          ? 'text-slate-800 hover:bg-emerald-50 focus:bg-emerald-50 focus:outline-none'
+                                          ? 'text-slate-800 hover:bg-emerald-50 focus:bg-emerald-50 focus:outline-none dark:text-slate-200 dark:hover:bg-emerald-500/10 dark:focus:bg-emerald-500/10'
                                           : 'cursor-not-allowed text-slate-400 opacity-75'
-                                        } ${activeResultIndex === resultIndex ? 'bg-emerald-50' : ''}`}
+                                        } ${activeResultIndex === resultIndex ? 'bg-emerald-50 dark:bg-emerald-500/10' : ''}`}
                                     >
                                       <span className="min-w-0">
                                         <span className="block truncate font-bold">{room.name}</span>
-                                        <span className="mt-0.5 block text-[11px] text-slate-500">
+                                        <span className="mt-0.5 block text-[11px] text-slate-500 dark:text-slate-400">
                                           {[room.code, formatFloor(room), room.capacity !== null ? `${room.capacity} orang` : null].filter(Boolean).join(' · ')}
                                         </span>
                                       </span>
-                                      <span className={`shrink-0 text-[10px] font-bold ${isAvailable ? 'text-emerald-700' : 'text-slate-500'}`}>{status}</span>
+                                      <span className={`shrink-0 text-[10px] font-bold ${isAvailable ? 'text-emerald-700 dark:text-emerald-300' : 'text-slate-500 dark:text-slate-400'}`}>{status}</span>
                                     </button>
                                   );
                                 })}
@@ -1148,22 +1146,22 @@ function NewBookingForm() {
                   </div>
 
                   {availabilityError && (
-                    <div className="flex items-center justify-between gap-3 rounded-xl border border-rose-300 bg-rose-50 p-3 text-xs text-rose-900" role="alert">
+                    <div className="flex items-center justify-between gap-3 rounded-xl border border-rose-300 bg-rose-50 p-3 text-xs text-rose-900 dark:border-rose-500/40 dark:bg-rose-500/10 dark:text-rose-400" role="alert">
                       <span>{availabilityError}</span>
-                      <button type="button" onClick={refreshAvailability} className="min-h-9 shrink-0 rounded-lg bg-white px-3 font-bold text-rose-700 ring-1 ring-rose-200 hover:bg-rose-100">Coba Lagi</button>
+                      <button type="button" onClick={refreshAvailability} className="min-h-9 shrink-0 rounded-lg bg-white px-3 font-bold text-rose-700 ring-1 ring-rose-200 hover:bg-rose-100 dark:bg-slate-900 dark:text-rose-400 dark:ring-rose-500/30 dark:hover:bg-rose-500/15">Coba Lagi</button>
                     </div>
                   )}
 
                   {selectedRoom && (
-                    <div className="space-y-2 rounded-2xl border border-slate-200 bg-slate-50 p-3.5 text-xs">
+                    <div className="space-y-2 rounded-2xl border border-slate-200 bg-slate-50 p-3.5 text-xs dark:border-slate-700 dark:bg-slate-800/60">
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
-                          <p className="font-bold text-slate-800">{selectedRoom.name}</p>
-                          <p className="mt-1 text-[11px] text-slate-500">
+                          <p className="font-bold text-slate-800 dark:text-slate-200">{selectedRoom.name}</p>
+                          <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
                             {[selectedRoom.code, formatFloor(selectedRoom), selectedRoom.capacity !== null ? `${selectedRoom.capacity} orang` : null].filter(Boolean).join(' · ')}
                           </p>
                         </div>
-                        <span className={`shrink-0 rounded border px-2 py-0.5 text-[10px] font-bold ${selectedRoomAvailability?.state === 'available' ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : 'border-slate-200 bg-white text-slate-600'}`}>
+                        <span className={`shrink-0 rounded border px-2 py-0.5 text-[10px] font-bold ${selectedRoomAvailability?.state === 'available' ? 'border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-200' : 'border-slate-200 bg-white text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300'}`}>
                           {!hasCompleteSchedule ? 'Belum diperiksa' : selectedRoomAvailability?.state === 'available' ? 'Tersedia' : selectedRoomAvailability?.state === 'unavailable' ? unavailableLabel(selectedRoomAvailability) : 'Belum diverifikasi'}
                         </span>
                       </div>
@@ -1176,7 +1174,7 @@ function NewBookingForm() {
             {/* Date & Time Selectors */}
             <div className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-bold text-slate-700 mb-1 dark:text-slate-300">
                   Tanggal Pelaksanaan *
                 </label>
                 <div
@@ -1201,19 +1199,19 @@ function NewBookingForm() {
                     }}
                     className={`w-full pl-10 pr-4 py-2.5 text-xs sm:text-sm font-medium border rounded-xl focus:outline-none transition-all cursor-pointer ${
                       fieldErrors.date
-                        ? 'border-red-500 ring-2 ring-red-500 bg-red-50/40 text-red-900'
-                        : 'border-slate-200 bg-slate-50 text-slate-800 focus:ring-2 focus:ring-yarsi-primary'
+                        ? 'border-red-500 ring-2 ring-red-500 bg-red-50/40 text-red-900 dark:border-rose-500 dark:ring-rose-500/40 dark:bg-rose-500/10 dark:text-rose-400'
+                        : 'border-slate-200 bg-slate-50 text-slate-800 focus:ring-2 focus:ring-yarsi-primary dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-200'
                     }`}
                   />
                 </div>
                 {fieldErrors.date && (
-                  <p className="text-[11px] font-semibold text-red-600 mt-1">Tanggal pelaksanaan kegiatan wajib diisi.</p>
+                  <p className="text-[11px] font-semibold text-red-600 mt-1 dark:text-rose-400">Tanggal pelaksanaan kegiatan wajib diisi.</p>
                 )}
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                  <label className="block text-xs font-bold text-slate-700 mb-1 dark:text-slate-300">
                     Jam Mulai (WIB) *
                   </label>
                   <input
@@ -1229,16 +1227,16 @@ function NewBookingForm() {
                     }}
                     className={`w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border rounded-xl focus:outline-none transition-all cursor-pointer ${
                       fieldErrors.startTime
-                        ? 'border-red-500 ring-2 ring-red-500 bg-red-50/40 text-red-900'
-                        : 'border-slate-200 bg-slate-50 text-slate-800 focus:ring-2 focus:ring-yarsi-primary'
+                        ? 'border-red-500 ring-2 ring-red-500 bg-red-50/40 text-red-900 dark:border-rose-500 dark:ring-rose-500/40 dark:bg-rose-500/10 dark:text-rose-400'
+                        : 'border-slate-200 bg-slate-50 text-slate-800 focus:ring-2 focus:ring-yarsi-primary dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-200'
                     }`}
                   />
                   {fieldErrors.startTime && (
-                    <p className="text-[11px] font-semibold text-red-600 mt-1">Jam mulai wajib diisi.</p>
+                    <p className="text-[11px] font-semibold text-red-600 mt-1 dark:text-rose-400">Jam mulai wajib diisi.</p>
                   )}
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                  <label className="block text-xs font-bold text-slate-700 mb-1 dark:text-slate-300">
                     Jam Selesai (WIB) *
                   </label>
                   <input
@@ -1254,12 +1252,12 @@ function NewBookingForm() {
                     }}
                     className={`w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border rounded-xl focus:outline-none transition-all cursor-pointer ${
                       fieldErrors.endTime
-                        ? 'border-red-500 ring-2 ring-red-500 bg-red-50/40 text-red-900'
-                        : 'border-slate-200 bg-slate-50 text-slate-800 focus:ring-2 focus:ring-yarsi-primary'
+                        ? 'border-red-500 ring-2 ring-red-500 bg-red-50/40 text-red-900 dark:border-rose-500 dark:ring-rose-500/40 dark:bg-rose-500/10 dark:text-rose-400'
+                        : 'border-slate-200 bg-slate-50 text-slate-800 focus:ring-2 focus:ring-yarsi-primary dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-200'
                     }`}
                   />
                   {fieldErrors.endTime && (
-                    <p className="text-[11px] font-semibold text-red-600 mt-1">
+                    <p className="text-[11px] font-semibold text-red-600 mt-1 dark:text-rose-400">
                       {!endTime ? 'Jam selesai wajib diisi.' : 'Jam selesai harus lebih akhir dari jam mulai.'}
                     </p>
                   )}
@@ -1267,7 +1265,7 @@ function NewBookingForm() {
               </div>
 
               {/* Checkbox Peminjaman Lebih dari 1 Hari */}
-              <div className="p-3.5 sm:p-4 bg-slate-50 hover:bg-slate-100/70 border border-slate-200 rounded-2xl transition-all">
+              <div className="p-3.5 sm:p-4 bg-slate-50 hover:bg-slate-100/70 border border-slate-200 rounded-2xl transition-all dark:bg-slate-800/60 dark:hover:bg-slate-700/50 dark:border-slate-700">
                 <label className="flex items-start gap-3 cursor-pointer select-none">
                   <input
                     type="checkbox"
@@ -1276,11 +1274,11 @@ function NewBookingForm() {
                       setIsPerSemester(e.target.checked);
                       if (!e.target.checked) clearFieldError('tenggatPelaksanaan');
                     }}
-                    className="mt-0.5 w-4 h-4 text-yarsi-primary rounded border-slate-300 focus:ring-yarsi-primary cursor-pointer accent-emerald-600"
+                    className="mt-0.5 w-4 h-4 text-yarsi-primary rounded border-slate-300 focus:ring-yarsi-primary cursor-pointer accent-emerald-600 dark:text-emerald-400 dark:border-slate-600"
                   />
                   <div className="space-y-1 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-xs sm:text-sm font-bold text-slate-900">
+                      <span className="text-xs sm:text-sm font-bold text-slate-900 dark:text-slate-100">
                         Peminjaman Lebih dari 1 Hari
                       </span>
                       {isPerSemester ? (
@@ -1289,27 +1287,27 @@ function NewBookingForm() {
                             {computedDates.length > 0 ? `${computedDates.length} Hari Berturut-turut` : 'Multi-Hari'}
                           </span>
                         ) : (
-                          <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                          <span className="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200 dark:bg-emerald-500/15 dark:text-emerald-200 dark:border-emerald-500/30">
                             {computedDates.length > 0 ? `${computedDates.length} Sesi Terjadwal` : 'Jadwal Berkala'}
                           </span>
                         )
                       ) : (
-                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-200/80 text-slate-600">
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-200/80 text-slate-600 dark:bg-slate-700/80 dark:text-slate-300">
                           Opsi Multi-Hari & Berkala
                         </span>
                       )}
                     </div>
-                    <p className="text-[11px] text-slate-500 leading-relaxed">
+                    <p className="text-[11px] text-slate-500 leading-relaxed dark:text-slate-400">
                       Centang jika ruangan dipinjam untuk beberapa hari berturut-turut atau terjadwal secara rutin berkala.
                     </p>
                   </div>
                 </label>
 
                 {isPerSemester && (
-                  <div className="mt-4 pt-3.5 border-t border-slate-200/80 space-y-4 animate-fade-in">
+                  <div className="mt-4 pt-3.5 border-t border-slate-200/80 space-y-4 animate-fade-in dark:border-slate-700">
                     {/* Mode Selector (Tabs) */}
                     <div>
-                      <label className="block text-[11px] font-bold text-slate-700 mb-1.5">
+                      <label className="block text-[11px] font-bold text-slate-700 mb-1.5 dark:text-slate-300">
                         Pilih Tipe Durasi / Penjadwalan:
                       </label>
                       <div className="grid grid-cols-1 gap-2">
@@ -1318,23 +1316,23 @@ function NewBookingForm() {
                           onClick={() => setRepeatType('consecutive')}
                           className={`w-full p-3 rounded-xl border text-left transition-all flex items-center justify-between gap-3 cursor-pointer ${
                             repeatType === 'consecutive'
-                              ? 'bg-blue-50/90 border-blue-400 ring-2 ring-blue-400/20'
-                              : 'bg-white border-slate-200 hover:border-slate-300'
+                              ? 'bg-blue-50/90 border-blue-400 ring-2 ring-blue-400/20 dark:bg-blue-500/15 dark:border-blue-500/50 dark:ring-blue-500/20'
+                              : 'bg-white border-slate-200 hover:border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:hover:border-slate-600'
                           }`}
                         >
                           <div className="flex items-start gap-2.5 min-w-0">
-                            <CalendarRange className={`w-4 h-4 mt-0.5 shrink-0 ${repeatType === 'consecutive' ? 'text-blue-600' : 'text-slate-400'}`} />
+                            <CalendarRange className={`w-4 h-4 mt-0.5 shrink-0 ${repeatType === 'consecutive' ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400'}`} />
                             <div>
-                              <div className={`text-xs font-bold ${repeatType === 'consecutive' ? 'text-blue-900' : 'text-slate-800'}`}>
+                              <div className={`text-xs font-bold ${repeatType === 'consecutive' ? 'text-blue-900 dark:text-blue-200' : 'text-slate-800 dark:text-slate-200'}`}>
                                 Hari Berturut-turut (Multi-Hari)
                               </div>
-                              <div className="text-[10px] text-slate-500 mt-0.5 leading-snug">
+                              <div className="text-[10px] text-slate-500 mt-0.5 leading-snug dark:text-slate-400">
                                 Peminjaman untuk beberapa hari berurutan (seminar, pelatihan, workshop, atau pameran).
                               </div>
                             </div>
                           </div>
                           <div className={`w-4 h-4 rounded-full border-2 shrink-0 flex items-center justify-center ${
-                            repeatType === 'consecutive' ? 'border-blue-600 bg-blue-600' : 'border-slate-300'
+                            repeatType === 'consecutive' ? 'border-blue-600 bg-blue-600 dark:border-blue-400 dark:bg-blue-500' : 'border-slate-300 dark:border-slate-600'
                           }`}>
                             {repeatType === 'consecutive' && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
                           </div>
@@ -1345,23 +1343,23 @@ function NewBookingForm() {
                           onClick={() => setRepeatType('recurring')}
                           className={`w-full p-3 rounded-xl border text-left transition-all flex items-center justify-between gap-3 cursor-pointer ${
                             repeatType === 'recurring'
-                              ? 'bg-emerald-50/90 border-emerald-400 ring-2 ring-emerald-400/20'
-                              : 'bg-white border-slate-200 hover:border-slate-300'
+                              ? 'bg-emerald-50/90 border-emerald-400 ring-2 ring-emerald-400/20 dark:bg-emerald-500/15 dark:border-emerald-500/50 dark:ring-emerald-500/20'
+                              : 'bg-white border-slate-200 hover:border-slate-300 dark:bg-slate-900 dark:border-slate-700 dark:hover:border-slate-600'
                           }`}
                         >
                           <div className="flex items-start gap-2.5 min-w-0">
-                            <Repeat className={`w-4 h-4 mt-0.5 shrink-0 ${repeatType === 'recurring' ? 'text-emerald-600' : 'text-slate-400'}`} />
+                            <Repeat className={`w-4 h-4 mt-0.5 shrink-0 ${repeatType === 'recurring' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`} />
                             <div>
-                              <div className={`text-xs font-bold ${repeatType === 'recurring' ? 'text-emerald-900' : 'text-slate-800'}`}>
+                              <div className={`text-xs font-bold ${repeatType === 'recurring' ? 'text-emerald-900 dark:text-emerald-200' : 'text-slate-800 dark:text-slate-200'}`}>
                                 Jadwal Rutin Berkala
                               </div>
-                              <div className="text-[10px] text-slate-500 mt-0.5 leading-snug">
+                              <div className="text-[10px] text-slate-500 mt-0.5 leading-snug dark:text-slate-400">
                                 Peminjaman berulang pada hari dan jam yang sama setiap minggu (jadwal kuliah, praktikum, atau rapat rutin).
                               </div>
                             </div>
                           </div>
                           <div className={`w-4 h-4 rounded-full border-2 shrink-0 flex items-center justify-center ${
-                            repeatType === 'recurring' ? 'border-emerald-600 bg-emerald-600' : 'border-slate-300'
+                            repeatType === 'recurring' ? 'border-emerald-600 bg-emerald-600 dark:border-emerald-400 dark:bg-emerald-500' : 'border-slate-300 dark:border-slate-600'
                           }`}>
                             {repeatType === 'recurring' && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
                           </div>
@@ -1371,8 +1369,8 @@ function NewBookingForm() {
 
                     {/* Mode Content */}
                     {repeatType === 'consecutive' ? (
-                      <div className="bg-white p-3.5 rounded-xl border border-slate-200 space-y-1.5">
-                        <label className="block text-[11px] font-bold text-slate-700">
+                      <div className="bg-white p-3.5 rounded-xl border border-slate-200 space-y-1.5 dark:bg-slate-900 dark:border-slate-700">
+                        <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300">
                           Tanggal Selesai Pelaksanaan (Rentang Hari) *
                         </label>
                         <input
@@ -1389,25 +1387,25 @@ function NewBookingForm() {
                           }}
                           className={`w-full px-3 py-2 text-xs border rounded-xl focus:outline-none transition-all font-semibold cursor-pointer ${
                             fieldErrors.tenggatPelaksanaan
-                              ? 'border-red-500 ring-2 ring-red-500 bg-red-50/40 text-red-900'
-                              : 'border-slate-200 bg-slate-50 text-slate-800 focus:ring-2 focus:ring-blue-500'
+                              ? 'border-red-500 ring-2 ring-red-500 bg-red-50/40 text-red-900 dark:border-rose-500 dark:ring-rose-500/40 dark:bg-rose-500/10 dark:text-rose-400'
+                              : 'border-slate-200 bg-slate-50 text-slate-800 focus:ring-2 focus:ring-blue-500 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-200'
                           }`}
                         />
                         {fieldErrors.tenggatPelaksanaan && (
-                          <p className="text-[11px] font-semibold text-red-600 mt-1">
+                          <p className="text-[11px] font-semibold text-red-600 mt-1 dark:text-rose-400">
                             {!tenggatPelaksanaan
                               ? 'Tanggal selesai pelaksanaan wajib diisi.'
                               : 'Tanggal selesai tidak boleh lebih awal dari tanggal mulai.'}
                           </p>
                         )}
                         <p className="text-[10px] text-slate-400">
-                          Mulai dari <span className="font-semibold text-slate-600">{date ? formatDateIndo(date) : '(pilih tanggal pelaksanaan di atas)'}</span> hingga tanggal selesai yang dipilih.
+                          Mulai dari <span className="font-semibold text-slate-600 dark:text-slate-300">{date ? formatDateIndo(date) : '(pilih tanggal pelaksanaan di atas)'}</span> hingga tanggal selesai yang dipilih.
                         </p>
                       </div>
                     ) : (
-                      <div className="space-y-3.5 bg-white p-3.5 rounded-xl border border-slate-200">
+                      <div className="space-y-3.5 bg-white p-3.5 rounded-xl border border-slate-200 dark:bg-slate-900 dark:border-slate-700">
                         <div>
-                          <label className="block text-[11px] font-bold text-slate-700 mb-1">
+                          <label className="block text-[11px] font-bold text-slate-700 mb-1 dark:text-slate-300">
                             Tenggat Akhir Pelaksanaan *
                           </label>
                           <input
@@ -1424,12 +1422,12 @@ function NewBookingForm() {
                             }}
                             className={`w-full px-3 py-2 text-xs border rounded-xl focus:outline-none transition-all font-semibold cursor-pointer ${
                               fieldErrors.tenggatPelaksanaan
-                                ? 'border-red-500 ring-2 ring-red-500 bg-red-50/40 text-red-900'
-                                : 'border-slate-200 bg-slate-50 text-slate-800 focus:ring-2 focus:ring-emerald-500'
+                                ? 'border-red-500 ring-2 ring-red-500 bg-red-50/40 text-red-900 dark:border-rose-500 dark:ring-rose-500/40 dark:bg-rose-500/10 dark:text-rose-400'
+                                : 'border-slate-200 bg-slate-50 text-slate-800 focus:ring-2 focus:ring-emerald-500 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-200'
                             }`}
                           />
                           {fieldErrors.tenggatPelaksanaan && (
-                            <p className="text-[11px] font-semibold text-red-600 mt-1">
+                            <p className="text-[11px] font-semibold text-red-600 mt-1 dark:text-rose-400">
                               {!tenggatPelaksanaan
                                 ? 'Tenggat pelaksanaan jadwal berkala wajib diisi.'
                                 : 'Tenggat pelaksanaan tidak boleh lebih awal dari tanggal mulai.'}
@@ -1442,21 +1440,21 @@ function NewBookingForm() {
 
                         <div>
                           <div className="flex flex-wrap items-center justify-between gap-1.5 mb-2">
-                            <label className="block text-[11px] font-bold text-slate-700">
+                            <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300">
                               Pilih Hari Rutin:
                             </label>
                             <div className="flex items-center gap-1.5">
                               <button
                                 type="button"
                                 onClick={() => setSelectedDays(['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat'])}
-                                className="px-2 py-0.5 text-[10px] font-bold rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 transition-colors cursor-pointer"
+                                className="px-2 py-0.5 text-[10px] font-bold rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 transition-colors cursor-pointer dark:border-slate-700 dark:bg-slate-800/60 dark:hover:bg-slate-700 dark:text-slate-200"
                               >
                                 Sen – Jum
                               </button>
                               <button
                                 type="button"
                                 onClick={handleSelectAllWeekdays}
-                                className="px-2 py-0.5 text-[10px] font-bold rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 transition-colors cursor-pointer"
+                                className="px-2 py-0.5 text-[10px] font-bold rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 transition-colors cursor-pointer dark:border-slate-700 dark:bg-slate-800/60 dark:hover:bg-slate-700 dark:text-slate-200"
                               >
                                 {selectedDays.length === WEEKDAYS.length ? 'Reset 1 Hari' : 'Semua Hari'}
                               </button>
@@ -1475,7 +1473,7 @@ function NewBookingForm() {
                                   className={`w-full py-2 sm:py-2.5 px-0.5 text-center rounded-xl border font-bold transition-all cursor-pointer select-none flex flex-col items-center justify-center ${
                                     isChecked
                                       ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs ring-2 ring-emerald-600/25'
-                                      : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100 hover:border-slate-300'
+                                      : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100 hover:border-slate-300 dark:bg-slate-800/60 dark:text-slate-200 dark:border-slate-700 dark:hover:bg-slate-700 dark:hover:border-slate-600'
                                   }`}
                                 >
                                   <span className="text-xs sm:text-sm font-extrabold tracking-tight">{item.short}</span>
@@ -1484,10 +1482,10 @@ function NewBookingForm() {
                             })}
                           </div>
 
-                          <div className="flex flex-wrap items-center justify-between gap-1 text-[11px] pt-2 px-0.5 text-slate-500">
+                          <div className="flex flex-wrap items-center justify-between gap-1 text-[11px] pt-2 px-0.5 text-slate-500 dark:text-slate-400">
                             <span className="truncate">
                               Hari aktif:{' '}
-                              <strong className="text-emerald-700 font-bold">
+                              <strong className="text-emerald-700 font-bold dark:text-emerald-300">
                                 {selectedDays.length === 7
                                   ? 'Setiap Hari (Senin – Minggu)'
                                   : selectedDays.join(', ')}
@@ -1503,8 +1501,8 @@ function NewBookingForm() {
 
                     {/* Schedule Preview Bar */}
                     {date && tenggatPelaksanaan && tenggatPelaksanaan >= date && (
-                      <div className="p-3 bg-emerald-50/70 border border-emerald-200/80 rounded-xl space-y-2">
-                        <div className="flex flex-wrap items-center justify-between gap-1 text-xs font-bold text-emerald-950">
+                      <div className="p-3 bg-emerald-50/70 border border-emerald-200/80 rounded-xl space-y-2 dark:bg-emerald-500/10 dark:border-emerald-500/30">
+                        <div className="flex flex-wrap items-center justify-between gap-1 text-xs font-bold text-emerald-950 dark:text-emerald-400">
                           <span className="flex items-center gap-1.5">
                             <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                             <span>
@@ -1513,7 +1511,7 @@ function NewBookingForm() {
                                 : `Total ${computedDates.length} Sesi Pertemuan Terjadwal`}
                             </span>
                           </span>
-                          <span className="text-[11px] font-medium text-emerald-800">
+                          <span className="text-[11px] font-medium text-emerald-800 dark:text-emerald-200">
                             {startTime && endTime ? `${startTime} – ${endTime} WIB` : ''}
                           </span>
                         </div>
@@ -1523,19 +1521,19 @@ function NewBookingForm() {
                             {computedDates.slice(0, 6).map((d) => (
                               <span
                                 key={d}
-                                className="text-[10px] font-semibold px-2 py-0.5 rounded-lg bg-white border border-emerald-200 text-emerald-900 shadow-2xs"
+                                className="text-[10px] font-semibold px-2 py-0.5 rounded-lg bg-white border border-emerald-200 text-emerald-900 shadow-2xs dark:bg-slate-900 dark:border-emerald-500/30 dark:text-emerald-100"
                               >
                                 {formatDateIndo(d)}
                               </span>
                             ))}
                             {computedDates.length > 6 && (
-                              <span className="text-[10px] font-bold text-emerald-700 px-1.5">
+                              <span className="text-[10px] font-bold text-emerald-700 px-1.5 dark:text-emerald-300">
                                 + {computedDates.length - 6} sesi lainnya
                               </span>
                             )}
                           </div>
                         ) : (
-                          <p className="text-[11px] text-amber-700">
+                          <p className="text-[11px] text-amber-700 dark:text-amber-400">
                             Tidak ada tanggal yang cocok dengan jadwal hari yang dipilih pada rentang waktu ini.
                           </p>
                         )}
@@ -1546,35 +1544,35 @@ function NewBookingForm() {
               </div>
 
               {!hasCompleteSchedule ? (
-                <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
-                  <Clock className="h-5 w-5 shrink-0 text-slate-500" aria-hidden="true" />
+                <div className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-300">
+                  <Clock className="h-5 w-5 shrink-0 text-slate-500 dark:text-slate-400" aria-hidden="true" />
                   <div>
-                    <p className="font-bold text-slate-800">Ketersediaan belum diperiksa</p>
-                    <p className="text-[11px] text-slate-600">Pilih tanggal dan waktu untuk melihat ketersediaan</p>
+                    <p className="font-bold text-slate-800 dark:text-slate-200">Ketersediaan belum diperiksa</p>
+                    <p className="text-[11px] text-slate-600 dark:text-slate-300">Pilih tanggal dan waktu untuk melihat ketersediaan</p>
                   </div>
                 </div>
               ) : isAvailabilityLoading ? (
-                <div className="flex items-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-900" aria-live="polite">
-                  <Clock className="h-5 w-5 shrink-0 animate-pulse text-yarsi-primary" aria-hidden="true" />
+                <div className="flex items-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 p-3 text-xs text-emerald-900 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-100" aria-live="polite">
+                  <Clock className="h-5 w-5 shrink-0 animate-pulse text-yarsi-primary dark:text-emerald-400" aria-hidden="true" />
                   <div>
-                    <p className="font-bold text-emerald-950">Memeriksa ketersediaan ruangan</p>
-                    <p className="text-[11px] text-emerald-700">Status tersedia akan ditampilkan setelah pemeriksaan selesai.</p>
+                    <p className="font-bold text-emerald-950 dark:text-emerald-400">Memeriksa ketersediaan ruangan</p>
+                    <p className="text-[11px] text-emerald-700 dark:text-emerald-300">Status tersedia akan ditampilkan setelah pemeriksaan selesai.</p>
                   </div>
                 </div>
               ) : selectedRoomAvailability?.state === 'available' ? (
-                <div className="flex items-center gap-2 rounded-2xl border border-emerald-300 bg-emerald-50 p-3 text-xs text-emerald-900">
+                <div className="flex items-center gap-2 rounded-2xl border border-emerald-300 bg-emerald-50 p-3 text-xs text-emerald-900 dark:border-emerald-500/40 dark:bg-emerald-500/10 dark:text-emerald-100">
                   <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-600" aria-hidden="true" />
                   <div>
-                    <p className="font-bold text-emerald-950">Ruangan tersedia</p>
-                    <p className="text-[11px] text-emerald-700">Ketersediaan diperiksa langsung dari sistem penjadwalan.</p>
+                    <p className="font-bold text-emerald-950 dark:text-emerald-400">Ruangan tersedia</p>
+                    <p className="text-[11px] text-emerald-700 dark:text-emerald-300">Ketersediaan diperiksa langsung dari sistem penjadwalan.</p>
                   </div>
                 </div>
               ) : selectedRoom && selectedRoomAvailability?.state === 'unavailable' ? (
-                <div className="flex items-start gap-2.5 rounded-2xl border-2 border-rose-300 bg-rose-50 p-3 text-xs text-rose-900" role="alert">
-                  <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-rose-600" aria-hidden="true" />
+                <div className="flex items-start gap-2.5 rounded-2xl border-2 border-rose-300 bg-rose-50 p-3 text-xs text-rose-900 dark:border-rose-500/50 dark:bg-rose-500/10 dark:text-rose-400" role="alert">
+                  <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-rose-600 dark:text-rose-400" aria-hidden="true" />
                   <div>
-                    <p className="font-black text-rose-950">{unavailableLabel(selectedRoomAvailability)}</p>
-                    <p className="mt-0.5 text-[11px] text-rose-800">Pilih ruangan lain atau ganti jam kegiatan agar permohonan dapat disubmit.</p>
+                    <p className="font-black text-rose-950 dark:text-rose-300">{unavailableLabel(selectedRoomAvailability)}</p>
+                    <p className="mt-0.5 text-[11px] text-rose-800 dark:text-rose-300">Pilih ruangan lain atau ganti jam kegiatan agar permohonan dapat disubmit.</p>
                   </div>
                 </div>
               ) : null}
@@ -1583,13 +1581,13 @@ function NewBookingForm() {
         </div>
 
         {/* STEP 2: EVENT DETAILS & JENIS KEGIATAN */}
-        <div className="space-y-6 rounded-[18px_4px_18px_18px] border border-slate-200/90 bg-white p-6 shadow-card sm:p-8">
-          <div className="flex items-center gap-2.5 pb-4 border-b border-slate-100">
-            <div className="p-2 rounded-xl bg-amber-50 text-amber-700">
+        <div className="space-y-6 rounded-[18px_4px_18px_18px] border border-slate-200/90 bg-white p-6 shadow-card sm:p-8 dark:border-slate-700 dark:bg-slate-900">
+          <div className="flex items-center gap-2.5 pb-4 border-b border-slate-100 dark:border-slate-800">
+            <div className="p-2 rounded-xl bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">
               <FileText className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-slate-900">
+              <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
                 2. Informasi Kegiatan
               </h2>
               <p className="text-xs text-slate-400">
@@ -1601,7 +1599,7 @@ function NewBookingForm() {
           <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div className="sm:col-span-2">
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-bold text-slate-700 mb-1 dark:text-slate-300">
                   Nama / Judul Kegiatan *
                 </label>
                 <input
@@ -1615,23 +1613,23 @@ function NewBookingForm() {
                   }}
                   className={`w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border rounded-xl focus:outline-none transition-all ${
                     fieldErrors.title
-                      ? 'border-red-500 ring-2 ring-red-500 bg-red-50/40 text-red-900 placeholder:text-red-300'
-                      : 'border-slate-200 bg-slate-50 text-slate-900 focus:ring-2 focus:ring-yarsi-primary'
+                      ? 'border-red-500 ring-2 ring-red-500 bg-red-50/40 text-red-900 placeholder:text-red-300 dark:border-rose-500 dark:ring-rose-500/40 dark:bg-rose-500/10 dark:text-rose-400'
+                      : 'border-slate-200 bg-slate-50 text-slate-900 focus:ring-2 focus:ring-yarsi-primary dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-100'
                   }`}
                 />
                 {fieldErrors.title && (
-                  <p className="text-[11px] font-semibold text-red-600 mt-1">Nama / Judul kegiatan wajib diisi.</p>
+                  <p className="text-[11px] font-semibold text-red-600 mt-1 dark:text-rose-400">Nama / Judul kegiatan wajib diisi.</p>
                 )}
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-bold text-slate-700 mb-1 dark:text-slate-300">
                   Jenis Kegiatan *
                 </label>
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value as BookingCategory)}
-                  className="w-full px-3.5 py-2.5 text-xs sm:text-sm font-bold bg-emerald-50/70 border border-emerald-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-yarsi-primary text-emerald-950"
+                  className="w-full px-3.5 py-2.5 text-xs sm:text-sm font-bold bg-emerald-50/70 border border-emerald-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-yarsi-primary text-emerald-950 dark:bg-emerald-500/10 dark:border-emerald-500/40 dark:text-emerald-300"
                 >
                   <option value="seminar">Seminar</option>
                   <option value="workshop">Workshop</option>
@@ -1649,7 +1647,7 @@ function NewBookingForm() {
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-bold text-slate-700 mb-1 dark:text-slate-300">
                   Estimasi Jumlah Peserta *
                 </label>
                 <input
@@ -1666,22 +1664,22 @@ function NewBookingForm() {
                   }}
                   className={`w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border rounded-xl focus:outline-none transition-all ${
                     fieldErrors.estimatedAttendees || isCapacityExceeded
-                      ? 'border-red-500 ring-2 ring-red-500 bg-red-50/40 text-red-900'
-                      : 'border-slate-200 bg-slate-50 text-slate-900 focus:ring-2 focus:ring-yarsi-primary'
+                      ? 'border-red-500 ring-2 ring-red-500 bg-red-50/40 text-red-900 dark:border-rose-500 dark:ring-rose-500/40 dark:bg-rose-500/10 dark:text-rose-400'
+                      : 'border-slate-200 bg-slate-50 text-slate-900 focus:ring-2 focus:ring-yarsi-primary dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-100'
                   }`}
                 />
                 {fieldErrors.estimatedAttendees && !isCapacityExceeded && (
-                  <p className="text-[11px] font-semibold text-red-600 mt-1">Estimasi jumlah peserta wajib diisi lebih dari 0.</p>
+                  <p className="text-[11px] font-semibold text-red-600 mt-1 dark:text-rose-400">Estimasi jumlah peserta wajib diisi lebih dari 0.</p>
                 )}
                 {isCapacityExceeded && (
-                  <p className="text-[11px] text-rose-600 mt-1 font-semibold">
+                  <p className="text-[11px] text-rose-600 mt-1 font-semibold dark:text-rose-400">
                     Jumlah peserta ({estimatedAttendees}) melebihi kapasitas ruang ({selectedRoom?.capacity ?? 'belum tersedia'} orang).
                   </p>
                 )}
               </div>
 
               <div className="sm:col-span-2">
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-bold text-slate-700 mb-1 dark:text-slate-300">
                   Organisasi / Unit Pengusul *
                 </label>
                 <input
@@ -1695,18 +1693,18 @@ function NewBookingForm() {
                   placeholder="Contoh: BEM Fakultas Teknologi Informasi"
                   className={`w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border rounded-xl focus:outline-none transition-all ${
                     fieldErrors.userOrganization
-                      ? 'border-red-500 ring-2 ring-red-500 bg-red-50/40 text-red-900 placeholder:text-red-300'
-                      : 'border-slate-200 bg-slate-50 text-slate-900 focus:ring-2 focus:ring-yarsi-primary'
+                      ? 'border-red-500 ring-2 ring-red-500 bg-red-50/40 text-red-900 placeholder:text-red-300 dark:border-rose-500 dark:ring-rose-500/40 dark:bg-rose-500/10 dark:text-rose-400'
+                      : 'border-slate-200 bg-slate-50 text-slate-900 focus:ring-2 focus:ring-yarsi-primary dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-100'
                   }`}
                 />
                 {fieldErrors.userOrganization && (
-                  <p className="text-[11px] font-semibold text-red-600 mt-1">Organisasi / Unit pengusul kegiatan wajib diisi.</p>
+                  <p className="text-[11px] font-semibold text-red-600 mt-1 dark:text-rose-400">Organisasi / Unit pengusul kegiatan wajib diisi.</p>
                 )}
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">
+              <label className="block text-xs font-bold text-slate-700 mb-1 dark:text-slate-300">
                 Deskripsi Singkat Acara & Kebutuhan Ruangan *
               </label>
               <textarea
@@ -1720,29 +1718,29 @@ function NewBookingForm() {
                 placeholder="Tuliskan tujuan acara, susunan pembicara, dan catatan teknis pendukung..."
                 className={`w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border rounded-xl focus:outline-none transition-all ${
                   fieldErrors.description
-                    ? 'border-red-500 ring-2 ring-red-500 bg-red-50/40 text-red-900 placeholder:text-red-300'
-                    : 'border-slate-200 bg-slate-50 text-slate-900 focus:ring-2 focus:ring-yarsi-primary'
+                    ? 'border-red-500 ring-2 ring-red-500 bg-red-50/40 text-red-900 placeholder:text-red-300 dark:border-rose-500 dark:ring-rose-500/40 dark:bg-rose-500/10 dark:text-rose-400'
+                    : 'border-slate-200 bg-slate-50 text-slate-900 focus:ring-2 focus:ring-yarsi-primary dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-100'
                 }`}
               />
               {fieldErrors.description && (
-                <p className="text-[11px] font-semibold text-red-600 mt-1">Deskripsi kegiatan wajib diisi.</p>
+                <p className="text-[11px] font-semibold text-red-600 mt-1 dark:text-rose-400">Deskripsi kegiatan wajib diisi.</p>
               )}
             </div>
           </div>
         </div>
 
         {/* STEP 3: LOGISTICS & FASILITAS TAMBAHAN (BookingLogistik Model) */}
-        <div className="space-y-6 rounded-[18px_4px_18px_18px] border border-slate-200/90 bg-white p-6 shadow-card sm:p-8">
-          <div className="flex items-center gap-2.5 pb-4 border-b border-slate-100">
-            <div className="p-2 rounded-xl bg-teal-50 text-teal-700">
+        <div className="space-y-6 rounded-[18px_4px_18px_18px] border border-slate-200/90 bg-white p-6 shadow-card sm:p-8 dark:border-slate-700 dark:bg-slate-900">
+          <div className="flex items-center gap-2.5 pb-4 border-b border-slate-100 dark:border-slate-800">
+            <div className="p-2 rounded-xl bg-teal-50 text-teal-700 dark:bg-teal-500/10 dark:text-teal-300">
               <PackageCheck className="w-5 h-5" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-base font-bold text-slate-900">
+                <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
                   3. Fasilitas Tambahan
                 </h2>
-                <span className="text-[10px] font-bold text-slate-500 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-full">
+                <span className="text-[10px] font-bold text-slate-500 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-full dark:text-slate-400 dark:bg-slate-800 dark:border-slate-700">
                   Opsional
                 </span>
               </div>
@@ -1755,7 +1753,7 @@ function NewBookingForm() {
           {/* Quick Equipment Checklist (Dynamic from Superadmin Master Data) */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <p className="text-xs font-bold text-slate-700">Fasilitas Standar &amp; Tambahan Ruang:</p>
+              <p className="text-xs font-bold text-slate-700 dark:text-slate-300">Fasilitas Standar &amp; Tambahan Ruang:</p>
               {isLoadingFacilities && (
                 <span className="text-[10px] text-slate-400 font-medium">Sinkronisasi fasilitas...</span>
               )}
@@ -1773,22 +1771,22 @@ function NewBookingForm() {
                     key={eq.id}
                     onClick={() => handleEquipmentToggle(eq.id)}
                     className={`p-3 rounded-xl border transition-all cursor-pointer flex items-start gap-3 ${state.selected
-                        ? 'bg-emerald-50/70 border-emerald-300 ring-1 ring-emerald-500/30'
-                        : 'bg-slate-50/60 border-slate-200/80 hover:bg-slate-100'
+                        ? 'bg-emerald-50/70 border-emerald-300 ring-1 ring-emerald-500/30 dark:bg-emerald-500/10 dark:border-emerald-500/40'
+                        : 'bg-slate-50/60 border-slate-200/80 hover:bg-slate-100 dark:bg-slate-800/50 dark:border-slate-700 dark:hover:bg-slate-700/60'
                       }`}
                   >
                     <input
                       type="checkbox"
                       checked={state.selected}
                       onChange={() => { }}
-                      className="mt-0.5 rounded text-yarsi-primary focus:ring-yarsi-primary"
+                      className="mt-0.5 rounded text-yarsi-primary focus:ring-yarsi-primary dark:text-emerald-400"
                     />
 
                     <div className="flex-1 text-xs">
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        <p className="font-bold text-slate-800">{eq.name}</p>
+                        <p className="font-bold text-slate-800 dark:text-slate-200">{eq.name}</p>
                         {eq.isSpecial && (
-                          <span className="text-[9.5px] font-bold px-1.5 py-0.2 rounded bg-rose-100 text-rose-800 border border-rose-200">
+                          <span className="text-[9.5px] font-bold px-1.5 py-0.2 rounded bg-rose-100 text-rose-800 border border-rose-200 dark:bg-rose-500/15 dark:text-rose-200 dark:border-rose-500/30">
                             Khusus
                           </span>
                         )}
@@ -1803,7 +1801,7 @@ function NewBookingForm() {
                           className="pt-1.5 flex items-center gap-2"
                           onClick={(e) => e.stopPropagation()}
                         >
-                          <span className="text-[11px] text-slate-500">Jumlah:</span>
+                          <span className="text-[11px] text-slate-500 dark:text-slate-400">Jumlah:</span>
                           <input
                             type="number"
                             min={1}
@@ -1812,7 +1810,7 @@ function NewBookingForm() {
                             onChange={(e) =>
                               handleEquipmentQty(eq.id, parseInt(e.target.value) || 1)
                             }
-                            className="w-16 px-2 py-0.5 text-xs border rounded bg-white text-slate-800 font-bold"
+                            className="w-16 px-2 py-0.5 text-xs border rounded bg-white text-slate-800 font-bold dark:bg-slate-900 dark:text-slate-200"
                           />
                         </div>
                       )}
@@ -1824,23 +1822,23 @@ function NewBookingForm() {
           </div>
 
           {/* Custom Logistics Multi-Item Table */}
-          <div className="space-y-3 pt-3 border-t border-slate-100">
-            <p className="text-xs font-bold text-slate-700">Daftar Rincian Logistik Tambahan:</p>
+          <div className="space-y-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+            <p className="text-xs font-bold text-slate-700 dark:text-slate-300">Daftar Rincian Logistik Tambahan:</p>
 
             {customLogistics.length > 0 && (
               <div className="space-y-2">
                 {customLogistics.map((item, idx) => (
                   <div
                     key={idx}
-                    className="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs"
+                    className="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs dark:bg-slate-800/60 dark:border-slate-700"
                   >
                     <div className="flex items-center gap-3">
-                      <span className="font-bold text-slate-900">{item.jenisItem}</span>
-                      <span className="px-2 py-0.5 bg-emerald-100 text-yarsi-primary font-bold rounded">
+                      <span className="font-bold text-slate-900 dark:text-slate-100">{item.jenisItem}</span>
+                      <span className="px-2 py-0.5 bg-emerald-100 text-yarsi-primary font-bold rounded dark:bg-emerald-500/20 dark:text-emerald-300">
                         {item.jumlah} Unit
                       </span>
                       {item.catatan && (
-                        <span className="text-slate-500 italic">"{item.catatan}"</span>
+                        <span className="text-slate-500 italic dark:text-slate-400">"{item.catatan}"</span>
                       )}
                     </div>
                     <button
@@ -1856,13 +1854,13 @@ function NewBookingForm() {
             )}
 
             {/* Add Custom Logistics Input Bar */}
-            <div className="p-3 bg-slate-100/70 rounded-2xl border border-slate-200/80 flex flex-col sm:flex-row items-center gap-2">
+            <div className="p-3 bg-slate-100/70 rounded-2xl border border-slate-200/80 flex flex-col sm:flex-row items-center gap-2 dark:bg-slate-800/60 dark:border-slate-700">
               <input
                 type="text"
                 placeholder="Jenis Item (misal: Kabel Colokan Listrik 10m)"
                 value={newLogistikItem}
                 onChange={(e) => setNewLogistikItem(e.target.value)}
-                className="flex-1 px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yarsi-primary"
+                className="flex-1 px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yarsi-primary dark:bg-slate-900 dark:border-slate-700"
               />
               <input
                 type="number"
@@ -1871,19 +1869,19 @@ function NewBookingForm() {
                 placeholder="Jumlah"
                 value={newLogistikQty}
                 onChange={(e) => setNewLogistikQty(parseInt(e.target.value) || 1)}
-                className="w-20 px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl font-bold"
+                className="w-20 px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl font-bold dark:bg-slate-900 dark:border-slate-700"
               />
               <input
                 type="text"
                 placeholder="Catatan penempatan (opsional)"
                 value={newLogistikNotes}
                 onChange={(e) => setNewLogistikNotes(e.target.value)}
-                className="flex-1 px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl"
+                className="flex-1 px-3 py-2 text-xs bg-white border border-slate-200 rounded-xl dark:bg-slate-900 dark:border-slate-700"
               />
               <button
                 type="button"
                 onClick={handleAddCustomLogistik}
-                className="w-full sm:w-auto px-4 py-2 bg-yarsi-primary hover:bg-yarsi-dark text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1 shrink-0"
+                className="w-full sm:w-auto px-4 py-2 bg-yarsi-primary hover:bg-yarsi-dark text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1 shrink-0 dark:bg-emerald-600 dark:hover:bg-emerald-500"
               >
                 <Plus className="w-4 h-4" />
                 <span>Tambah Item</span>
@@ -1893,13 +1891,13 @@ function NewBookingForm() {
         </div>
 
         {/* STEP 4: DOCUMENT UPLOAD (dokumenUrl / attachment) */}
-        <div className="space-y-6 rounded-[18px_4px_18px_18px] border border-slate-200/90 bg-white p-6 shadow-card sm:p-8">
-          <div className="flex items-center gap-2.5 pb-4 border-b border-slate-100">
-            <div className="p-2 rounded-xl bg-purple-50 text-purple-700">
+        <div className="space-y-6 rounded-[18px_4px_18px_18px] border border-slate-200/90 bg-white p-6 shadow-card sm:p-8 dark:border-slate-700 dark:bg-slate-900">
+          <div className="flex items-center gap-2.5 pb-4 border-b border-slate-100 dark:border-slate-800">
+            <div className="p-2 rounded-xl bg-purple-50 text-purple-700 dark:bg-purple-500/10 dark:text-purple-300">
               <UploadCloud className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-slate-900">
+              <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">
                 4. Dokumen Pendukung
               </h2>
               <p className="text-xs text-slate-400">
@@ -1908,13 +1906,13 @@ function NewBookingForm() {
             </div>
           </div>
 
-          <div className="border-2 border-dashed border-slate-200 rounded-2xl p-6 text-center space-y-3 bg-slate-50 hover:bg-slate-100/60 transition-colors">
+          <div className="border-2 border-dashed border-slate-200 rounded-2xl p-6 text-center space-y-3 bg-slate-50 hover:bg-slate-100/60 transition-colors dark:border-slate-700 dark:bg-slate-800/60 dark:hover:bg-slate-700/50">
             <FileText className="w-10 h-10 text-slate-400 mx-auto" />
             <div>
               {uploadedFileName ? (
                 <div>
-                  <p className="text-xs font-bold text-slate-700">
-                    Berkas Terpilih: <span className="text-yarsi-primary font-mono">{uploadedFileName}</span>
+                  <p className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                    Berkas Terpilih: <span className="text-yarsi-primary font-mono dark:text-emerald-400">{uploadedFileName}</span>
                   </p>
                   <button
                     type="button"
@@ -1922,13 +1920,13 @@ function NewBookingForm() {
                       setSelectedFile(null);
                       setUploadedFileName('');
                     }}
-                    className="mt-1 text-[11px] font-bold text-rose-600 hover:text-rose-700 hover:underline"
+                    className="mt-1 text-[11px] font-bold text-rose-600 hover:text-rose-700 hover:underline dark:text-rose-400"
                   >
                     Hapus / Ganti Berkas
                   </button>
                 </div>
               ) : (
-                <p className="text-xs font-bold text-slate-500">
+                <p className="text-xs font-bold text-slate-500 dark:text-slate-400">
                   Belum ada berkas yang dipilih (opsional)
                 </p>
               )}
@@ -1937,7 +1935,7 @@ function NewBookingForm() {
               </p>
             </div>
 
-            <label className="inline-block cursor-pointer px-4 py-2 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 shadow-xs">
+            <label className="inline-block cursor-pointer px-4 py-2 bg-white hover:bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 shadow-xs dark:bg-slate-900 dark:hover:bg-slate-800/80 dark:border-slate-700 dark:text-slate-200">
               <span>Pilih Dokumen (PDF / Gambar)</span>
               <input
                 type="file"
@@ -1954,8 +1952,8 @@ function NewBookingForm() {
           ref={internalApprovalContainerRef}
           className={`space-y-4 rounded-[18px_4px_18px_18px] border p-6 sm:p-8 transition-all ${
             fieldErrors.isInternalApproved
-              ? 'border-red-500 ring-2 ring-red-500 bg-red-50/70'
-              : 'border-emerald-300 bg-emerald-50/80'
+              ? 'border-red-500 ring-2 ring-red-500 bg-red-50/70 dark:border-rose-500/60 dark:ring-rose-500/30 dark:bg-rose-500/10'
+              : 'border-emerald-300 bg-emerald-50/80 dark:border-emerald-500/40 dark:bg-emerald-500/10'
           }`}
         >
           <div className="flex items-start gap-3">
@@ -1970,31 +1968,31 @@ function NewBookingForm() {
               }}
               className={`mt-1 w-5 h-5 rounded focus:ring-yarsi-primary cursor-pointer ${
                 fieldErrors.isInternalApproved
-                  ? 'text-red-600 border-red-500 focus:ring-red-500'
-                  : 'text-yarsi-primary border-emerald-400 focus:ring-yarsi-primary'
+                  ? 'text-red-600 border-red-500 focus:ring-red-500 dark:text-rose-400 dark:border-rose-500'
+                  : 'text-yarsi-primary border-emerald-400 focus:ring-yarsi-primary dark:text-emerald-400 dark:border-emerald-500'
               }`}
             />
             <label htmlFor="internalApprovalCheck" className="cursor-pointer space-y-1">
-              <p className={`text-sm font-bold leading-snug ${fieldErrors.isInternalApproved ? 'text-red-950' : 'text-emerald-950'}`}>
+              <p className={`text-sm font-bold leading-snug ${fieldErrors.isInternalApproved ? 'text-red-950 dark:text-rose-300' : 'text-emerald-950 dark:text-emerald-300'}`}>
                 Konfirmasi Persetujuan Internal *
               </p>
-              <p className={`text-xs leading-relaxed ${fieldErrors.isInternalApproved ? 'text-red-800' : 'text-emerald-800'}`}>
+              <p className={`text-xs leading-relaxed ${fieldErrors.isInternalApproved ? 'text-red-800 dark:text-rose-300' : 'text-emerald-800 dark:text-emerald-200'}`}>
                 Saya menyatakan bahwa kegiatan ini telah diketahui atau disetujui oleh pimpinan fakultas, dekanat, BEM/DPM, atau pembina kemahasiswaan terkait.
               </p>
             </label>
           </div>
           {fieldErrors.isInternalApproved && (
-            <p className="text-xs font-bold text-red-600">
+            <p className="text-xs font-bold text-red-600 dark:text-rose-400">
               Anda wajib mencentang konfirmasi persetujuan internal sebelum mengirim permohonan.
             </p>
           )}
         </div>
 
         {/* SUBMIT BUTTON BAR */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-slate-200">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-slate-200 dark:border-slate-700">
           <Link
             href="/dashboard"
-            className="px-6 py-3 rounded-2xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition-colors"
+            className="px-6 py-3 rounded-2xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition-colors dark:text-slate-300 dark:hover:bg-slate-700"
           >
             Batal
           </Link>
@@ -2005,10 +2003,10 @@ function NewBookingForm() {
               disabled={isSubmitting}
               className={`w-full sm:w-auto px-8 py-3.5 rounded-2xl font-bold text-sm transition-all flex items-center justify-center gap-2 ${
                 isSubmitting
-                  ? 'bg-slate-300 text-slate-500 cursor-wait'
+                  ? 'bg-slate-300 text-slate-500 cursor-wait dark:bg-slate-700 dark:text-slate-400'
                   : isFormValid
-                    ? 'bg-yarsi-primary hover:bg-yarsi-dark text-white shadow-lg hover:shadow-xl shadow-emerald-900/20 active:scale-95 cursor-pointer'
-                    : 'bg-slate-300 hover:bg-slate-400 text-slate-600 shadow-none cursor-pointer'
+                    ? 'bg-yarsi-primary hover:bg-yarsi-dark text-white shadow-lg hover:shadow-xl shadow-emerald-900/20 active:scale-95 cursor-pointer dark:bg-emerald-600 dark:hover:bg-emerald-500'
+                    : 'bg-slate-300 hover:bg-slate-400 text-slate-600 shadow-none cursor-pointer dark:bg-slate-700 dark:hover:bg-slate-600 dark:text-slate-400'
               }`}
             >
               {isSubmitting ? (

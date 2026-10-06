@@ -46,7 +46,7 @@ export function AuthGateModal({
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="" maxWidth="md">
-      <div className="overflow-hidden rounded-[18px_4px_18px_18px] border border-emerald-900/10 bg-white">
+      <div className="overflow-hidden rounded-[18px_4px_18px_18px] border border-emerald-900/10 bg-white dark:border-emerald-500/30 dark:bg-slate-900">
         <div className="relative overflow-hidden bg-[#063d30] p-6 text-white sm:p-7">
           <div className="absolute inset-y-0 right-0 w-1/2 bg-[linear-gradient(135deg,transparent,rgba(52,211,153,0.13))]" aria-hidden="true" />
           <div className="relative">
@@ -63,28 +63,28 @@ export function AuthGateModal({
 
         <div className="p-5 sm:p-6">
           {targetRoomName && (
-            <div className="mb-5 flex items-center gap-3 border-l-2 border-yarsi-primary bg-emerald-50/70 px-4 py-3">
-              <Building2 className="h-5 w-5 shrink-0 text-yarsi-primary" aria-hidden="true" />
+            <div className="mb-5 flex items-center gap-3 border-l-2 border-yarsi-primary bg-emerald-50/70 px-4 py-3 dark:bg-emerald-500/10">
+              <Building2 className="h-5 w-5 shrink-0 text-yarsi-primary dark:text-emerald-400" aria-hidden="true" />
               <div className="min-w-0">
-                <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-700">Pilihan tersimpan</p>
-                <p className="truncate text-sm font-bold text-slate-900">{targetRoomName}</p>
+                <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-300">Pilihan tersimpan</p>
+                <p className="truncate text-sm font-bold text-slate-900 dark:text-slate-100">{targetRoomName}</p>
                 {(targetDate || targetStartTime) && (
-                  <p className="mt-0.5 text-[11px] text-slate-500">{targetDate}{targetStartTime ? ` · ${targetStartTime}–${targetEndTime} WIB` : ''}</p>
+                  <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">{targetDate}{targetStartTime ? ` · ${targetStartTime}–${targetEndTime} WIB` : ''}</p>
                 )}
               </div>
             </div>
           )}
 
-          <div className="grid gap-3 border-y border-slate-100 py-4 text-xs text-slate-600 sm:grid-cols-2">
-            <span className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-yarsi-primary" aria-hidden="true" />Identitas kampus terverifikasi</span>
-            <span className="flex items-center gap-2"><CalendarCheck2 className="h-4 w-4 text-yarsi-primary" aria-hidden="true" />Pilihan jadwal tetap tersimpan</span>
+          <div className="grid gap-3 border-y border-slate-100 py-4 text-xs text-slate-600 sm:grid-cols-2 dark:border-slate-700 dark:text-slate-300">
+            <span className="flex items-center gap-2"><ShieldCheck className="h-4 w-4 text-yarsi-primary dark:text-emerald-400" aria-hidden="true" />Identitas kampus terverifikasi</span>
+            <span className="flex items-center gap-2"><CalendarCheck2 className="h-4 w-4 text-yarsi-primary dark:text-emerald-400" aria-hidden="true" />Pilihan jadwal tetap tersimpan</span>
           </div>
 
           <div className="mt-5 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-            <button type="button" onClick={onClose} className="min-h-11 px-4 text-sm font-bold text-slate-600 hover:bg-slate-100">
+            <button type="button" onClick={onClose} className="min-h-11 px-4 text-sm font-bold text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
               Kembali menjelajah
             </button>
-            <button type="button" onClick={handleGoToLogin} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[9px_2px_9px_9px] bg-yarsi-primary px-5 text-sm font-bold text-white shadow-sm hover:bg-yarsi-dark">
+            <button type="button" onClick={handleGoToLogin} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-[9px_2px_9px_9px] bg-yarsi-primary px-5 text-sm font-bold text-white shadow-sm hover:bg-yarsi-dark dark:bg-emerald-600 dark:hover:bg-emerald-500">
               Masuk dengan SSO <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </button>
           </div>

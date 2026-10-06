@@ -250,8 +250,8 @@ function SeatCell({
           isBooked
             ? 'shadow-sm cursor-not-allowed opacity-90'
             : isSelected
-              ? 'bg-blue-50 text-blue-900 border-2 border-blue-500 shadow-md ring-2 ring-blue-400/50 ring-offset-1 z-10 scale-105 font-extrabold cursor-pointer'
-              : 'bg-slate-100 text-slate-500 border border-slate-200 hover:bg-slate-200 hover:text-slate-800 hover:border-slate-300 cursor-pointer',
+              ? 'bg-blue-50 text-blue-900 border-2 border-blue-500 shadow-md ring-2 ring-blue-400/50 ring-offset-1 z-10 scale-105 font-extrabold cursor-pointer dark:bg-blue-500/20 dark:text-blue-100 dark:border-blue-400 dark:ring-blue-500/30'
+              : 'bg-slate-100 text-slate-500 border border-slate-200 hover:bg-slate-200 hover:text-slate-800 hover:border-slate-300 cursor-pointer dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700 dark:hover:bg-slate-700 dark:hover:text-slate-200 dark:hover:border-slate-600',
         ].join(' ')}
         style={
           isBooked && isApproved && facultyTheme
@@ -329,7 +329,7 @@ function SeatBlock({
   return (
     <div className="flex-1 min-w-0">
       {/* Block header */}
-      <div className="flex items-center justify-between mb-3 pb-1.5 border-b border-slate-200">
+      <div className="flex items-center justify-between mb-3 pb-1.5 border-b border-slate-200 dark:border-slate-700">
         <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{label}</span>
         <span className="text-[10px] font-mono font-medium text-slate-400">{rangeLabel}</span>
       </div>
@@ -397,7 +397,7 @@ function CustomSeatBlock({
   return (
     <div className="flex-1 min-w-0">
       {/* Block header */}
-      <div className="flex items-center justify-between mb-3 pb-1.5 border-b border-slate-200">
+      <div className="flex items-center justify-between mb-3 pb-1.5 border-b border-slate-200 dark:border-slate-700">
         <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{label}</span>
         <span className="text-[10px] font-mono font-medium text-slate-400">{rangeLabel}</span>
       </div>
@@ -420,7 +420,7 @@ function CustomSeatBlock({
                 Array.from({ length: br.leadingSpacers }).map((_, si) => (
                   <div
                     key={`lead-${si}`}
-                    className="w-8 h-8 sm:w-9 sm:h-9 rounded-md bg-slate-200/60 border border-dashed border-slate-300 flex items-center justify-center"
+                    className="w-8 h-8 sm:w-9 sm:h-9 rounded-md bg-slate-200/60 border border-dashed border-slate-300 flex items-center justify-center dark:bg-slate-800/60 dark:border-slate-600"
                     title="Pilar / Tiang"
                   >
                     <span className="text-[7px] text-slate-400 font-bold">▨</span>
@@ -444,7 +444,7 @@ function CustomSeatBlock({
                 Array.from({ length: br.trailingSpacers }).map((_, ti) => (
                   <div
                     key={`trail-${ti}`}
-                    className="w-8 h-8 sm:w-9 sm:h-9 rounded-md bg-slate-100/60 border border-dashed border-slate-200 flex items-center justify-center"
+                    className="w-8 h-8 sm:w-9 sm:h-9 rounded-md bg-slate-100/60 border border-dashed border-slate-200 flex items-center justify-center dark:bg-slate-800/40 dark:border-slate-700"
                     title="Area Kosong"
                   >
                     <span className="text-[7px] text-slate-300 font-bold">·</span>
@@ -723,7 +723,7 @@ export default function CbtSeatMap({
               lastClickedRef.current = null;
               onSelectedSeatsChange?.([]);
             }}
-            className="inline-flex items-center gap-1 text-[11px] font-bold text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 px-2.5 py-1 rounded-md transition-all cursor-pointer active:scale-95"
+            className="inline-flex items-center gap-1 text-[11px] font-bold text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 px-2.5 py-1 rounded-md transition-all cursor-pointer active:scale-95 dark:text-rose-400 dark:hover:text-rose-300 dark:bg-rose-500/10 dark:hover:bg-rose-500/20 dark:border-rose-500/30"
             title="Kosongkan seluruh kursi terpilih"
           >
             <RefreshCw className="w-3 h-3" />
@@ -738,8 +738,8 @@ export default function CbtSeatMap({
           className={[
             'p-3 rounded-xl border text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2 transition-all duration-150',
             isFullCapacity
-              ? 'bg-blue-50 border-blue-200 text-blue-900 shadow-sm'
-              : 'bg-slate-50 border-slate-200 text-slate-800',
+              ? 'bg-blue-50 border-blue-200 text-blue-900 shadow-sm dark:bg-blue-500/15 dark:border-blue-500/30 dark:text-blue-100'
+              : 'bg-slate-50 border-slate-200 text-slate-800 dark:bg-slate-800/60 dark:border-slate-700 dark:text-slate-200',
           ].join(' ')}
         >
           <div className="flex items-center gap-2.5">
@@ -752,7 +752,7 @@ export default function CbtSeatMap({
             <div>
               <div className="font-bold flex items-center gap-2">
                 <span>Kursi Terpilih:</span>
-                <span className="font-mono text-blue-700 bg-blue-100 px-2 py-0.5 rounded text-[11px]">
+                <span className="font-mono text-blue-700 bg-blue-100 px-2 py-0.5 rounded text-[11px] dark:text-blue-300 dark:bg-blue-500/20">
                   {formatSeatList(selectedSeats)}
                 </span>
               </div>
@@ -760,17 +760,17 @@ export default function CbtSeatMap({
               {capacity > 0 ? (
                 <p className="text-[11px] mt-0.5 font-medium">
                   {isFullCapacity ? (
-                    <span className="text-blue-700 font-semibold">
+                    <span className="text-blue-700 font-semibold dark:text-blue-400">
                       Kapasitas terpenuhi: {selectedSeats.length} dari {capacity} kursi terpilih (Batas maksimal terkunci).
                     </span>
                   ) : (
-                    <span className="text-amber-700">
+                    <span className="text-amber-700 dark:text-amber-400">
                       Terpilih {selectedSeats.length} dari {capacity} kursi ({capacity - selectedSeats.length} kursi tersisa).
                     </span>
                   )}
                 </p>
               ) : (
-                <p className="text-[11px] text-slate-500 mt-0.5">
+                <p className="text-[11px] text-slate-500 mt-0.5 dark:text-slate-400">
                   Total {selectedSeats.length} kursi terpilih. Masukkan nilai Kapasitas di form untuk mengunci alokasi.
                 </p>
               )}
@@ -785,7 +785,7 @@ export default function CbtSeatMap({
 
       {/* ── Front-of-room label ── */}
       <div className="flex justify-center">
-        <div className="px-8 py-1 border-b-2 border-emerald-700 text-[10px] font-semibold text-slate-500 tracking-widest uppercase">
+        <div className="px-8 py-1 border-b-2 border-emerald-700 text-[10px] font-semibold text-slate-500 tracking-widest uppercase dark:text-slate-400">
           ▲ Depan Ruangan / Layar Proyektor
         </div>
       </div>
@@ -819,7 +819,7 @@ export default function CbtSeatMap({
           {/* CENTRAL AISLE */}
           <div className="flex flex-col items-center justify-start px-3 sm:px-5 pt-8 gap-1 shrink-0">
             {/* Dashed vertical line */}
-            <div className="w-0 border-l-2 border-dashed border-slate-300/80 flex-1" />
+            <div className="w-0 border-l-2 border-dashed border-slate-300/80 flex-1 dark:border-slate-600" />
             {/* Aisle label */}
             <span
               className="text-[8px] font-bold text-slate-400 uppercase tracking-widest select-none"
@@ -827,7 +827,7 @@ export default function CbtSeatMap({
             >
               Lorong Tengah
             </span>
-            <div className="w-0 border-l-2 border-dashed border-slate-300/80 flex-1" />
+            <div className="w-0 border-l-2 border-dashed border-slate-300/80 flex-1 dark:border-slate-600" />
           </div>
 
           {/* RIGHT BLOCK */}
@@ -843,14 +843,14 @@ export default function CbtSeatMap({
               extraBottomContent={
                 roomId === 'cbt-b' ? (
                   <div className="mt-3 pl-8 sm:pl-10 pr-1 space-y-2">
-                    <div className="h-[92px] rounded-lg border-2 border-slate-300 bg-slate-100/90 flex flex-col items-center justify-center p-2 text-center shadow-sm">
-                      <span className="text-[10px] font-extrabold text-slate-700 tracking-wider uppercase">
+                    <div className="h-[92px] rounded-lg border-2 border-slate-300 bg-slate-100/90 flex flex-col items-center justify-center p-2 text-center shadow-sm dark:border-slate-600 dark:bg-slate-800/60">
+                      <span className="text-[10px] font-extrabold text-slate-700 tracking-wider uppercase dark:text-slate-200">
                         RUANG PENGAWAS
                       </span>
                       <span className="text-[8.5px] text-slate-500 mt-0.5">Area Pengawas CBT</span>
                     </div>
-                    <div className="h-[92px] rounded-lg border-2 border-slate-300 bg-slate-100/90 flex flex-col items-center justify-center p-2 text-center shadow-sm">
-                      <span className="text-[10px] font-extrabold text-slate-700 tracking-wider uppercase">
+                    <div className="h-[92px] rounded-lg border-2 border-slate-300 bg-slate-100/90 flex flex-col items-center justify-center p-2 text-center shadow-sm dark:border-slate-600 dark:bg-slate-800/60">
+                      <span className="text-[10px] font-extrabold text-slate-700 tracking-wider uppercase dark:text-slate-200">
                         RUANG SERVER / PANEL LISTRIK
                       </span>
                       <span className="text-[8.5px] text-slate-500 mt-0.5">Petugas DPT Only</span>
@@ -874,28 +874,28 @@ export default function CbtSeatMap({
       </div>
 
       {/* ── Legend ── */}
-      <div className="border-t border-slate-200 pt-3">
+      <div className="border-t border-slate-200 pt-3 dark:border-slate-700">
         <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">
           Legenda Status &amp; Alokasi Fakultas
         </h4>
         <div className="flex flex-wrap items-center gap-2">
           {/* Status Pending (Kuning) Indicator */}
-          <div className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg border bg-yellow-50 border-amber-300 shadow-xs">
+          <div className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg border bg-yellow-50 border-amber-300 shadow-xs dark:bg-amber-500/10 dark:border-amber-500/30">
             <div
               className="w-3.5 h-3.5 rounded-sm shrink-0"
               style={{ backgroundColor: '#FEF08A', border: '1.5px solid #EAB308' }}
             />
-            <span className="font-bold text-amber-900">Belum di-ACC (Kuning)</span>
-            <span className="text-amber-700 text-[10px]">Pending Approval</span>
+            <span className="font-bold text-amber-900 dark:text-amber-300">Belum di-ACC (Kuning)</span>
+            <span className="text-amber-700 text-[10px] dark:text-amber-400">Pending Approval</span>
             {pendingSeatsCount > 0 && (
-              <span className="font-extrabold text-amber-800 bg-amber-200/80 px-1.5 py-0.2 rounded text-[10px]">
+              <span className="font-extrabold text-amber-800 bg-amber-200/80 px-1.5 py-0.2 rounded text-[10px] dark:text-amber-200 dark:bg-amber-500/25">
                 {pendingSeatsCount} kursi
               </span>
             )}
           </div>
 
-          <span className="text-slate-300 text-xs px-1">|</span>
-          <span className="text-slate-500 text-xs font-semibold">Sudah di-ACC:</span>
+          <span className="text-slate-300 text-xs px-1 dark:text-slate-500">|</span>
+          <span className="text-slate-500 text-xs font-semibold dark:text-slate-400">Sudah di-ACC:</span>
 
           {(Object.entries(FACULTY_COLORS) as [CbtFaculty, (typeof FACULTY_COLORS)[CbtFaculty]][]).map(
             ([code, color]) => {
@@ -913,10 +913,10 @@ export default function CbtSeatMap({
                     className="w-3.5 h-3.5 rounded-sm shrink-0"
                     style={{ backgroundColor: color.bg, border: `1.5px solid ${color.border}` }}
                   />
-                  <span className="font-semibold text-slate-700">{code}</span>
+                  <span className="font-semibold text-slate-700 dark:text-slate-300">{code}</span>
                   <span className="text-slate-400 text-[10px]">{color.label}</span>
                   {count > 0 && (
-                    <span className="font-bold text-slate-600">({count})</span>
+                    <span className="font-bold text-slate-600 dark:text-slate-300">({count})</span>
                   )}
                 </div>
               );

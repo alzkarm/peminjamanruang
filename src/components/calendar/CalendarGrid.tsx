@@ -99,27 +99,27 @@ export function CalendarGrid({
   };
 
   return (
-    <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:p-5">
+    <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:p-5 dark:border-slate-700 dark:bg-slate-900">
       {/* Month Navigation */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-2">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-yarsi-primary ring-1 ring-emerald-100">
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-yarsi-primary ring-1 ring-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-400 dark:ring-emerald-500/30">
             <CalendarIcon className="h-5 w-5" aria-hidden="true" />
           </span>
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-yarsi-primary">Kalender bulanan</p>
-            <h2 className="text-lg font-black tracking-tight text-slate-950">
+            <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-yarsi-primary dark:text-emerald-400">Kalender bulanan</p>
+            <h2 className="text-lg font-black tracking-tight text-slate-950 dark:text-slate-100">
               {monthNames[currentMonth]} {currentYear}
             </h2>
           </div>
         </div>
 
-        <div className="grid grid-cols-[44px_1fr_44px] items-center gap-1 rounded-xl border border-slate-200 bg-slate-100 p-1">
+        <div className="grid grid-cols-[44px_1fr_44px] items-center gap-1 rounded-xl border border-slate-200 bg-slate-100 p-1 dark:border-slate-700 dark:bg-slate-800">
           <button
             type="button"
             onClick={handlePrevMonth}
             aria-label="Bulan sebelumnya"
-            className="flex min-h-11 items-center justify-center rounded-lg text-slate-700 hover:bg-white hover:text-yarsi-primary hover:shadow-sm"
+            className="flex min-h-11 items-center justify-center rounded-lg text-slate-700 hover:bg-white hover:text-yarsi-primary hover:shadow-sm dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-emerald-400"
           >
             <ChevronLeft className="w-4 h-4" />
           </button>
@@ -129,7 +129,7 @@ export function CalendarGrid({
               setCurrentYear(todayYear);
               setCurrentMonth(todayMonth - 1);
             }}
-            className="min-h-11 rounded-lg px-3 text-sm font-bold text-yarsi-primary hover:bg-white hover:shadow-sm"
+            className="min-h-11 rounded-lg px-3 text-sm font-bold text-yarsi-primary hover:bg-white hover:shadow-sm dark:text-emerald-400 dark:hover:bg-slate-800"
           >
             Bulan Ini
           </button>
@@ -137,7 +137,7 @@ export function CalendarGrid({
             type="button"
             onClick={handleNextMonth}
             aria-label="Bulan berikutnya"
-            className="flex min-h-11 items-center justify-center rounded-lg text-slate-700 hover:bg-white hover:text-yarsi-primary hover:shadow-sm"
+            className="flex min-h-11 items-center justify-center rounded-lg text-slate-700 hover:bg-white hover:text-yarsi-primary hover:shadow-sm dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-emerald-400"
           >
             <ChevronRight className="w-4 h-4" />
           </button>
@@ -145,22 +145,22 @@ export function CalendarGrid({
       </div>
 
       {/* Week Header - Google Calendar Style */}
-      <div className="grid grid-cols-7 border-b border-slate-200 pb-2 text-center text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+      <div className="grid grid-cols-7 border-b border-slate-200 pb-2 text-center text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:border-slate-700 dark:text-slate-400">
         {['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'].map((day, index) => (
-          <div key={day} className={index > 4 ? 'text-amber-700' : ''}>
+          <div key={day} className={index > 4 ? 'text-amber-700 dark:text-amber-400' : ''}>
             {day}
           </div>
         ))}
       </div>
 
       {/* Calendar Month Grid - Google Calendar Style */}
-      <div className="grid grid-cols-7 gap-px bg-slate-200 rounded-xl overflow-hidden border border-slate-200">
+      <div className="grid grid-cols-7 gap-px bg-slate-200 rounded-xl overflow-hidden border border-slate-200 dark:bg-slate-700 dark:border-slate-700">
         {daysArray.map((day, idx) => {
           if (day === null) {
             return (
               <div
                 key={`empty-${idx}`}
-                className="min-h-16 bg-slate-50/60 p-2 sm:min-h-[110px]"
+                className="min-h-16 bg-slate-50/60 p-2 sm:min-h-[110px] dark:bg-slate-800/40"
               />
             );
           }
@@ -184,10 +184,10 @@ export function CalendarGrid({
               onClick={() => onSelectDate?.(dateStr)}
               className={`flex min-h-16 flex-col justify-between p-1.5 sm:p-2 cursor-pointer transition-colors sm:min-h-[116px] ${
                 isToday
-                  ? 'bg-emerald-50/40 hover:bg-emerald-50/70'
+                  ? 'bg-emerald-50/40 hover:bg-emerald-50/70 dark:bg-emerald-500/10 dark:hover:bg-emerald-500/20'
                   : isPast
-                  ? 'bg-white/80 hover:bg-slate-50'
-                  : 'bg-white hover:bg-slate-50'
+                  ? 'bg-white/80 hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800/80'
+                  : 'bg-white hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800/80'
               }`}
             >
               {/* Day Header with Google Calendar Circle */}
@@ -202,14 +202,14 @@ export function CalendarGrid({
                   className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${
                     isToday
                       ? 'bg-emerald-700 text-white font-bold shadow-xs'
-                      : 'text-slate-700 font-semibold hover:bg-slate-200'
+                      : 'text-slate-700 font-semibold hover:bg-slate-200 dark:text-slate-300 dark:hover:bg-slate-700'
                   }`}
                 >
                   {day}
                 </button>
 
                 {dayBookings.length > 0 && (
-                  <span className="rounded-full bg-slate-100 px-1.5 py-0.2 text-[9px] font-bold text-slate-500">
+                  <span className="rounded-full bg-slate-100 px-1.5 py-0.2 text-[9px] font-bold text-slate-500 dark:bg-slate-800 dark:text-slate-400">
                     {dayBookings.length}
                   </span>
                 )}
@@ -227,10 +227,10 @@ export function CalendarGrid({
                     }}
                     className={`block w-full truncate rounded px-1.5 py-0.5 text-left text-[10px] font-medium border-l-2 shadow-2xs transition-colors ${
                       b.status === 'APPROVED'
-                        ? 'border-emerald-600 bg-emerald-50 hover:bg-emerald-100 text-emerald-950'
+                        ? 'border-emerald-600 bg-emerald-50 hover:bg-emerald-100 text-emerald-950 dark:bg-emerald-500/10 dark:hover:bg-emerald-500/20 dark:text-emerald-200'
                         : b.status === 'RECOMMENDED' || b.status === 'RECOMMENDED_YAYASAN'
-                        ? 'border-sky-500 bg-sky-50 hover:bg-sky-100 text-sky-950'
-                        : 'border-amber-500 bg-amber-50 hover:bg-amber-100 text-amber-950'
+                        ? 'border-sky-500 bg-sky-50 hover:bg-sky-100 text-sky-950 dark:bg-sky-500/10 dark:hover:bg-sky-500/20 dark:text-sky-200'
+                        : 'border-amber-500 bg-amber-50 hover:bg-amber-100 text-amber-950 dark:bg-amber-500/10 dark:hover:bg-amber-500/20 dark:text-amber-200'
                     }`}
                   >
                     <span className="font-mono font-semibold">{b.startTime}</span>{' '}
@@ -239,7 +239,7 @@ export function CalendarGrid({
                 ))}
 
                 {dayBookings.length > 3 && (
-                  <span className="block text-left text-[9px] font-bold text-slate-500 hover:text-emerald-700 pl-1">
+                  <span className="block text-left text-[9px] font-bold text-slate-500 hover:text-emerald-700 pl-1 dark:text-slate-400 dark:hover:text-emerald-300">
                     +{dayBookings.length - 3} lainnya
                   </span>
                 )}

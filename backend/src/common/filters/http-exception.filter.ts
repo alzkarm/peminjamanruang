@@ -22,18 +22,12 @@ export class AllExceptionsFilter implements ExceptionFilter {
         ? exception.getStatus()
         : HttpStatus.INTERNAL_SERVER_ERROR;
 
+    // Pesan 5xx TIDAK boleh bocor ke client (pernah memuat path absolut + internal Prisma).
+    // Detail asli tetap dicatat di log server.
     const message =
       exception instanceof HttpException
         ? exception.getResponse()
-        : (exception as any)?.message || 'Internal server error';
-
-    const errorResponse = {
-      statusCode: status,
-      timestamp: new Date().toISOString(),
-      path: request.url,
-      method: request.method,
-      error: typeof message === 'object' ? message : { message },
-    };
+        : 'Terjadi kesalahan pada server. Silakan coba lagi atau hubungi admin.';
 
     if (status >= 500) {
       this.logger.error(
@@ -50,6 +44,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       );
     }
 
+    const errorResponse = { statusCode: status, message, path: request.url, timestamp: new Date().toISOString() };
     response.status(status).json(errorResponse);
   }
 }

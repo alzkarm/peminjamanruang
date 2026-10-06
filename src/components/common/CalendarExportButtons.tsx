@@ -26,9 +26,9 @@ export function CalendarExportButtons({
           target="_blank"
           rel="noopener noreferrer"
           title="Tambahkan ke Google Calendar"
-          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold border border-blue-200 transition-colors"
+          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold border border-blue-200 transition-colors dark:bg-blue-500/10 dark:hover:bg-blue-500/20 dark:text-blue-400 dark:border-blue-500/30"
         >
-          <Calendar className="w-3.5 h-3.5 text-blue-600" />
+          <Calendar className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
           <span>Google Calendar</span>
         </a>
 
@@ -36,9 +36,9 @@ export function CalendarExportButtons({
           type="button"
           onClick={() => downloadIcsFile(booking)}
           title="Unduh file kalender .ics (Apple Calendar / Outlook)"
-          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium border border-slate-300 transition-colors"
+          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium border border-slate-300 transition-colors dark:bg-slate-800 dark:hover:bg-slate-700/60 dark:text-slate-300 dark:border-slate-600"
         >
-          <Download className="w-3.5 h-3.5 text-slate-600" />
+          <Download className="w-3.5 h-3.5 text-slate-600 dark:text-slate-400" />
           <span>iCal (.ics)</span>
         </button>
       </div>
@@ -46,9 +46,9 @@ export function CalendarExportButtons({
   }
 
   return (
-    <div className={`rounded-xl border border-slate-200 bg-slate-50/70 p-3 space-y-2 ${className}`}>
+    <div className={`rounded-xl border border-slate-200 bg-slate-50/70 p-3 space-y-2 ${className} dark:border-slate-700 dark:bg-slate-800/60`}>
       <div className="flex items-center justify-between">
-        <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+        <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5 dark:text-slate-300">
           <Calendar className="w-4 h-4 text-yarsi-primary" />
           <span>Sinkronisasi ke Kalender Pribadi</span>
         </span>
@@ -60,9 +60,9 @@ export function CalendarExportButtons({
           href={googleCalUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-white hover:bg-blue-50 text-blue-700 font-bold text-xs border border-blue-200 shadow-2xs hover:border-blue-400 transition-all text-center"
+          className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-white hover:bg-blue-50 text-blue-700 font-bold text-xs border border-blue-200 shadow-2xs hover:border-blue-400 transition-all text-center dark:bg-slate-900 dark:hover:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/30 dark:hover:border-blue-500/40"
         >
-          <Calendar className="w-3.5 h-3.5 text-blue-600" />
+          <Calendar className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
           <span>Add to Google Calendar</span>
           <ExternalLink className="w-3 h-3 opacity-60 ml-0.5" />
         </a>
@@ -70,9 +70,9 @@ export function CalendarExportButtons({
         <button
           type="button"
           onClick={() => downloadIcsFile(booking)}
-          className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-700 font-semibold text-xs border border-slate-300 shadow-2xs transition-all text-center"
+          className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-white hover:bg-slate-100 text-slate-700 font-semibold text-xs border border-slate-300 shadow-2xs transition-all text-center dark:bg-slate-900 dark:hover:bg-slate-800 dark:text-slate-300 dark:border-slate-600"
         >
-          <Download className="w-3.5 h-3.5 text-slate-600" />
+          <Download className="w-3.5 h-3.5 text-slate-600 dark:text-slate-400" />
           <span>Download iCal (.ics)</span>
         </button>
       </div>

@@ -1002,6 +1002,7 @@ export const cbtRoomApi = {
   },
 
   async bookSeats(payload: {
+    roomId: 'A' | 'B';
     title: string;
     faculty: string;
     seatStart: number;

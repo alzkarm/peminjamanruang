@@ -7,11 +7,11 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
 import { Prisma } from '@prisma/client';
-import { CreateCbtBookingDto, QueryCbtSeatsDto, getCbtRoomCapacity } from './dto/cbt-room.dto';
+import { CreateCbtBookingDto, QueryCbtSeatsDto } from './dto/cbt-room.dto';
 
-const CBT_ROOM_CAPACITIES = {
-  A: 196,
-  B: 159,
+const CBT_ROOM_SEAT_RANGES = {
+  A: { min: 1, max: 196 },
+  B: { min: 197, max: 355 },
 } as const;
 
 @Injectable()
@@ -68,16 +68,17 @@ export class CbtRoomService {
       );
     }
 
-    // Validate seat range against room capacity
-    const roomCapacity = CBT_ROOM_CAPACITIES[dto.roomId];
-    if (dto.seatStart < 1 || dto.seatStart > roomCapacity) {
+    // Validate seat range against the physical numbering of each room
+    // (Room A 1-196, Room B 197-355 — see CbtSeatMap.tsx).
+    const { min, max } = CBT_ROOM_SEAT_RANGES[dto.roomId];
+    if (dto.seatStart < min || dto.seatStart > max) {
       throw new BadRequestException(
-        `Nomor kursi awal harus antara 1 dan ${roomCapacity} untuk Ruang CBT ${dto.roomId}.`,
+        `Nomor kursi awal harus antara ${min} dan ${max} untuk Ruang CBT ${dto.roomId}.`,
       );
     }
-    if (dto.seatEnd < 1 || dto.seatEnd > roomCapacity) {
+    if (dto.seatEnd < min || dto.seatEnd > max) {
       throw new BadRequestException(
-        `Nomor kursi akhir harus antara 1 dan ${roomCapacity} untuk Ruang CBT ${dto.roomId}.`,
+        `Nomor kursi akhir harus antara ${min} dan ${max} untuk Ruang CBT ${dto.roomId}.`,
       );
     }
 
@@ -124,8 +125,8 @@ export class CbtRoomService {
             conflictingSeats,
           });
         }
-
-        // Check remaining capacity for this room
+        // Check remaining capacity for this room (jumlah kursi fisik, bukan nomor max).
+        const roomCapacity = max - min + 1;
         const totalBooked = bookedSeats.size;
         const remaining = roomCapacity - totalBooked;
 

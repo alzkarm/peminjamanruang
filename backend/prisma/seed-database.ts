@@ -8,6 +8,7 @@ type SeedPrisma = {
   booking: any;
   approvalLog: any;
   feedback: any;
+  cbtRoom: any;
 };
 
 const floorData = [
@@ -230,7 +231,6 @@ export async function seedDatabase(prisma: SeedPrisma, passwordHash: string) {
     });
     if (!existing) await prisma.approvalLog.create({ data });
   }
-
   const existingFeedback = await prisma.feedback.findUnique({ where: { bookingId: bookings.guestLecture.id } });
   if (!existingFeedback) {
     await prisma.feedback.create({
@@ -241,4 +241,17 @@ export async function seedDatabase(prisma: SeedPrisma, passwordHash: string) {
       },
     });
   }
+
+  // Master Ruang CBT wajib ada: CbtSeatBooking.roomId FK ke CbtRoom.id.
+  // Tanpa baris ini setiap booking CBT valid gagal dengan FK violation (#11).
+  await prisma.cbtRoom.upsert({
+    where: { id: 'A' },
+    update: { name: 'Ruang CBT A', capacity: 196, isActive: true },
+    create: { id: 'A', name: 'Ruang CBT A', capacity: 196, isActive: true },
+  });
+  await prisma.cbtRoom.upsert({
+    where: { id: 'B' },
+    update: { name: 'Ruang CBT B', capacity: 159, isActive: true },
+    create: { id: 'B', name: 'Ruang CBT B', capacity: 159, isActive: true },
+  });
 }

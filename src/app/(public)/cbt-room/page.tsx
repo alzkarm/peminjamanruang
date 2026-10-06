@@ -197,6 +197,7 @@ export default function CbtRoomPage() {
     const maxSeat = Math.max(...selectedSeats);
 
     const bookingPayload = {
+      roomId: selectedRoomId === 'cbt-b' ? ('B' as const) : ('A' as const),
       title,
       faculty: faculty as CbtFaculty,
       seatStart: minSeat,
@@ -207,79 +208,8 @@ export default function CbtRoomPage() {
     };
 
     try {
-      let created: CbtSeatBooking;
-
-      try {
-        // Try backend API first
-        created = await cbtRoomApi.bookSeats(bookingPayload);
-      } catch (apiErr: any) {
-        // If API fails or backend offline, perform atomic local validation
-        const localList = getStoredLocalBookings();
-        const reqStart = new Date(bookingPayload.startTime).getTime();
-        const reqEnd = new Date(bookingPayload.endTime).getTime();
-
-        const slotBookings = localList.filter((b) => {
-          const bStart = new Date(b.startTime).getTime();
-          const bEnd = new Date(b.endTime).getTime();
-          return bStart < reqEnd && bEnd > reqStart;
-        });
-
-        // 1. Capacity check
-        const currentlyBookedSeats = new Set<number>();
-        for (const b of slotBookings) {
-          for (let s = b.seatStart; s <= b.seatEnd; s++) {
-            currentlyBookedSeats.add(s);
-          }
-        }
-
-        const remainingSeats = 200 - currentlyBookedSeats.size;
-        const requestedCount = selectedSeats.length;
-
-        if (requestedCount > remainingSeats) {
-          throw new Error(
-            `Kapasitas tidak mencukupi! Tersisa ${remainingSeats} kursi, Anda meminta ${requestedCount} kursi.`
-          );
-        }
-
-        // 2. Overlap check against selected seats
-        const overlappingSeats: number[] = [];
-        for (const s of selectedSeats) {
-          if (currentlyBookedSeats.has(s)) {
-            overlappingSeats.push(s);
-          }
-        }
-
-        if (overlappingSeats.length > 0) {
-          const sample = overlappingSeats.slice(0, 5).join(', ');
-          const extra = overlappingSeats.length > 5 ? ` dan ${overlappingSeats.length - 5} lainnya` : '';
-          throw new Error(
-            `Kursi [${sample}${extra}] sudah dipesan oleh fakultas lain pada slot waktu ini.`
-          );
-        }
-
-        // Validation passed: create locally
-        created = {
-          id: `cbt-${Date.now()}`,
-          userId: currentUser?.id || 'demo-user',
-          faculty: bookingPayload.faculty,
-          title: bookingPayload.title,
-          seatStart: bookingPayload.seatStart,
-          seatEnd: bookingPayload.seatEnd,
-          startTime: bookingPayload.startTime,
-          endTime: bookingPayload.endTime,
-          status: 'PENDING',
-          notes: bookingPayload.notes,
-          createdAt: new Date().toISOString(),
-          user: {
-            id: currentUser?.id || 'demo-user',
-            fullName: currentUser?.name || `${bookingPayload.faculty} User`,
-            unitName: currentUser?.organization || `Fakultas ${bookingPayload.faculty}`,
-          },
-        };
-
-        const updated = [...localList, created];
-        saveLocalBookings(updated);
-      }
+      const created = await cbtRoomApi.bookSeats(bookingPayload);
+      void created;
 
       setSuccessMessage(
         `Sukses! ${selectedSeats.length} kursi (${formatSeatList(selectedSeats)}) berhasil dibooking untuk ${bookingPayload.faculty}.`
@@ -289,8 +219,9 @@ export default function CbtRoomPage() {
       setCapacity(0);
       setNotes('');
       await fetchSlotBookings();
-    } catch (err: any) {
-      setError(err.message || 'Gagal memproses pemesanan kursi CBT.');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Gagal memproses pemesanan kursi CBT.';
+      setError(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -378,7 +309,7 @@ export default function CbtRoomPage() {
                     'flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-all duration-150 border',
                     selectedRoomId === room.id
                       ? 'bg-emerald-600 text-white border-emerald-700 shadow-sm shadow-emerald-600/25'
-                      : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300',
+                      : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300 dark:hover:bg-emerald-500/10 dark:hover:text-emerald-300 dark:hover:border-emerald-500/40',
                   ].join(' ')}
                 >
                   <Monitor className="w-3.5 h-3.5" />
@@ -410,7 +341,7 @@ export default function CbtRoomPage() {
               {/* Status indicator */}
               <div className="flex items-center gap-2 text-xs">
                 {isLoading ? (
-                  <span className="flex items-center gap-1.5 text-amber-600 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200">
+                  <span className="flex items-center gap-1.5 text-amber-600 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200 dark:text-amber-400 dark:bg-amber-500/10 dark:border-amber-500/30">
                     <span className="w-2 h-2 rounded-full bg-amber-500 animate-ping" />
                     Memuat data...
                   </span>
@@ -439,12 +370,12 @@ export default function CbtRoomPage() {
           {/* Bookings breakdown table */}
           <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
             <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2 mb-4">
-              <Layers className="w-4 h-4 text-emerald-600" />
+              <Layers className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               Daftar Alokasi Kursi Pada Slot Ini
             </h3>
 
             {bookings.length === 0 ? (
-              <div className="text-center py-8 text-slate-500 text-sm">
+              <div className="text-center py-8 text-slate-500 text-sm dark:text-slate-400">
                 Belum ada pemesanan kursi pada slot waktu ini. Seluruh {activeRoomConfig.totalSeats} kursi tersedia.
               </div>
             ) : (
@@ -490,7 +421,7 @@ export default function CbtRoomPage() {
                               </span>
                             ) : (
                               <span
-                                className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold border bg-yellow-100 text-amber-900 border-amber-300 shadow-xs"
+                                className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold border bg-yellow-100 text-amber-900 border-amber-300 shadow-xs dark:bg-amber-500/15 dark:text-amber-200 dark:border-amber-500/40"
                                 title="Menunggu ACC (Belum menggunakan warna fakultas)"
                               >
                                 {b.faculty} • Pending
@@ -508,20 +439,20 @@ export default function CbtRoomPage() {
                           </td>
                           <td className="px-3 py-3">
                             {isApproved ? (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300 dark:bg-emerald-500/15 dark:text-emerald-200 dark:border-emerald-500/40">
                                 ✓ Sudah di-ACC
                               </span>
                             ) : bStatus === 'REJECTED' ? (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-700 border border-red-300">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-100 text-red-700 border border-red-300 dark:bg-rose-500/15 dark:text-rose-400 dark:border-rose-500/40">
                                 ✗ Ditolak
                               </span>
                             ) : (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-yellow-100 text-amber-900 border border-amber-300 shadow-xs">
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-yellow-100 text-amber-900 border border-amber-300 shadow-xs dark:bg-amber-500/15 dark:text-amber-200 dark:border-amber-500/40">
                                 ⏳ Belum di-ACC (Kuning)
                               </span>
                             )}
                           </td>
-                          <td className="px-3 py-3 text-slate-500">
+                          <td className="px-3 py-3 text-slate-500 dark:text-slate-400">
                             {canViewDetails ? (b.user?.fullName || 'Pengguna Terdaftar') : 'Identitas Terproteksi'}
                           </td>
                           <td className="px-3 py-3 text-right">
@@ -529,7 +460,7 @@ export default function CbtRoomPage() {
                               <button
                                 type="button"
                                 onClick={() => handleUpdateStatus(b.id, 'APPROVED')}
-                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[10.5px] font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs transition active:scale-95"
+                                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[10.5px] font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs transition active:scale-95 dark:hover:bg-emerald-500"
                                 title="Setujui permohonan ini agar warna kursi berubah menjadi warna fakultas"
                               >
                                 <CheckCircle2 className="w-3 h-3" />
@@ -539,7 +470,7 @@ export default function CbtRoomPage() {
                               <button
                                 type="button"
                                 onClick={() => handleUpdateStatus(b.id, 'PENDING')}
-                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold text-slate-500 hover:text-amber-800 hover:bg-amber-50 border border-slate-200 transition"
+                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold text-slate-500 hover:text-amber-800 hover:bg-amber-50 border border-slate-200 transition dark:text-slate-400 dark:hover:text-amber-400 dark:hover:bg-amber-500/10 dark:border-slate-700"
                                 title="Kembalikan status ke Pending (Kuning)"
                               >
                                 <span>Batal ACC</span>
@@ -561,7 +492,7 @@ export default function CbtRoomPage() {
           <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 p-6 shadow-sm">
             <div className="mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
               <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-emerald-600" />
+                <ShieldCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                 Form Booking Kursi CBT
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
@@ -600,7 +531,7 @@ export default function CbtRoomPage() {
           {/* Validation Rules Card */}
           <div className="bg-gradient-to-br from-slate-50 to-emerald-50/40 dark:from-slate-900 dark:to-emerald-950/20 rounded-2xl border border-slate-200 dark:border-slate-800 p-5 space-y-3">
             <h4 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
-              <Info className="w-4 h-4 text-emerald-600" />
+              <Info className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               Ketentuan Multi-Select &amp; Kapasitas
             </h4>
             <ul className="text-xs text-slate-600 dark:text-slate-300 space-y-2">

@@ -6,10 +6,11 @@ import {
   IsOptional,
   IsBoolean,
   IsDateString,
-  ValidateNested,
   IsNumber,
   Min,
+  ValidateNested,
   ValidateIf,
+  Matches,
 } from 'class-validator';
 import { Type, Transform } from 'class-transformer';
 import { ActivityType, BookingStatus } from '@/common/types';
@@ -93,10 +94,6 @@ export class CreateBookingDto {
   catatan?: string;
 
   @IsOptional()
-  @IsString()
-  dokumenUrl?: string;
-
-  @IsOptional()
   @IsBoolean()
   @Type(() => Boolean)
   isLeaderApproved?: boolean;
@@ -157,6 +154,27 @@ export class UpdateBatchStatusDto {
   catatan?: string;
 }
 
+export class RescheduleBookingDto {
+  @IsNotEmpty({ message: 'Tanggal baru wajib diisi (YYYY-MM-DD).' })
+  @Matches(/^\d{4}-\d{2}-\d{2}$/, { message: 'Format tanggal baru harus YYYY-MM-DD.' })
+  newDate: string;
+
+  @IsNotEmpty({ message: 'Jam mulai baru wajib diisi (HH:mm).' })
+  @Matches(/^([01]\d|2[0-3]):[0-5]\d$/, { message: 'Format jam mulai baru harus HH:mm.' })
+  newStartTime: string;
+
+  @IsNotEmpty({ message: 'Jam selesai baru wajib diisi (HH:mm).' })
+  @Matches(/^([01]\d|2[0-3]):[0-5]\d$/, { message: 'Format jam selesai baru harus HH:mm.' })
+  newEndTime: string;
+
+  @IsNotEmpty({ message: 'Alasan pindah jadwal wajib diisi.' })
+  @IsString()
+  reason: string;
+
+  @IsOptional()
+  @IsString()
+  newRoomId?: string;
+}
 export class QueryBookingDto {
   @IsOptional()
   @IsEnum(BookingStatus)

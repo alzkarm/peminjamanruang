@@ -271,7 +271,7 @@ function LoginFormContent() {
   };
 
   return (
-    <div className="relative flex min-h-[calc(100vh-140px)] items-center justify-center bg-[#f5f8f6] p-4 py-12">
+    <div className="relative flex min-h-[calc(100vh-140px)] items-center justify-center bg-[#f5f8f6] p-4 py-12 dark:bg-[#0b1120]">
       {/* Toast Alert Notification */}
       {toast && (
         <div
@@ -279,14 +279,14 @@ function LoginFormContent() {
           aria-live="assertive"
           className={`fixed top-6 right-6 z-50 flex max-w-md items-start gap-3 rounded-2xl border p-4 shadow-xl backdrop-blur-md transition-all duration-300 animate-slide-in ${
             toast.type === 'error'
-              ? 'border-rose-300 bg-rose-50/95 text-rose-950'
-              : 'border-emerald-300 bg-emerald-50/95 text-emerald-950'
+              ? 'border-rose-300 bg-rose-50/95 text-rose-950 dark:border-rose-500/40 dark:bg-rose-500/10 dark:text-rose-200'
+              : 'border-emerald-300 bg-emerald-50/95 text-emerald-950 dark:border-emerald-500/40 dark:bg-emerald-500/10 dark:text-emerald-200'
           }`}
         >
           {toast.type === 'error' ? (
-            <AlertCircle className="h-5 w-5 text-rose-600 shrink-0 mt-0.5" />
+            <AlertCircle className="h-5 w-5 text-rose-600 shrink-0 mt-0.5 dark:text-rose-400" />
           ) : (
-            <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
+            <CheckCircle2 className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5 dark:text-emerald-400" />
           )}
           <div className="flex-1 pr-2">
             <h4 className="text-xs font-bold leading-tight">{toast.title}</h4>
@@ -294,7 +294,7 @@ function LoginFormContent() {
           </div>
           <button
             onClick={() => setToast(null)}
-            className="text-slate-400 hover:text-slate-700 transition-colors"
+            className="text-slate-400 hover:text-slate-700 transition-colors dark:hover:text-slate-200"
             aria-label="Tutup notifikasi"
           >
             <X className="h-4 w-4" />
@@ -302,7 +302,7 @@ function LoginFormContent() {
         </div>
       )}
 
-      <div className="grid w-full max-w-4xl grid-cols-1 overflow-hidden rounded-[20px_4px_20px_20px] border border-slate-200/80 bg-white shadow-2xl lg:grid-cols-12">
+      <div className="grid w-full max-w-4xl grid-cols-1 overflow-hidden rounded-[20px_4px_20px_20px] border border-slate-200/80 bg-white shadow-2xl lg:grid-cols-12 dark:bg-slate-900 dark:border-slate-800">
         {/* Left Col: YARSI Branding & LDAP Security Information */}
         <div className="relative flex flex-col justify-between overflow-hidden bg-[#053f31] p-8 text-white sm:p-10 lg:col-span-5">
           <div className="hero-architectural-grid absolute inset-0 opacity-35" aria-hidden="true" />
@@ -378,13 +378,13 @@ function LoginFormContent() {
         <div className="lg:col-span-7 p-8 sm:p-12 flex flex-col justify-between">
           <div className="space-y-6">
             <div className="space-y-1">
-              <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-yarsi-primary">
+              <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-yarsi-primary dark:text-emerald-400">
                 Autentikasi Single Sign-On (SSO)
               </span>
-              <h2 className="text-2xl font-black text-slate-900 mt-2">
+              <h2 className="text-2xl font-black text-slate-900 mt-2 dark:text-slate-100">
                 Masuk ke Akun Anda
               </h2>
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-slate-500 dark:text-slate-400">
                 Gunakan kredensial resmi civitas akademika Universitas YARSI.
               </p>
             </div>
@@ -394,14 +394,14 @@ function LoginFormContent() {
               <div
                 className={`p-3.5 rounded-2xl border text-xs flex items-start gap-2.5 transition-all ${
                   errorMessage.includes('gangguan')
-                    ? 'bg-amber-50 border-amber-300 text-amber-900'
-                    : 'bg-rose-50 border-rose-300 text-rose-900'
+                    ? 'bg-amber-50 border-amber-300 text-amber-900 dark:bg-amber-500/10 dark:border-amber-500/40 dark:text-amber-200'
+                    : 'bg-rose-50 border-rose-300 text-rose-900 dark:bg-rose-500/10 dark:border-rose-500/40 dark:text-rose-200'
                 }`}
               >
                 {errorMessage.includes('gangguan') ? (
-                  <ServerOff className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                  <ServerOff className="w-4 h-4 text-amber-600 shrink-0 mt-0.5 dark:text-amber-400" />
                 ) : (
-                  <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                  <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5 dark:text-rose-400" />
                 )}
                 <div>
                   <p className="font-bold">
@@ -419,7 +419,7 @@ function LoginFormContent() {
               <div>
                 <label
                   htmlFor="username"
-                  className="block text-xs font-bold text-slate-700 mb-1"
+                  className="block text-xs font-bold text-slate-700 mb-1 dark:text-slate-300"
                 >
                   Username / NPM <span className="text-rose-500">*</span>
                 </label>
@@ -433,7 +433,7 @@ function LoginFormContent() {
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     placeholder="Masukkan Username atau NPM / NIK (Contoh: 1402022001)"
-                    className="w-full pl-10 pr-4 py-2.5 text-xs sm:text-sm font-medium bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yarsi-primary text-slate-800 placeholder:text-slate-400"
+                    className="w-full pl-10 pr-4 py-2.5 text-xs sm:text-sm font-medium bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yarsi-primary text-slate-800 placeholder:text-slate-400 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100"
                   />
                 </div>
                 <p className="text-[10px] text-slate-400 mt-1">
@@ -446,7 +446,7 @@ function LoginFormContent() {
                 <div className="flex items-center justify-between mb-1">
                   <label
                     htmlFor="password"
-                    className="block text-xs font-bold text-slate-700"
+                    className="block text-xs font-bold text-slate-700 dark:text-slate-300"
                   >
                     Password <span className="text-rose-500">*</span>
                   </label>
@@ -458,7 +458,7 @@ function LoginFormContent() {
                         'Untuk reset kata sandi akun LDAP YARSI, silakan hubungi Helpdesk PTI YARSI atau email pti@yarsi.ac.id.',
                       );
                     }}
-                    className="text-[11px] text-yarsi-primary font-bold hover:underline"
+                    className="text-[11px] text-yarsi-primary font-bold hover:underline dark:text-emerald-400"
                   >
                     Lupa Password?
                   </a>
@@ -473,7 +473,7 @@ function LoginFormContent() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Masukkan Password SSO"
-                    className="w-full pl-10 pr-10 py-2.5 text-xs sm:text-sm font-medium bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yarsi-primary text-slate-800 placeholder:text-slate-400"
+                    className="w-full pl-10 pr-10 py-2.5 text-xs sm:text-sm font-medium bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-yarsi-primary text-slate-800 placeholder:text-slate-400 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100"
                   />
                   <button
                     type="button"
@@ -488,7 +488,7 @@ function LoginFormContent() {
 
               {/* Ingat sesi */}
               <div className="flex items-center justify-between pt-1">
-                <label className="flex items-center gap-2 text-xs text-slate-600 cursor-pointer">
+                <label className="flex items-center gap-2 text-xs text-slate-600 cursor-pointer dark:text-slate-300">
                   <input
                     type="checkbox"
                     defaultChecked
@@ -502,7 +502,7 @@ function LoginFormContent() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-3 px-4 rounded-xl font-bold text-sm text-white bg-yarsi-primary hover:bg-yarsi-dark shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                className="w-full py-3 px-4 rounded-xl font-bold text-sm text-white bg-yarsi-primary hover:bg-yarsi-dark shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 dark:bg-emerald-600 dark:hover:bg-emerald-500"
               >
                 {isLoading ? (
                   <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" />
@@ -516,12 +516,12 @@ function LoginFormContent() {
             </form>
 
             {/* Quick Demo Login Per Role */}
-            <div className="pt-5 border-t border-slate-200">
+            <div className="pt-5 border-t border-slate-200 dark:border-slate-700">
               <div className="flex items-center justify-between mb-2">
-                <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                <p className="text-[11px] font-bold text-slate-500 uppercase tracking-wider dark:text-slate-400">
                   ⚡ Mode Cepat / Akun Demo:
                 </p>
-                <span className="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-semibold">
+                <span className="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-semibold dark:bg-amber-500/15 dark:text-amber-200">
                   Klik untuk uji coba login
                 </span>
               </div>
@@ -529,89 +529,89 @@ function LoginFormContent() {
                 <button
                   type="button"
                   onClick={() => handleQuickDemo('1402022001', 'password123')}
-                  className="flex flex-col items-start p-2.5 rounded-xl border border-teal-200 bg-teal-50/60 hover:bg-teal-100/70 transition-all text-left group"
+                  className="flex flex-col items-start p-2.5 rounded-xl border border-teal-200 bg-teal-50/60 hover:bg-teal-100/70 transition-all text-left group dark:border-teal-500/30 dark:bg-teal-500/10 dark:hover:bg-teal-500/15"
                 >
-                  <span className="text-[11px] font-bold text-teal-900 group-hover:text-teal-950">
+                  <span className="text-[11px] font-bold text-teal-900 group-hover:text-teal-950 dark:text-teal-200 dark:group-hover:text-teal-100">
                     🎓 Mahasiswa
                   </span>
-                  <span className="text-[10px] text-teal-700">1402022001</span>
+                  <span className="text-[10px] text-teal-700 dark:text-teal-400">1402022001</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => handleQuickDemo('0314058201', 'password123')}
-                  className="flex flex-col items-start p-2.5 rounded-xl border border-blue-200 bg-blue-50/60 hover:bg-blue-100/70 transition-all text-left group"
+                  className="flex flex-col items-start p-2.5 rounded-xl border border-blue-200 bg-blue-50/60 hover:bg-blue-100/70 transition-all text-left group dark:border-blue-500/30 dark:bg-blue-500/10 dark:hover:bg-blue-500/15"
                 >
-                  <span className="text-[11px] font-bold text-blue-900 group-hover:text-blue-950">
+                  <span className="text-[11px] font-bold text-blue-900 group-hover:text-blue-950 dark:text-blue-200 dark:group-hover:text-blue-100">
                     👨‍🏫 Dosen
                   </span>
-                  <span className="text-[10px] text-blue-700">0314058201</span>
+                  <span className="text-[10px] text-blue-700 dark:text-blue-400">0314058201</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => handleQuickDemo('19880210201402', 'password123')}
-                  className="flex flex-col items-start p-2.5 rounded-xl border border-purple-200 bg-purple-50/60 hover:bg-purple-100/70 transition-all text-left group"
+                  className="flex flex-col items-start p-2.5 rounded-xl border border-purple-200 bg-purple-50/60 hover:bg-purple-100/70 transition-all text-left group dark:border-purple-500/30 dark:bg-purple-500/10 dark:hover:bg-purple-500/15"
                 >
-                  <span className="text-[11px] font-bold text-purple-900 group-hover:text-purple-950">
+                  <span className="text-[11px] font-bold text-purple-900 group-hover:text-purple-950 dark:text-purple-200 dark:group-hover:text-purple-100">
                     💼 Tendik
                   </span>
-                  <span className="text-[10px] text-purple-700">19880210201402</span>
+                  <span className="text-[10px] text-purple-700 dark:text-purple-400">19880210201402</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => handleQuickDemo('admin', 'password123')}
-                  className="flex flex-col items-start p-2.5 rounded-xl border border-indigo-200 bg-indigo-50/60 hover:bg-indigo-100/70 transition-all text-left group"
+                  className="flex flex-col items-start p-2.5 rounded-xl border border-indigo-200 bg-indigo-50/60 hover:bg-indigo-100/70 transition-all text-left group dark:border-indigo-500/30 dark:bg-indigo-500/10 dark:hover:bg-indigo-500/15"
                 >
-                  <span className="text-[11px] font-bold text-indigo-900 group-hover:text-indigo-950">
+                  <span className="text-[11px] font-bold text-indigo-900 group-hover:text-indigo-950 dark:text-indigo-200 dark:group-hover:text-indigo-100">
                     🛠️ Admin
                   </span>
-                  <span className="text-[10px] text-indigo-700">admin</span>
+                  <span className="text-[10px] text-indigo-700 dark:text-indigo-400">admin</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => handleQuickDemo('superadmin', 'password123')}
-                  className="flex flex-col items-start p-2.5 rounded-xl border border-rose-200 bg-rose-50/60 hover:bg-rose-100/70 transition-all text-left group"
+                  className="flex flex-col items-start p-2.5 rounded-xl border border-rose-200 bg-rose-50/60 hover:bg-rose-100/70 transition-all text-left group dark:border-rose-500/30 dark:bg-rose-500/10 dark:hover:bg-rose-500/15"
                 >
-                  <span className="text-[11px] font-bold text-rose-900 group-hover:text-rose-950">
+                  <span className="text-[11px] font-bold text-rose-900 group-hover:text-rose-950 dark:text-rose-200 dark:group-hover:text-rose-100">
                     ⚡ Superadmin
                   </span>
-                  <span className="text-[10px] text-rose-700">superadmin</span>
+                  <span className="text-[10px] text-rose-700 dark:text-rose-400">superadmin</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => handleQuickDemo('lpf.admin', 'password123')}
-                  className="flex flex-col items-start p-2.5 rounded-xl border border-emerald-200 bg-emerald-50/60 hover:bg-emerald-100/70 transition-all text-left group"
+                  className="flex flex-col items-start p-2.5 rounded-xl border border-emerald-200 bg-emerald-50/60 hover:bg-emerald-100/70 transition-all text-left group dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:hover:bg-emerald-500/15"
                 >
-                  <span className="text-[11px] font-bold text-emerald-900 group-hover:text-emerald-950">
+                  <span className="text-[11px] font-bold text-emerald-900 group-hover:text-emerald-950 dark:text-emerald-200 dark:group-hover:text-emerald-100">
                     🛡️ Admin LPF
                   </span>
-                  <span className="text-[10px] text-emerald-700">lpf.admin</span>
+                  <span className="text-[10px] text-emerald-700 dark:text-emerald-300">lpf.admin</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => handleQuickDemo('yayasan.admin', 'password123')}
-                  className="flex flex-col items-start p-2.5 rounded-xl border border-amber-200 bg-amber-50/60 hover:bg-amber-100/70 transition-all text-left group col-span-2 sm:col-span-1"
+                  className="flex flex-col items-start p-2.5 rounded-xl border border-amber-200 bg-amber-50/60 hover:bg-amber-100/70 transition-all text-left group col-span-2 sm:col-span-1 dark:border-amber-500/30 dark:bg-amber-500/10 dark:hover:bg-amber-500/15"
                 >
-                  <span className="text-[11px] font-bold text-amber-900 group-hover:text-amber-950">
+                  <span className="text-[11px] font-bold text-amber-900 group-hover:text-amber-950 dark:text-amber-200 dark:group-hover:text-amber-100">
                     🏛️ Yayasan
                   </span>
-                  <span className="text-[10px] text-amber-700">yayasan.admin</span>
+                  <span className="text-[10px] text-amber-700 dark:text-amber-400">yayasan.admin</span>
                 </button>
               </div>
             </div>
           </div>
 
-          <div className="pt-6 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
+          <div className="pt-6 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400 dark:border-slate-800">
             <span className="flex items-center gap-1">
-              <ShieldCheck className="w-4 h-4 text-emerald-600" />
+              <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               <span>Akses akun kampus</span>
             </span>
-            <Link href="/" className="text-yarsi-primary font-bold hover:underline">
+            <Link href="/" className="text-yarsi-primary font-bold hover:underline dark:text-emerald-400">
               Kembali ke Beranda
             </Link>
           </div>
@@ -625,7 +625,7 @@ export default function LoginPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-[calc(100vh-140px)] flex items-center justify-center text-slate-500 text-sm">
+        <div className="min-h-[calc(100vh-140px)] flex items-center justify-center text-slate-500 text-sm dark:text-slate-400">
           Memuat formulir SSO LDAP...
         </div>
       }

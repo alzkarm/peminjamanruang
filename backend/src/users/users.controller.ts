@@ -7,9 +7,14 @@ import {
   Param,
   HttpCode,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { InviteUserDto } from './dto/invite-user.dto';
+import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
+import { RolesGuard } from '@/common/guards/roles.guard';
+import { Roles } from '@/common/decorators/roles.decorator';
+import { Role } from '@/common/types';
 
 @Controller('users')
 export class UsersController {
@@ -27,6 +32,8 @@ export class UsersController {
   }
 
   @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.SUPERADMIN, Role.ADMIN_UMUM)
   async remove(@Param('id') id: string) {
     return this.usersService.remove(id);
   }
