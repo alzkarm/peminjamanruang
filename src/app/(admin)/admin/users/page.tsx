@@ -151,8 +151,8 @@ export default function AdminUsersPage() {
         );
       case 'admin_umum':
         return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-indigo-100 dark:bg-indigo-500/20 text-indigo-900 dark:text-indigo-200 border border-indigo-300 dark:border-indigo-500/40">
-            Admin Umum
+          <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-100 dark:bg-emerald-500/20 text-emerald-900 dark:text-emerald-200 border border-emerald-300 dark:border-emerald-500/40">
+            Admin LPF
           </span>
         );
       case 'admin_yayasan':
@@ -295,7 +295,6 @@ export default function AdminUsersPage() {
           >
             <option value="ALL">Semua Peran</option>
             <option value="superadmin">Superadmin</option>
-            <option value="admin_umum">Admin Umum</option>
             <option value="admin_lpf">Admin LPF</option>
             <option value="admin_yayasan">Yayasan</option>
             <option value="dosen">Dosen</option>
@@ -520,10 +519,9 @@ export default function AdminUsersPage() {
                   <option value="mahasiswa">Mahasiswa (Peminjam Reguler)</option>
                   <option value="dosen">Dosen (Peminjam &amp; Pengampu)</option>
                   <option value="tendik">Tenaga Kependidikan (Tendik)</option>
-                  <option value="admin_umum">Admin Umum (Verifikator Ruangan Reguler)</option>
-                  <option value="admin_lpf">Admin LPF (Verifikator Ruangan Yayasan)</option>
+                  <option value="admin_lpf">Admin LPF (Verifikator Permohonan)</option>
                   <option value="admin_yayasan">Pengurus Yayasan (Approval Yayasan)</option>
-                  <option value="superadmin">Superadmin (Full Control &amp; Approval Akhir)</option>
+                  <option value="superadmin">Superadmin (Approval Akhir &amp; Full Control)</option>
                 </select>
               </div>
 

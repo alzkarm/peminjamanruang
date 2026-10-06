@@ -112,18 +112,27 @@ export default function UserDashboardPage() {
       .catch(() => undefined);
   }, [fetchBookings, fetchRooms]);
 
-  // Filter user's bookings (or all if admin)
-  const userBookings = bookings.filter((b) => {
-    if (!currentUser) return false;
-    if (currentUser.role === 'admin_lpf' || currentUser.role === 'admin_yayasan') {
-      return true;
-    }
-    return b.userId === currentUser.id || b.userNimNidn === currentUser.identifier || (currentUser?.email && b.userEmail === currentUser.email);
-  });
+  // Filter strictly only the current user's personal bookings (never leak other users' history)
+  const userBookings = useMemo(() => {
+    if (!currentUser || currentUser.role === 'guest') return [];
+    return bookings.filter((b) => {
+      const matchId = Boolean(b.userId && currentUser.id && b.userId === currentUser.id);
+      const matchNim = Boolean(b.userNimNidn && currentUser.identifier && b.userNimNidn === currentUser.identifier);
+      const matchEmail = Boolean(currentUser.email && b.userEmail && b.userEmail.toLowerCase() === currentUser.email.toLowerCase());
+      return matchId || matchNim || matchEmail;
+    });
+  }, [bookings, currentUser]);
 
   const filteredBookings = userBookings.filter((b) => {
     if (activeTab === 'all') return true;
-    if (activeTab === 'pending') return b.status === 'PENDING_LPF' || b.status === 'RECOMMENDED_YAYASAN';
+    if (activeTab === 'pending')
+      return (
+        b.status === 'PENDING_LPF' ||
+        b.status === 'PENDING' ||
+        b.status === 'VERIFIED' ||
+        b.status === 'RECOMMENDED' ||
+        b.status === 'RECOMMENDED_YAYASAN'
+      );
     if (activeTab === 'approved') return b.status === 'APPROVED';
     if (activeTab === 'returned') return b.status === 'RETURNED';
     if (activeTab === 'completed') return b.status === 'COMPLETED';
@@ -177,7 +186,14 @@ export default function UserDashboardPage() {
 
   const approvedCount = countUniqueBookingApplications(userBookings.filter((b) => b.status === 'APPROVED'));
   const pendingCount = countUniqueBookingApplications(
-    userBookings.filter((b) => b.status === 'PENDING_LPF' || b.status === 'RECOMMENDED_YAYASAN')
+    userBookings.filter(
+      (b) =>
+        b.status === 'PENDING_LPF' ||
+        b.status === 'PENDING' ||
+        b.status === 'VERIFIED' ||
+        b.status === 'RECOMMENDED' ||
+        b.status === 'RECOMMENDED_YAYASAN'
+    )
   );
   const returnedCount = countUniqueBookingApplications(userBookings.filter((b) => b.status === 'RETURNED'));
   const completedCount = countUniqueBookingApplications(userBookings.filter((b) => b.status === 'COMPLETED'));

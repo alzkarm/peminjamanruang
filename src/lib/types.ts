@@ -2,7 +2,6 @@ export type Role =
   | 'mahasiswa'
   | 'dosen'
   | 'tendik'
-  | 'admin_umum'
   | 'admin_lpf'
   | 'admin_yayasan'
   | 'superadmin'

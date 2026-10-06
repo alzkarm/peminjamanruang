@@ -117,7 +117,7 @@ export const useAppStore = create<AppState>()(
     (set, get) => ({
       currentUser: GUEST_USER,
       rooms: INITIAL_ROOMS,
-      bookings: INITIAL_BOOKINGS,
+      bookings: [],
       academicBlocks: INITIAL_ACADEMIC_BLOCKS,
       feedbacks: INITIAL_FEEDBACKS,
       hasHydrated: false,
@@ -144,7 +144,7 @@ export const useAppStore = create<AppState>()(
             bookings:
               bookingsData.status === 'fulfilled'
                 ? bookingsData.value
-                : (get().bookings?.length ? get().bookings : []),
+                : [],
             academicBlocks:
               academicData.status === 'fulfilled'
                 ? academicData.value
@@ -194,7 +194,7 @@ export const useAppStore = create<AppState>()(
       },
 
       login: async (username, password, roleCategory) => {
-        set({ isLoading: true, error: null });
+        set({ isLoading: true, error: null, bookings: [] });
 
         // Check local demo account first if matching
         const cleanUser = username.trim().toLowerCase();
@@ -215,7 +215,7 @@ export const useAppStore = create<AppState>()(
         } catch (err: any) {
           // If backend API/LDAP is unavailable or returned error, fallback to local demo account
           if (demoUser) {
-            set({ currentUser: demoUser, isLoading: false });
+            set({ currentUser: demoUser, isLoading: false, bookings: [] });
             return demoUser;
           }
 
@@ -231,6 +231,7 @@ export const useAppStore = create<AppState>()(
         removeAuthToken();
         set({
           currentUser: GUEST_USER,
+          bookings: [],
         });
       },
 
@@ -338,21 +339,19 @@ export const useAppStore = create<AppState>()(
         set({ isSyncing: true });
         const booking = get().bookings.find((b) => b.id === bookingId);
         const currentUserRole = get().currentUser?.role;
-        let targetStatus: 'VERIFIED' | 'RECOMMENDED' | 'APPROVED' = 'APPROVED';
-        let frontendTargetStatus: BookingStatus = 'APPROVED';
 
-        if (booking?.requiresYayasanApproval) {
-          targetStatus = 'RECOMMENDED';
-          frontendTargetStatus = 'RECOMMENDED_YAYASAN';
+        // Alur Terpadu SIPERU:
+        // Admin LPF: memverifikasi & meneruskan -> status VERIFIED
+        // Superadmin: menerima & menyetujui final -> status APPROVED
+        let targetStatus: 'VERIFIED' | 'APPROVED' = 'VERIFIED';
+        let frontendTargetStatus: BookingStatus = 'VERIFIED';
+
+        if (currentUserRole === 'superadmin') {
+          targetStatus = 'APPROVED';
+          frontendTargetStatus = 'APPROVED';
         } else {
-          // Ruangan Umum: Admin Umum memverifikasi -> VERIFIED; Superadmin menyetujui -> APPROVED
-          if (currentUserRole === 'admin_umum') {
-            targetStatus = 'VERIFIED';
-            frontendTargetStatus = 'VERIFIED';
-          } else {
-            targetStatus = 'APPROVED';
-            frontendTargetStatus = 'APPROVED';
-          }
+          targetStatus = 'VERIFIED';
+          frontendTargetStatus = 'VERIFIED';
         }
 
         let relatedIds = [bookingId];
@@ -385,14 +384,18 @@ export const useAppStore = create<AppState>()(
           }
 
           const now = new Date().toLocaleString('id-ID');
-          const approver = approverName || 'Bambang Sudibyo (LPF)';
+          const approver = approverName || (currentUserRole === 'superadmin' ? 'Superadmin YARSI' : 'Bambang Sudibyo (LPF)');
+          const defaultNote = currentUserRole === 'superadmin'
+            ? 'Disetujui secara resmi oleh Superadmin'
+            : 'Diverifikasi oleh Admin LPF (Menunggu Persetujuan Superadmin)';
+
           set((state) => ({
             bookings: state.bookings.map((b) =>
               relatedIds.includes(b.id)
                 ? {
                     ...b,
                     status: frontendTargetStatus as BookingStatus,
-                    lpfNotes: notes || (booking?.requiresYayasanApproval ? 'Diverifikasi LPF & Direkomendasikan ke Yayasan' : 'Disetujui oleh LPF'),
+                    lpfNotes: notes || defaultNote,
                     lpfApprovedAt: now,
                     lpfApprovedBy: approver,
                   }
@@ -403,11 +406,10 @@ export const useAppStore = create<AppState>()(
         } catch (err: unknown) {
           set({
             isSyncing: false,
-            error: err instanceof Error ? err.message : 'Gagal memproses persetujuan LPF.',
+            error: err instanceof Error ? err.message : 'Gagal memproses verifikasi / persetujuan.',
           });
           throw err;
         }
-
       },
 
       approveBookingYayasan: async (bookingId, notes, approverName, applyToRecurringGroup = true) => {
@@ -722,8 +724,11 @@ export const useAppStore = create<AppState>()(
       },
     }),
     {
-      name: 'siperu_yarsi_app_storage_v4',
+      name: 'siperu_yarsi_app_storage_v5',
       storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({
+        currentUser: state.currentUser,
+      }),
       onRehydrateStorage: () => (state) => {
         if (state) {
           state.hasHydrated = true;

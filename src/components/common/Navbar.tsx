@@ -92,20 +92,19 @@ export function Navbar() {
   const isGuest = !currentUser || currentUser.role === 'guest';
   const role = currentUser?.role;
   const isSuperadmin = role === 'superadmin';
-  const isAdminUmum = role === 'admin_umum' || (role as string) === 'admin';
   const isAdminLPF = role === 'admin_lpf';
   const isYayasan = role === 'admin_yayasan';
-  const isAdminUser = isSuperadmin || isAdminUmum || isAdminLPF || isYayasan;
+  const isAdminUser = isSuperadmin || isAdminLPF || isYayasan;
 
   const isHome = pathname === '/';
   const isOnAdminPath = pathname.startsWith('/admin');
 
   // Compute pending counts (grouped by application so recurring series count as 1)
-  const pendingGeneralCount = countUniqueBookingApplications(
-    bookings.filter((b) => (b.status === 'PENDING_LPF' || b.status === 'VERIFIED') && !b.requiresYayasanApproval)
-  );
   const pendingLPFCount = countUniqueBookingApplications(
-    bookings.filter((b) => b.status === 'PENDING_LPF' && b.requiresYayasanApproval)
+    bookings.filter((b) => b.status === 'PENDING_LPF' || b.status === 'PENDING')
+  );
+  const pendingSuperadminCount = countUniqueBookingApplications(
+    bookings.filter((b) => b.status === 'VERIFIED')
   );
   const pendingYayasanCount = countUniqueBookingApplications(
     bookings.filter((b) => b.status === 'RECOMMENDED_YAYASAN')
@@ -115,7 +114,7 @@ export function Navbar() {
     ? pendingYayasanCount
     : isAdminLPF
     ? pendingLPFCount
-    : pendingGeneralCount;
+    : pendingSuperadminCount;
 
   const adminTargetUrl = isYayasan ? '/admin/approvals/yayasan' : '/admin/approvals';
 
@@ -158,8 +157,6 @@ export function Navbar() {
     switch (userRole) {
       case 'superadmin':
         return <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-purple-100 text-purple-900 border border-purple-300 dark:bg-purple-500/20 dark:text-purple-200 dark:border-purple-500/40">Superadmin</span>;
-      case 'admin_umum':
-        return <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-indigo-100 text-indigo-900 border border-indigo-300 dark:bg-indigo-500/20 dark:text-indigo-200 dark:border-indigo-500/40">Admin Umum</span>;
       case 'admin_yayasan':
         return <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-900 border border-amber-300 dark:bg-amber-500/20 dark:text-amber-200 dark:border-amber-500/40">Yayasan YARSI</span>;
       case 'admin_lpf':
@@ -177,7 +174,6 @@ export function Navbar() {
 
   const getRoleTitle = () => {
     if (isSuperadmin) return 'Superadmin';
-    if (isAdminUmum) return 'Admin Umum';
     if (isAdminLPF) return 'Admin LPF';
     if (isYayasan) return 'Pengurus Yayasan';
     return 'Pengelola';
@@ -347,7 +343,7 @@ export function Navbar() {
                           )}
                         </Link>
 
-                        {(isSuperadmin || isAdminUmum || isAdminLPF) && (
+                        {(isSuperadmin || isAdminLPF) && (
                           <Link
                             href="/admin/academic-bulk"
                             onClick={() => setAdminDropdownOpen(false)}
@@ -570,7 +566,7 @@ export function Navbar() {
                               )}
                             </Link>
 
-                            {(isSuperadmin || isAdminUmum || isAdminLPF) && (
+                            {(isSuperadmin || isAdminLPF) && (
                               <Link
                                 href="/admin/academic-bulk"
                                 onClick={() => setUserDropdownOpen(false)}
@@ -729,7 +725,7 @@ export function Navbar() {
                     <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
                   </Link>
 
-                  {(isSuperadmin || isAdminUmum || isAdminLPF) && (
+                  {(isSuperadmin || isAdminLPF) && (
                     <Link
                       href="/admin/academic-bulk"
                       onClick={() => setMobileMenuOpen(false)}

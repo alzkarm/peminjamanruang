@@ -155,14 +155,14 @@ export function getStatusBadgeConfig(status: BookingStatus) {
     case "PENDING_LPF":
     case "PENDING" as any:
       return {
-        label: "Menunggu Verifikasi",
+        label: "Menunggu Verifikasi LPF",
         bg: "bg-amber-50 text-amber-800 border-amber-300 ring-amber-500/20",
         dot: "bg-amber-500",
         iconName: "Clock",
       };
     case "VERIFIED":
       return {
-        label: "Terverifikasi (Admin)",
+        label: "Diverifikasi LPF (Menunggu Superadmin)",
         bg: "bg-indigo-50 text-indigo-800 border-indigo-300 ring-indigo-500/20",
         dot: "bg-indigo-500",
         iconName: "ShieldCheck",
@@ -177,7 +177,7 @@ export function getStatusBadgeConfig(status: BookingStatus) {
       };
     case "APPROVED":
       return {
-        label: "Disetujui",
+        label: "Disetujui Resmi (Superadmin)",
         bg: "bg-emerald-50 text-emerald-800 border-emerald-300 ring-emerald-500/20",
         dot: "bg-emerald-500",
         iconName: "CheckCircle2",

@@ -144,7 +144,7 @@ export class BookingsController {
 
   @Post('detect-no-show')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.SUPERADMIN, Role.ADMIN_UNIV, Role.ADMIN_LPF, Role.ADMIN_UMUM)
+  @Roles(Role.SUPERADMIN, Role.ADMIN_UNIV, Role.ADMIN_LPF)
   async detectNoShow() {
     return this.bookingsService.detectNoShowBookings();
   }
@@ -199,6 +199,7 @@ export class BookingsController {
 
   @Patch('batch-status')
   @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.SUPERADMIN, Role.ADMIN_UNIV, Role.ADMIN_LPF, Role.ADMIN_YAYASAN, Role.YAYASAN)
   async updateBatchStatus(
     @CurrentUser() currentUser: { id: string; role: Role; fullName: string },
     @Body() dto: UpdateBatchStatusDto,
@@ -208,6 +209,7 @@ export class BookingsController {
 
   @Patch(':id/status')
   @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.SUPERADMIN, Role.ADMIN_UNIV, Role.ADMIN_LPF, Role.ADMIN_YAYASAN, Role.YAYASAN)
   async updateStatus(
     @Param('id') id: string,
     @CurrentUser() currentUser: { id: string; role: Role; fullName: string },

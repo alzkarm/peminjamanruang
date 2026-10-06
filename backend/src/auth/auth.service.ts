@@ -355,8 +355,7 @@ export class AuthService {
 
   private mapUserRole(role: Role, unitName: string): string {
     if ((role as any) === 'SUPERADMIN' || role === Role.SUPERADMIN) return 'superadmin';
-    if ((role as any) === 'ADMIN_UMUM' || role === Role.ADMIN_UMUM) return 'admin_umum';
-    if ((role as any) === 'ADMIN_LPF' || role === Role.ADMIN_LPF || role === Role.ADMIN_UNIV) return 'admin_lpf';
+    if ((role as any) === 'ADMIN_LPF' || role === Role.ADMIN_LPF || role === Role.ADMIN_UNIV || (role as any) === 'ADMIN_UMUM' || role === Role.ADMIN_UMUM) return 'admin_lpf';
     if ((role as any) === 'YAYASAN' || role === Role.YAYASAN || role === Role.ADMIN_YAYASAN) return 'admin_yayasan';
     const u = (unitName || '').toLowerCase();
     if (u.includes('dosen')) return 'dosen';

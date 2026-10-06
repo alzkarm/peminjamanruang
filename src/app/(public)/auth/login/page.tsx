@@ -180,7 +180,6 @@ function LoginFormContent() {
       } else if (
         data.user?.role === 'admin_lpf' ||
         data.user?.role === 'admin_yayasan' ||
-        data.user?.role === 'admin_umum' ||
         data.user?.role === 'superadmin'
       ) {
         router.push(data.user?.role === 'admin_yayasan' ? '/admin/approvals/yayasan' : '/admin/approvals');
@@ -251,7 +250,6 @@ function LoginFormContent() {
       } else if (
         data.user?.role === 'admin_lpf' ||
         data.user?.role === 'admin_yayasan' ||
-        data.user?.role === 'admin_umum' ||
         data.user?.role === 'superadmin'
       ) {
         router.push(data.user?.role === 'admin_yayasan' ? '/admin/approvals/yayasan' : '/admin/approvals');
@@ -561,18 +559,7 @@ function LoginFormContent() {
 
                 <button
                   type="button"
-                  onClick={() => handleQuickDemo('admin', 'password123')}
-                  className="flex flex-col items-start p-2.5 rounded-xl border border-indigo-200 bg-indigo-50/60 hover:bg-indigo-100/70 transition-all text-left group dark:border-indigo-500/30 dark:bg-indigo-500/10 dark:hover:bg-indigo-500/15"
-                >
-                  <span className="text-[11px] font-bold text-indigo-900 group-hover:text-indigo-950 dark:text-indigo-200 dark:group-hover:text-indigo-100">
-                    🛠️ Admin
-                  </span>
-                  <span className="text-[10px] text-indigo-700 dark:text-indigo-400">admin</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleQuickDemo('superadmin', 'password123')}
+                  onClick={() => handleQuickDemo('lpf.admin', 'password123')}
                   className="flex flex-col items-start p-2.5 rounded-xl border border-rose-200 bg-rose-50/60 hover:bg-rose-100/70 transition-all text-left group dark:border-rose-500/30 dark:bg-rose-500/10 dark:hover:bg-rose-500/15"
                 >
                   <span className="text-[11px] font-bold text-rose-900 group-hover:text-rose-950 dark:text-rose-200 dark:group-hover:text-rose-100">

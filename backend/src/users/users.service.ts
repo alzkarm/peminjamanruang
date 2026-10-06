@@ -110,8 +110,6 @@ export class UsersService {
     if (!unitName) {
       if (dto.role === 'superadmin' || prismaRole === Role.SUPERADMIN) {
         unitName = 'Pusat Data dan Informasi (PUSDATIN)';
-      } else if (dto.role === 'admin_umum' || prismaRole === Role.ADMIN_UMUM) {
-        unitName = 'Bagian Administrasi Umum Kampus';
       } else if (dto.role === 'admin_yayasan' || dto.role === 'yayasan' || prismaRole === Role.YAYASAN || prismaRole === Role.ADMIN_YAYASAN) {
         unitName = 'Biro Sekretariat & Aset Yayasan YARSI';
       } else if (dto.role === 'admin_lpf' || prismaRole === Role.ADMIN_LPF || prismaRole === Role.ADMIN_UNIV) {
@@ -175,7 +173,6 @@ export class UsersService {
     if (!roleStr) return Role.USER;
     const r = roleStr.toLowerCase();
     if (r === 'superadmin') return Role.SUPERADMIN;
-    if (r === 'admin_umum' || r === 'admin') return Role.ADMIN_UMUM;
     if (r === 'admin_lpf' || r === 'admin_univ') return Role.ADMIN_LPF;
     if (r === 'admin_yayasan' || r === 'yayasan') return Role.YAYASAN;
     return Role.USER;
@@ -183,7 +180,6 @@ export class UsersService {
 
   private mapRole(role: Role, unitName: string): string {
     if (role === Role.SUPERADMIN) return 'superadmin';
-    if (role === Role.ADMIN_UMUM) return 'admin_umum';
     if (role === Role.ADMIN_LPF || role === Role.ADMIN_UNIV) return 'admin_lpf';
     if (role === Role.YAYASAN || role === Role.ADMIN_YAYASAN) return 'admin_yayasan';
     const u = (unitName || '').toLowerCase();

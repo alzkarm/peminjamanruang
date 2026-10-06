@@ -15,7 +15,6 @@ export default function AdminLayout({
   const isAdmin =
     currentUser?.role === 'admin_lpf' ||
     currentUser?.role === 'admin_yayasan' ||
-    currentUser?.role === 'admin_umum' ||
     currentUser?.role === 'superadmin';
 
   if (!isAdmin) {

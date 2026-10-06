@@ -272,11 +272,9 @@ export function mapBackendBookingToFrontend(b: any): Booking {
   const userRole: Role =
     b.user?.role === 'SUPERADMIN'
       ? 'superadmin'
-      : b.user?.role === 'ADMIN_UMUM'
-      ? 'admin_umum'
       : b.user?.role === 'ADMIN_YAYASAN' || b.user?.role === 'YAYASAN'
       ? 'admin_yayasan'
-      : b.user?.role === 'ADMIN_UNIV' || b.user?.role === 'ADMIN_LPF'
+      : b.user?.role === 'ADMIN_UNIV' || b.user?.role === 'ADMIN_LPF' || b.user?.role === 'ADMIN_UMUM'
       ? 'admin_lpf'
       : b.user?.username?.startsWith('03')
       ? 'dosen'
@@ -416,8 +414,8 @@ export const authApi = {
     const roleMap: Record<string, Role> = {
       SUPERADMIN: 'superadmin',
       superadmin: 'superadmin',
-      ADMIN_UMUM: 'admin_umum',
-      admin_umum: 'admin_umum',
+      ADMIN_UMUM: 'admin_lpf',
+      admin_umum: 'admin_lpf',
       ADMIN_YAYASAN: 'admin_yayasan',
       YAYASAN: 'admin_yayasan',
       admin_yayasan: 'admin_yayasan',
@@ -455,8 +453,8 @@ export const authApi = {
     const roleMap: Record<string, Role> = {
       SUPERADMIN: 'superadmin',
       superadmin: 'superadmin',
-      ADMIN_UMUM: 'admin_umum',
-      admin_umum: 'admin_umum',
+      ADMIN_UMUM: 'admin_lpf',
+      admin_umum: 'admin_lpf',
       ADMIN_YAYASAN: 'admin_yayasan',
       YAYASAN: 'admin_yayasan',
       admin_yayasan: 'admin_yayasan',

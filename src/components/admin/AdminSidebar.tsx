@@ -42,15 +42,14 @@ export function AdminSidebar() {
 
   const role = currentUser?.role;
   const isSuperadmin = role === 'superadmin';
-  const isAdminUmum = role === 'admin_umum';
   const isAdminLPF = role === 'admin_lpf';
   const isYayasan = role === 'admin_yayasan';
 
-  const pendingGeneralCount = countUniqueBookingApplications(
-    bookings.filter((b) => (b.status === 'PENDING_LPF' || b.status === 'VERIFIED') && !b.requiresYayasanApproval)
-  );
   const pendingLPFCount = countUniqueBookingApplications(
-    bookings.filter((b) => b.status === 'PENDING_LPF' && b.requiresYayasanApproval)
+    bookings.filter((b) => b.status === 'PENDING_LPF' || b.status === 'PENDING')
+  );
+  const pendingSuperadminCount = countUniqueBookingApplications(
+    bookings.filter((b) => b.status === 'VERIFIED')
   );
   const pendingYayasanCount = countUniqueBookingApplications(
     bookings.filter((b) => b.status === 'RECOMMENDED_YAYASAN')
@@ -59,33 +58,24 @@ export function AdminSidebar() {
   const navItems = [];
 
   // 1. Approval Items:
-  if (isAdminUmum) {
+  if (isAdminLPF) {
     navItems.push({
       href: '/admin/approvals',
-      label: 'Verifikasi Ruang Umum',
-      description: 'Verifikasi pengajuan ruang reguler',
-      icon: ShieldCheck,
-      badge: pendingGeneralCount,
-      badgeColor: 'bg-indigo-500',
-    });
-  } else if (isAdminLPF) {
-    navItems.push({
-      href: '/admin/approvals',
-      label: 'Persetujuan LPF',
-      description: 'Rekomendasi permohonan Yayasan',
+      label: 'Verifikasi LPF',
+      description: 'Verifikasi & teruskan ke Superadmin',
       icon: ShieldCheck,
       badge: pendingLPFCount,
-      badgeColor: 'bg-amber-500',
+      badgeColor: 'bg-emerald-500',
     });
   } else if (isSuperadmin) {
     navItems.push(
       {
         href: '/admin/approvals',
-        label: 'Persetujuan Ruang Umum',
-        description: 'Approval akhir ruang kuliah & lab',
+        label: 'Persetujuan Final',
+        description: 'Approval akhir pengajuan terverifikasi',
         icon: ShieldCheck,
-        badge: pendingGeneralCount,
-        badgeColor: 'bg-indigo-500',
+        badge: pendingSuperadminCount,
+        badgeColor: 'bg-purple-500',
       },
       {
         href: '/admin/approvals/yayasan',
@@ -107,8 +97,8 @@ export function AdminSidebar() {
     });
   }
 
-  // 2. Academic schedule: Superadmin, Admin Umum, Admin LPF
-  if (isSuperadmin || isAdminUmum || isAdminLPF) {
+  // 2. Academic schedule: Superadmin, Admin LPF
+  if (isSuperadmin || isAdminLPF) {
     navItems.push({
       href: '/admin/academic-bulk',
       label: 'Jadwal Akademik',
@@ -125,8 +115,8 @@ export function AdminSidebar() {
     icon: PackageCheck,
   });
 
-  // Pemeliharaan Ruang (Maintenance Scheduler - Task 2.3)
-  if (isSuperadmin || isAdminLPF || isAdminUmum) {
+  // Pemeliharaan Ruang (Maintenance Scheduler)
+  if (isSuperadmin || isAdminLPF) {
     navItems.push({
       href: '/admin/maintenance',
       label: 'Pemeliharaan Ruang',
@@ -285,8 +275,6 @@ export function AdminSidebar() {
             <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-900 border border-emerald-300 dark:bg-emerald-500/20 dark:text-emerald-200 dark:border-emerald-500/40">
               {isSuperadmin
                 ? 'Superadmin'
-                : isAdminUmum
-                ? 'Admin Ruang Umum'
                 : isAdminLPF
                 ? 'Admin LPF'
                 : 'Pengurus Yayasan'}
