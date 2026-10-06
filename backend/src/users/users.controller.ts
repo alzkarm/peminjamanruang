@@ -21,12 +21,16 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.SUPERADMIN, Role.ADMIN_UMUM, Role.ADMIN_LPF, Role.ADMIN_UNIV, Role.YAYASAN, Role.ADMIN_YAYASAN)
   async findAll() {
     return this.usersService.findAll();
   }
 
   @Post('invite')
   @HttpCode(HttpStatus.CREATED)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.SUPERADMIN)
   async invite(@Body() dto: InviteUserDto) {
     return this.usersService.invite(dto);
   }

@@ -24,7 +24,11 @@ import {
 } from './types';
 
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+  // Di browser: lewat rewrite Next.js satu pintu (port 3000 -> backend 4000),
+  // jadi tidak kena CORS dan cukup buka satu port. Di SSR: pakai env/absolut.
+  (typeof window !== 'undefined'
+    ? '/backend-api'
+    : process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api');
 
 const TOKEN_STORAGE_KEY = 'siperu_yarsi_auth_token';
 
@@ -1047,7 +1051,8 @@ export interface InviteUserPayload {
   fullName?: string;
   role?: string;
   unitName?: string;
-  password?: string;
+  // NOTE: tanpa password — akun invite adalah whitelist LDAP murni,
+  // password diverifikasi langsung ke server LDAP YARSI saat login.
 }
 
 export const usersApi = {

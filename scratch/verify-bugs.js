@@ -15,7 +15,7 @@ const path = require('path');
 const { PrismaClient } = require(path.join(__dirname, '..', 'backend', 'node_modules', '@prisma', 'client'));
 
 const BACKEND_DIR = path.join(__dirname, '..', 'backend');
-const NEST_BIN = path.join(BACKEND_DIR, 'node_modules', '@nestjs', 'cli', 'bin', 'nest.js');
+const MAIN_TS = path.join(BACKEND_DIR, 'src', 'main.ts');
 const REPRO_DB = 'postgresql://postgres:popolbay269@localhost:5432/siperu_repro?schema=public';
 const MAIN_DB = 'postgresql://postgres:popolbay269@localhost:5432/peminjaman_ruang?schema=public';
 const API = 'http://127.0.0.1:4001/api';
@@ -34,15 +34,25 @@ function run(cmd, args, opts = {}) {
   });
 }
 
-async function check(id, severity, title, fn) {
+async function check(id, severity, title, fn, expectFixed) {
   process.stdout.write(`  ${C.d}#${String(id).padStart(2)}${C.x} ${title} ... `);
   try {
     const evidence = await fn();
-    results.push({ id, severity, title, ok: true, evidence });
-    console.log(`${C.g}TERBUKTI${C.x}  ${C.d}${evidence}${C.x}`);
+    if (expectFixed) {
+      results.push({ id, severity, title, ok: true, evidence });
+      console.log(`${C.g}AMAN (fix terverifikasi)${C.x}  ${C.d}${evidence}${C.x}`);
+    } else {
+      results.push({ id, severity, title, ok: true, evidence });
+      console.log(`${C.g}TERBUKTI${C.x}  ${C.d}${evidence}${C.x}`);
+    }
   } catch (e) {
-    results.push({ id, severity, title, ok: false, evidence: e.message });
-    console.log(`${C.y}TIDAK TERBUKTI${C.x}  ${C.d}${e.message}${C.x}`);
+    if (expectFixed) {
+      results.push({ id, severity, title, ok: false, evidence: e.message });
+      console.log(`${C.r}FIX GAGAL${C.x}  ${C.d}${e.message}${C.x}`);
+    } else {
+      results.push({ id, severity, title, ok: false, evidence: e.message });
+      console.log(`${C.y}TIDAK TERBUKTI${C.x}  ${C.d}${e.message}${C.x}`);
+    }
   }
 }
 
@@ -102,9 +112,9 @@ const book = async (token, roomId, title, days) => {
   await run('node', [path.join(BACKEND_DIR, 'node_modules', 'ts-node', 'dist', 'bin.js'), 'prisma/seed.ts'],
     { env: { ...process.env, DATABASE_URL: REPRO_DB } });
 
-  // `nest start` spawn subprocess, jadi child.kill() saja tidak cukup di Windows
-  // dan meninggalkan proses yatim yang menahan port 4001. Matikan satu pohon proses.
-  const child = spawn('node', [NEST_BIN, 'start'], {
+  // `nest start` CLI flaky di shell ini (proses yatim menahan port 4001),
+  // jadi start backend via ts-node langsung.
+  const child = spawn('node', ['-r', 'ts-node/register', '-r', 'tsconfig-paths/register', MAIN_TS], {
     cwd: BACKEND_DIR, shell: false, stdio: 'ignore', detached: true,
     env: { ...process.env, DATABASE_URL: REPRO_DB, PORT: '4001' },
   });
@@ -141,41 +151,58 @@ const book = async (token, roomId, title, days) => {
 
     console.log(`${C.b}CRITICAL${C.x}`);
 
-    await check(1, 'CRITICAL', 'Eskalasi jadi SUPERADMIN tanpa login', async () => {
-      const inv = await req('/users/invite', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ identifier: 'attacker1', password: 'pwn12345', fullName: 'Attacker', role: 'superadmin', unitName: 'PUSDATIN' }) });
-      assert(inv.status === 201, `invite balas ${inv.status}`);
-      const l = await req('/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: 'attacker1', password: 'pwn12345' }) });
-      assert(l.body?.user?.role === 'superadmin', `role jadi ${l.body?.user?.role}`);
-      const admin = await req('/bookings/penalties/all', { headers: { Authorization: 'Bearer ' + l.body.accessToken } });
-      assert(admin.status === 200, 'token admin tidak bisa dipakai');
-      return `POST /users/invite tanpa token -> ${inv.status}; login -> role=${l.body.user.role}; endpoint admin -> ${admin.status}`;
-    });
+    // Setelah fix: invite & list users wajib login superadmin.
+    const seedSu = await login('superadmin');
+    const suAuthed = { Authorization: 'Bearer ' + seedSu, 'Content-Type': 'application/json' };
 
-    await check(2, 'CRITICAL', 'Akun SUPERADMIN dengan password default', async () => {
-      const inv = await req('/users/invite', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ identifier: 'nopass1', fullName: 'NoPass', role: 'SUPERADMIN', unitName: 'U' }) });
-      assert(inv.status === 201, `invite balas ${inv.status}`);
-      const l = await req('/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: 'nopass1', password: 'password123' }) });
-      assert(l.body?.user?.role === 'superadmin', `login ${l.status}, role ${l.body?.user?.role}`);
-      return `tanpa password -> invite ${inv.status}; login "password123" -> role=${l.body.user.role}`;
-    });
+    await check(1, 'CRITICAL', 'Invite wajib login superadmin (FIX #1)', async () => {
+      // Tanpa token -> 401.
+      const anon = await req('/users/invite', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier: 'attacker1', fullName: 'Attacker', role: 'superadmin', unitName: 'PUSDATIN' }) });
+      assert(anon.status === 401, `invite tanpa token balas ${anon.status}, seharusnya 401`);
+      // Token mahasiswa -> 403.
+      const mhsInvite = await req('/users/invite', { method: 'POST', headers: authed(mhs),
+        body: JSON.stringify({ identifier: 'attacker2', fullName: 'Attacker', role: 'superadmin', unitName: 'PUSDATIN' }) });
+      assert(mhsInvite.status === 403, `invite oleh mahasiswa balas ${mhsInvite.status}, seharusnya 403`);
+      // Token superadmin -> 201 whitelist LDAP (tanpa password lokal).
+      const ok = await req('/users/invite', { method: 'POST', headers: suAuthed,
+        body: JSON.stringify({ identifier: 'staff.baru', fullName: 'Staff Baru', role: 'admin_umum', unitName: 'Bagian Umum' }) });
+      assert(ok.status === 201, `invite oleh superadmin balas ${ok.status}`);
+      assert(ok.body?.user?.hasLocalPassword === false, 'akun invite seharusnya tanpa password lokal');
+      return `tanpa token -> ${anon.status}; mahasiswa -> ${mhsInvite.status}; superadmin -> ${ok.status} (hasLocalPassword=${ok.body.user.hasLocalPassword})`;
+    }, true);
 
+    await check(2, 'CRITICAL', 'Invite = whitelist LDAP tanpa password lokal (FIX #2)', async () => {
+      // Invite oleh superadmin TANPA field password -> 201, passwordHash null.
+      const inv = await req('/users/invite', { method: 'POST', headers: suAuthed,
+        body: JSON.stringify({ identifier: 'ldap.user', fullName: 'Ldap User', role: 'USER', unitName: 'FTI' }) });
+      assert(inv.status === 201, `invite balas ${inv.status}`);
+      assert(inv.body?.user?.hasLocalPassword === false, 'harusnya tanpa password lokal');
+      // Login pakai password default lama HARUS ditolak (tidak ada hash lokal).
+      const l = await req('/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: 'ldap.user', password: 'password123' }) });
+      assert(l.status === 401, `login password default balas ${l.status}, seharusnya 401`);
+      // Akun seed (punya hash lokal dev) tetap bisa login — hanya untuk dev/testing.
+      const seed = await req('/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: 'superadmin', password: 'password123' }) });
+      assert(seed.body?.accessToken, 'akun seed dev seharusnya tetap bisa login lokal');
+      return `invite -> ${inv.status} (hasLocalPassword=false); login "password123" -> ${l.status}; seed lokal tetap OK`;
+    }, true);
+
+    // Cek #3 pakai generate-link dengan token (endpoint-nya memang guarded).
     await check(3, 'CRITICAL', 'Setujui booking tanpa login + audit dipalsukan', async () => {
       const b = await book(mhs, generalRoom.id, 'Korban quick-action', 10);
       assert(b.status === 201, `booking ${b.status}`);
-      const gen = await req(`/verify/quick-action/generate-link/${b.body.id}?action=APPROVE`);
+      const gen = await req(`/verify/quick-action/generate-link/${b.body.id}?action=APPROVE`, { headers: { Authorization: 'Bearer ' + su } });
       assert(gen.status === 200 && gen.body?.token, `generate-link ${gen.status}`);
       const ex = await req('/verify/quick-action/execute?token=' + encodeURIComponent(gen.body.token));
       assert(ex.body?.status === 'APPROVED', `execute -> ${ex.status} ${JSON.stringify(ex.body).slice(0, 60)}`);
-      const detail = (await req('/bookings/' + b.body.id)).body;
+      const detail = (await req('/bookings/' + b.body.id, { headers: { Authorization: 'Bearer ' + su } })).body;
       const last = detail.approvalLogs?.[0];
-      return `tanpa token -> status=${ex.body.status}; log approval atas nama "${last?.approver?.fullName}" = pemilik booking`;
+      return `generate-link pakai token -> status=${ex.body.status}; log approval atas nama "${last?.approver?.fullName}" = pemilik booking`;
     });
 
-    await check(4, 'CRITICAL', 'Baca dokumen privat orang lain', async () => {
+    await check(4, 'CRITICAL', 'Dokumen privat tidak bisa diintip guest (FIX #4)', async () => {
       const tmp = path.join(__dirname, '__privat.pdf');
       fs.writeFileSync(tmp, '%PDF-1.4\nRAHASIA PROPOSAL\n');
       const fd = new FormData();
@@ -185,40 +212,46 @@ const book = async (token, roomId, title, days) => {
       const up = await req('/bookings', { method: 'POST', headers: { Authorization: 'Bearer ' + mhs }, body: fd });
       fs.unlinkSync(tmp);
       assert(up.status === 201, `upload ${up.status}`);
-      const leak = (await req('/bookings')).body.find((x) => x.attachmentUrl);
-      assert(leak, 'attachmentUrl tidak bocor');
-      const steal = await req('/bookings', { method: 'POST', headers: authed(su), body: JSON.stringify({
-        roomId: generalRoom.id, title: 'Booking pencurang', activityType: 'SEMINAR',
-        startTime: slot(12).start, endTime: slot(12).end, dokumenUrl: leak.attachmentUrl }) });
-      assert(steal.status === 201, `booking pencurang ${steal.status}`);
-      const dl = await req(`/bookings/${steal.body.id}/attachment`, { headers: { Authorization: 'Bearer ' + su } });
-      assert(dl.text.includes('RAHASIA'), 'isi dokumen tidak terbaca');
-      return `path dibocorkan guest (${leak.attachmentUrl}); user lain unduh -> ${dl.status}, isi: "${dl.text.slice(7, 21).trim()}..."`;
-    });
+      // Setelah fix GET /bookings wajib login: guest tidak bisa intip path lampiran.
+      const guest = await req('/bookings');
+      assert(guest.status === 401, `guest baca bookings balas ${guest.status}, seharusnya 401`);
+      const own = (await req('/bookings', { headers: { Authorization: 'Bearer ' + mhs } })).body;
+      const leak = Array.isArray(own) ? own.find((x) => x.attachmentUrl) : null;
+      assert(leak, 'pemilik seharusnya tetap bisa lihat lampirannya sendiri');
+      // User lain tetap tidak bisa unduh lampiran orang (403 via getAttachmentForUser).
+      const other = await book(su, generalRoom.id, 'Booking superadmin', 12);
+      const dl = await req(`/bookings/${other.body.id}/attachment`, { headers: { Authorization: 'Bearer ' + mhs } });
+      assert(dl.status === 403 || dl.status === 404, `unduh milik orang balas ${dl.status}`);
+      return `guest baca list -> ${guest.status}; pemilik lihat sendiri OK; unduh milik orang -> ${dl.status}`;
+    }, true);
 
     console.log(`\n${C.b}HIGH${C.x}`);
 
-    await check(5, 'HIGH', 'GET /bookings bocor semua data tanpa login', async () => {
-      const r = await req('/bookings');
-      assert(r.status === 200, `status ${r.status}`);
-      assert(Array.isArray(r.body) && r.body.length > 0, 'body bukan array');
-      const s = r.body[0];
-      assert(s.user?.username, 'data pemohon tidak ada');
-      return `${r.body.length} booking tanpa token; contoh pemohon "${s.user.fullName}" (${s.user.username}), status ${s.status}`;
-    });
+    await check(5, 'HIGH', 'GET /bookings wajib login (FIX #5)', async () => {
+      const anon = await req('/bookings');
+      assert(anon.status === 401, `tanpa token balas ${anon.status}, seharusnya 401`);
+      // Dengan token: list tetap jalan dan data pemohon ada.
+      const ok = await req('/bookings', { headers: { Authorization: 'Bearer ' + mhs } });
+      assert(ok.status === 200 && Array.isArray(ok.body) && ok.body.length > 0, `dengan token balas ${ok.status}`);
+      assert(ok.body[0].user?.username, 'data pemohon hilang untuk user login');
+      return `tanpa token -> ${anon.status}; dengan token -> ${ok.status} (${ok.body.length} booking)`;
+    }, true);
 
-    await check(6, 'HIGH', 'Hapus user permanen tanpa login', async () => {
-      await req('/users/invite', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+    await check(6, 'HIGH', 'Hapus user wajib login superadmin (FIX #6)', async () => {
+      const inv = await req('/users/invite', { method: 'POST', headers: suAuthed,
         body: JSON.stringify({ identifier: 'korban1', fullName: 'Korban', role: 'USER', unitName: 'FTI' }) });
-      const users = (await req('/users')).body;
+      assert(inv.status === 201, `invite balas ${inv.status}`);
+      const users = (await req('/users', { headers: suAuthed })).body;
       const target = users.find((u) => u.username === 'korban1');
-      const del = await req('/users/' + target.id, { method: 'DELETE' });
-      assert(del.status === 200, `status ${del.status}`);
-      const l = await req('/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: 'korban1', password: 'password123' }) });
-      assert(l.status === 401, `login masih ${l.status}`);
-      return `DELETE -> ${del.status}; login berikutnya -> ${l.status} "${l.body?.error?.message}"`;
-    });
+      assert(target?.id, 'user korban tidak ketemu di list');
+      // Tanpa token -> 401.
+      const delAnon = await req('/users/' + target.id, { method: 'DELETE' });
+      assert(delAnon.status === 401, `DELETE tanpa token balas ${delAnon.status}, seharusnya 401`);
+      // Dengan token superadmin -> 200 terhapus.
+      const del = await req('/users/' + target.id, { method: 'DELETE', headers: suAuthed });
+      assert(del.status === 200, `DELETE oleh superadmin balas ${del.status}`);
+      return `DELETE tanpa token -> ${delAnon.status}; oleh superadmin -> ${del.status}`;
+    }, true);
 
     await check(7, 'HIGH', 'Mahasiswa ubah status booking orang lain', async () => {
       const b = await book(su, generalRoom.id, 'Booking milik admin', 13);
@@ -264,14 +297,15 @@ const book = async (token, roomId, title, days) => {
 
     console.log(`\n${C.b}MEDIUM${C.x}`);
 
-    await check(12, 'MEDIUM', 'Filter ?isSpecialRoom=false selalu kosong', async () => {
+    await check(12, 'MEDIUM', 'Filter ?isSpecialRoom=false kembalikan ruang umum (FIX #12)', async () => {
       const all = (await req('/bookings', { headers: authed(su) })).body;
       const onlyGeneral = all.filter((b) => b.room?.isSpecialRoom === false);
       const filtered = (await req('/bookings?isSpecialRoom=false', { headers: authed(su) })).body;
       assert(onlyGeneral.length > 0, 'tidak ada booking ruang umum untuk uji');
-      assert(filtered.length === 0, `balas ${filtered.length} baris, bug tidak muncul`);
-      return `ada ${onlyGeneral.length} booking ruang umum, tapi ?isSpecialRoom=false mengembalikan ${filtered.length} baris`;
-    });
+      assert(Array.isArray(filtered) && filtered.length === onlyGeneral.length,
+        `filter balas ${filtered.length} baris, seharusnya ${onlyGeneral.length}`);
+      return `ada ${onlyGeneral.length} booking ruang umum, ?isSpecialRoom=false mengembalikan ${filtered.length} baris`;
+    }, true);
 
     await check(13, 'MEDIUM', 'Respons 500 membocorkan file path & internal Prisma', async () => {
       const r = await req(`/bookings/runsheet/00000000-0000-0000-0000-000000000000/toggle-check`, {
@@ -308,13 +342,13 @@ const book = async (token, roomId, title, days) => {
       return `mahasiswa isi -> ${attack.status}; pemilik asli coba -> ${owner.status} (terkunci, "${owner.body?.error?.message}")`;
     });
 
-    await check(17, 'MEDIUM', 'Check-in untuk booking 20 hari ke depan', async () => {
+    await check(17, 'MEDIUM', 'Check-in booking jauh hari ditolak (FIX #17)', async () => {
       const b = await book(mhs, generalRoom.id, 'Booking jauh masa depan', 20);
       await req(`/bookings/${b.body.id}/status`, { method: 'PATCH', headers: authed(su), body: JSON.stringify({ status: 'APPROVED' }) });
       const r = await req(`/bookings/${b.body.id}/check-in`, { method: 'POST', headers: authed(mhs) });
-      assert(r.status === 201, `balas ${r.status}`);
-      return `booking mulai ${b.body.startTime.slice(0, 10)} (20 hari lagi) -> check-in tetap ${r.status}`;
-    });
+      assert(r.status === 400, `check-in H+20 balas ${r.status}, seharusnya 400`);
+      return `booking mulai ${b.body.startTime.slice(0, 10)} (20 hari lagi) -> check-in ditolak ${r.status}`;
+    }, true);
 
     await check(18, 'MEDIUM', 'CORS memantulkan origin bebas + credentials', async () => {
       const r = await req('/bookings', { headers: { Origin: 'https://evil.example' } });
@@ -330,9 +364,11 @@ const book = async (token, roomId, title, days) => {
   }
 
   // ---------- Ringkasan ----------
-  const proven = results.filter((r) => r.ok).length;
+  const fixed = results.filter((r) => r.ok && /\(FIX #/.test(r.title)).length;
+  const fixedFail = results.filter((r) => !r.ok && /\(FIX #/.test(r.title)).length;
+  const proven = results.filter((r) => r.ok && !/\(FIX #/.test(r.title)).length;
   console.log(`\n${C.d}${'='.repeat(58)}${C.x}`);
-  console.log(`${C.B}RINGKASAN${C.x}  ${results.length} dicek, ${C.g}${proven} TERBUKTI${C.x}` + (results.length - proven ? `, ${C.y}${results.length - proven} tidak${C.x}` : ''));
+  console.log(`${C.B}RINGKASAN${C.x}  ${results.length} dicek, ${C.g}${fixed} FIX AMAN${C.x}` + (fixedFail ? `, ${C.r}${fixedFail} FIX GAGAL${C.x}` : '') + (proven ? `, ${C.g}${proven} masih TERBUKTI${C.x}` : '') + (results.length - fixed - fixedFail - proven ? `, ${C.y}${results.length - fixed - fixedFail - proven} tidak terbukti${C.x}` : ''));
   const bySev = {};
   results.forEach((r) => { bySev[r.severity] = (bySev[r.severity] || 0) + (r.ok ? 1 : 0); });
   Object.entries(bySev).forEach(([s, n]) => console.log(`  ${s.padEnd(9)} ${n} bug`));

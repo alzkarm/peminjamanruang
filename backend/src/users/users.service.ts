@@ -9,7 +9,6 @@ import { PrismaService } from '@/prisma/prisma.service';
 import { InviteUserDto } from './dto/invite-user.dto';
 import { Role } from '@/common/types';
 import { Role as PrismaRole } from '@prisma/client';
-import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
@@ -126,10 +125,10 @@ export class UsersService {
       }
     }
 
-    // Hash password (default to 'password123' if not specified)
-    const rawPass = dto.password || 'password123';
-    const passwordHash = await bcrypt.hash(rawPass, 10);
-
+    // Whitelist LDAP: akun invite TIDAK punya password lokal. passwordHash
+    // dikosongkan supaya login wajib lewat server LDAP YARSI (password
+    // diambil langsung dari akun LDAP, bukan password default apapun).
+    // Field `dto.password` sengaja diabaikan bila dikirim klien lama.
     const newUser = await this.prisma.user.create({
       data: {
         username,
@@ -137,7 +136,7 @@ export class UsersService {
         fullName,
         unitName,
         role: prismaRole as any,
-        passwordHash,
+        passwordHash: null,
       },
     });
 
@@ -152,7 +151,7 @@ export class UsersService {
         email: newUser.email,
         unitName: newUser.unitName,
         role: this.mapRole(newUser.role as unknown as Role, newUser.unitName),
-        hasLocalPassword: true,
+        hasLocalPassword: false,
         createdAt: newUser.createdAt,
       },
     };

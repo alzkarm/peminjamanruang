@@ -170,6 +170,11 @@ export const useAppStore = create<AppState>()(
           const bookings = await bookingsApi.getAll();
           set({ bookings });
         } catch (err: any) {
+          // Guest / tanpa token: GET /bookings wajib login (401). Jangan
+          // menimpa error global — kalender publik pakai endpoint
+          // /rooms/schedule yang memang terbuka untuk guest.
+          const status = err?.statusCode ?? err?.status;
+          if (status === 401 || status === 403) return;
           set({ error: err.message });
         }
       },

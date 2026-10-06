@@ -17,7 +17,7 @@ export class InviteUserDto {
   @IsString()
   unitName?: string;
 
-  @IsOptional()
-  @IsString()
-  password?: string;
+  // NOTE: tidak ada field password — akun invite adalah whitelist LDAP murni.
+  // Password selalu diverifikasi langsung ke server LDAP YARSI saat login,
+  // tidak pernah disimpan di database lokal.
 }

@@ -198,6 +198,18 @@ export class QueryBookingDto {
 
   @IsOptional()
   @IsBoolean()
-  @Type(() => Boolean)
+  // NOTE: baca dari obj mentah — global enableImplicitConversion mengubah
+  // string "false" jadi true SEBELUM @Transform jalan (non-empty string
+  // dianggap truthy). Dengan baca raw query, "false"/"0" tetap false.
+  @Transform(({ obj }) => {
+    const raw = obj?.isSpecialRoom;
+    if (typeof raw === 'boolean') return raw;
+    if (typeof raw === 'string') {
+      const v = raw.trim().toLowerCase();
+      if (v === 'true' || v === '1') return true;
+      if (v === 'false' || v === '0') return false;
+    }
+    return raw;
+  })
   isSpecialRoom?: boolean;
 }

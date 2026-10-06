@@ -101,6 +101,7 @@ export class BookingsController {
   }
 
   @Get()
+  @UseGuards(JwtAuthGuard)
   async findAll(
     @Query() query: QueryBookingDto,
     @CurrentUser() currentUser: { id: string; role: Role },
@@ -188,6 +189,7 @@ export class BookingsController {
   }
 
   @Get(':id')
+  @UseGuards(JwtAuthGuard)
   async findOne(
     @Param('id') id: string,
     @CurrentUser() currentUser: { id: string; role: Role },

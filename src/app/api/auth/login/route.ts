@@ -3,7 +3,10 @@ import { NextRequest, NextResponse } from 'next/server';
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+    // NOTE: pakai 127.0.0.1 — hostname 'localhost' kadang resolve ke ::1
+    // (IPv6) dari proses Next.js dan fetch gagal padahal backend jalan.
+    const backendUrl =
+      process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:4000/api';
 
     const backendRes = await fetch(`${backendUrl}/auth/login`, {
       method: 'POST',
@@ -26,11 +29,13 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(data, { status: backendRes.status });
   } catch (err: any) {
+    // Teruskan pesan error asli backend agar gampang debug (bukan 500 generik).
+    const detail = err?.message || 'Gagal terhubung ke server backend SIPERU.';
     return NextResponse.json(
       {
         statusCode: 500,
         error: 'Sistem autentikasi sedang gangguan',
-        message: 'Sistem autentikasi sedang gangguan. Pastikan server backend berjalan.',
+        message: `Sistem autentikasi sedang gangguan. Pastikan server backend berjalan. (Detail: ${detail})`,
       },
       { status: 500 },
     );

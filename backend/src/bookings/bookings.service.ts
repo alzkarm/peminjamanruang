@@ -514,22 +514,26 @@ export class BookingsService {
   async findAll(query: QueryBookingDto, currentUser?: { id: string; role: Role }) {
     const { status, roomId, userId, startDate, endDate, isSpecialRoom } = query;
 
-    let roleAccessCondition: any = {};
+    // Filter ruangan dari query (?isSpecialRoom=...) digabung dengan batasan
+    // akses role — bukan ditimpa. Sebelumnya `...roleAccessCondition` menimpa
+    // key `room` sehingga filter query hilang untuk role admin.
+    const roomConditions: any[] = [];
+    if (isSpecialRoom !== undefined) {
+      roomConditions.push({ isSpecialRoom });
+    }
 
     if (currentUser) {
       const r = currentUser.role as Role;
       if (r === Role.ADMIN_UMUM) {
         // Admin Umum CANNOT see bookings for Yayasan rooms (auditorium, senat, workshop, isSpecialRoom)
-        roleAccessCondition = {
-          room: {
-            isSpecialRoom: false,
-            AND: [
-              { name: { not: { contains: 'auditorium', mode: 'insensitive' } } },
-              { name: { not: { contains: 'senat', mode: 'insensitive' } } },
-              { name: { not: { contains: 'workshop', mode: 'insensitive' } } },
-            ],
-          },
-        };
+        roomConditions.push({
+          isSpecialRoom: false,
+          AND: [
+            { name: { not: { contains: 'auditorium', mode: 'insensitive' } } },
+            { name: { not: { contains: 'senat', mode: 'insensitive' } } },
+            { name: { not: { contains: 'workshop', mode: 'insensitive' } } },
+          ],
+        });
       } else if (
         r === Role.ADMIN_LPF ||
         r === Role.YAYASAN ||
@@ -537,18 +541,23 @@ export class BookingsService {
         r === Role.ADMIN_YAYASAN
       ) {
         // Admin LPF and Yayasan CANNOT see bookings for General rooms
-        roleAccessCondition = {
-          room: {
-            OR: [
-              { isSpecialRoom: true },
-              { name: { contains: 'auditorium', mode: 'insensitive' } },
-              { name: { contains: 'senat', mode: 'insensitive' } },
-              { name: { contains: 'workshop', mode: 'insensitive' } },
-            ],
-          },
-        };
+        roomConditions.push({
+          OR: [
+            { isSpecialRoom: true },
+            { name: { contains: 'auditorium', mode: 'insensitive' } },
+            { name: { contains: 'senat', mode: 'insensitive' } },
+            { name: { contains: 'workshop', mode: 'insensitive' } },
+          ],
+        });
       }
     }
+
+    const roomFilter =
+      roomConditions.length === 0
+        ? {}
+        : roomConditions.length === 1
+          ? { room: roomConditions[0] }
+          : { AND: roomConditions.map((c) => ({ room: c })) };
 
     return this.prisma.booking.findMany({
       where: {
@@ -563,8 +572,7 @@ export class BookingsService {
               },
             }
           : {}),
-        ...(isSpecialRoom !== undefined ? { room: { isSpecialRoom } } : {}),
-        ...roleAccessCondition,
+        ...roomFilter,
       },
       include: {
         room: { include: { floor: true } },
@@ -1244,6 +1252,25 @@ export class BookingsService {
       throw new BadRequestException(
         `Check-in hanya dapat dilakukan untuk peminjaman berstatus Disetujui (APPROVED). Status saat ini: ${booking.status}`
       );
+    }
+
+    // Check-in hanya dibuka pada hari-H: mulai 60 menit sebelum startTime
+    // sampai endTime. Booking yang masih jauh hari ditolak agar tidak bisa
+    // check-in lebih awal.
+    const now = new Date();
+    const startTime = new Date(booking.startTime);
+    const endTime = new Date(booking.endTime);
+    const openFrom = new Date(startTime.getTime() - 60 * 60 * 1000);
+    if (Number.isNaN(startTime.getTime()) || Number.isNaN(endTime.getTime())) {
+      throw new BadRequestException('Jadwal peminjaman tidak valid, check-in ditolak.');
+    }
+    if (now < openFrom) {
+      throw new BadRequestException(
+        'Check-in belum dibuka. Check-in tersedia mulai 60 menit sebelum jadwal mulai (hari-H).',
+      );
+    }
+    if (now > endTime) {
+      throw new BadRequestException('Waktu check-in sudah lewat (jadwal sudah berakhir).');
     }
 
     await this.prisma.approvalLog.create({
