@@ -341,8 +341,10 @@ export const useAppStore = create<AppState>()(
       approveBookingLPF: async (bookingId, notes, approverName, applyToRecurringGroup = true) => {
         set({ isSyncing: true });
         const booking = get().bookings.find((b) => b.id === bookingId);
-        const targetStatus = 'APPROVED';
-        const frontendTargetStatus: BookingStatus = 'APPROVED';
+        // Dua tahap: admin verifikasi (VERIFIED), superadmin approval final (APPROVED).
+        const isSuper = get().currentUser?.role === 'superadmin';
+        const targetStatus = isSuper ? 'APPROVED' : 'VERIFIED';
+        const frontendTargetStatus: BookingStatus = targetStatus;
 
         let relatedIds = [bookingId];
         if (applyToRecurringGroup && booking) {
@@ -381,7 +383,7 @@ export const useAppStore = create<AppState>()(
                 ? {
                     ...b,
                     status: frontendTargetStatus as BookingStatus,
-                    lpfNotes: notes || 'Disetujui oleh Admin',
+                    lpfNotes: notes || (isSuper ? 'Disetujui oleh Superadmin' : 'Diverifikasi oleh Admin'),
                     lpfApprovedAt: now,
                     lpfApprovedBy: approver,
                   }
@@ -400,7 +402,7 @@ export const useAppStore = create<AppState>()(
       },
 
       approveBookingYayasan: async (bookingId, notes, approverName, applyToRecurringGroup = true) => {
-        // Alias kompatibilitas: approval satu tingkat — semua persetujuan lewat approveBookingLPF (APPROVED).
+        // Alias kompatibilitas lama: tahap final superadmin — semua lewat approveBookingLPF.
         return get().approveBookingLPF(bookingId, notes, approverName, applyToRecurringGroup);
       },
 

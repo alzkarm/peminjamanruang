@@ -156,13 +156,8 @@ export class BookingsService {
   }
 
   /**
-   * Satu tingkat persetujuan: PENDING langsung APPROVED oleh ADMIN/SUPERADMIN.
-   * Field isSpecialRoom / requiresYayasanApproval hanya data display ruangan,
-   * bukan dasar cabang otorisasi.
-   */
-
-  /**
-   * Single-tier State Machine Transition Handler: PENDING langsung APPROVED.
+   * Dua tahap persetujuan: PENDING -> VERIFIED (Admin/Superadmin) -> APPROVED (Superadmin).
+   * Admin yang menekan Setujui otomatis diarahkan ke VERIFIED; approval final hanya Superadmin.
    */
   async updateStatus(
     bookingId: string,
@@ -195,7 +190,7 @@ export class BookingsService {
         }
       }
 
-      // State Machine Transition Rules — satu tingkat, tanpa auto-routing.
+      // State Machine Transition Rules — dua tahap, dengan auto-routing admin.
       if (targetStatus === BookingStatus.CANCELED) {
         const isOwner = booking.userId === currentUser.id;
         if (!isOwner && !isAdmin) {
@@ -204,13 +199,16 @@ export class BookingsService {
         if (currentStatus === BookingStatus.APPROVED && userRole !== Role.SUPERADMIN) {
           throw new BadRequestException('Peminjaman yang telah disetujui hanya dapat dibatalkan oleh Superadmin.');
         }
-      } else if (
-        targetStatus === BookingStatus.APPROVED ||
-        targetStatus === BookingStatus.VERIFIED ||
-        targetStatus === BookingStatus.RECOMMENDED
-      ) {
+      } else if (targetStatus === BookingStatus.VERIFIED) {
         if (!isAdmin) {
-          throw new ForbiddenException('Hanya Admin atau Superadmin yang berwenang menyetujui permohonan.');
+          throw new ForbiddenException('Hanya Admin atau Superadmin yang berwenang memverifikasi permohonan.');
+        }
+      } else if (targetStatus === BookingStatus.APPROVED) {
+        if (userRole === Role.ADMIN) {
+          targetStatus = BookingStatus.VERIFIED;
+          this.logger.log(`Auto-routing booking ${booking.id} to VERIFIED for Superadmin final approval`);
+        } else if (userRole !== Role.SUPERADMIN) {
+          throw new ForbiddenException('Persetujuan final hanya dapat diberikan oleh Superadmin.');
         }
       } else if (targetStatus === BookingStatus.PENDING || targetStatus === BookingStatus.EXPIRED) {
         if (booking.userId !== currentUser.id && !isAdmin) {
@@ -302,7 +300,7 @@ export class BookingsService {
   }
 
   /**
-   * Batch Status Transition Handler (Supports Bulk Approval / Rejection)
+   * Batch Status Transition Handler — dua tahap (VERIFIED admin, APPROVED superadmin).
    */
   async updateBatchStatus(
     currentUser: { id: string; role: string; fullName: string },
@@ -321,7 +319,7 @@ export class BookingsService {
         if (!booking) continue;
 
         const currentStatus = booking.status as BookingStatus;
-        const targetStatus = dto.status;
+        let targetStatus = dto.status;
         const notes = (dto.notes || dto.catatan || '').trim();
         const isAdmin = userRole === Role.ADMIN || userRole === Role.SUPERADMIN;
 
@@ -342,13 +340,15 @@ export class BookingsService {
           if (currentStatus === BookingStatus.APPROVED && userRole !== Role.SUPERADMIN) {
             throw new BadRequestException('Peminjaman yang telah disetujui hanya dapat dibatalkan oleh Superadmin.');
           }
-        } else if (
-          targetStatus === BookingStatus.APPROVED ||
-          targetStatus === BookingStatus.VERIFIED ||
-          targetStatus === BookingStatus.RECOMMENDED
-        ) {
+        } else if (targetStatus === BookingStatus.VERIFIED) {
           if (!isAdmin) {
-            throw new ForbiddenException('Hanya Admin atau Superadmin yang berwenang menyetujui permohonan.');
+            throw new ForbiddenException('Hanya Admin atau Superadmin yang berwenang memverifikasi permohonan.');
+          }
+        } else if (targetStatus === BookingStatus.APPROVED) {
+          if (userRole === Role.ADMIN) {
+            targetStatus = BookingStatus.VERIFIED;
+          } else if (userRole !== Role.SUPERADMIN) {
+            throw new ForbiddenException('Persetujuan final hanya dapat diberikan oleh Superadmin.');
           }
         } else if (booking.userId !== currentUser.id && !isAdmin) {
           throw new ForbiddenException('Anda tidak berhak mengubah status peminjaman milik pengguna lain.');

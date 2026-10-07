@@ -31,7 +31,7 @@ export function StatusBadge({
   const darkStatusClasses: Record<BookingStatus, string> = {
     PENDING: 'dark:bg-amber-500/10 dark:text-amber-200 dark:border-amber-500/40',
     PENDING_LPF: 'dark:bg-amber-500/10 dark:text-amber-200 dark:border-amber-500/40', // legacy alias -> Menunggu
-    VERIFIED: 'dark:bg-amber-500/10 dark:text-amber-200 dark:border-amber-500/40', // legacy alias -> Menunggu
+    VERIFIED: 'dark:bg-sky-500/10 dark:text-sky-200 dark:border-sky-500/40',
     RECOMMENDED: 'dark:bg-amber-500/10 dark:text-amber-200 dark:border-amber-500/40', // legacy alias -> Menunggu
     RECOMMENDED_YAYASAN: 'dark:bg-amber-500/10 dark:text-amber-200 dark:border-amber-500/40', // legacy alias -> Menunggu
     APPROVED: 'dark:bg-emerald-500/10 dark:text-emerald-200 dark:border-emerald-500/40',
@@ -63,8 +63,8 @@ export function StatusBadge({
       case 'PENDING':
       case 'PENDING_LPF': // legacy alias display-only -> Menunggu
         return <Clock className={iconClass} />;
-      case 'VERIFIED': // legacy alias display-only -> Menunggu
-        return <Clock className={iconClass} />;
+      case 'VERIFIED':
+        return <CheckCheck className={iconClass} />;
       case 'RECOMMENDED': // legacy alias display-only -> Menunggu
       case 'RECOMMENDED_YAYASAN': // legacy alias display-only -> Menunggu
         return <Clock className={iconClass} />;

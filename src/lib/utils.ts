@@ -162,12 +162,12 @@ export function getStatusBadgeConfig(status: BookingStatus) {
         dot: "bg-amber-500",
         iconName: "Clock",
       };
-    case "VERIFIED": // legacy alias -> Menunggu
+    case "VERIFIED":
       return {
-        label: "Menunggu",
-        bg: "bg-amber-50 text-amber-800 border-amber-300 ring-amber-500/20",
-        dot: "bg-amber-500",
-        iconName: "Clock",
+        label: "Terverifikasi",
+        bg: "bg-sky-50 text-sky-800 border-sky-300 ring-sky-500/20",
+        dot: "bg-sky-500",
+        iconName: "ShieldCheck",
       };
     case "RECOMMENDED_YAYASAN": // legacy alias -> Menunggu
     case "RECOMMENDED": // legacy alias -> Menunggu

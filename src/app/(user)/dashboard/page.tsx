@@ -124,7 +124,7 @@ export default function UserDashboardPage() {
 
   const filteredBookings = userBookings.filter((b) => {
     if (activeTab === 'all') return true;
-    if (activeTab === 'pending') return b.status === 'PENDING';
+    if (activeTab === 'pending') return b.status === 'PENDING' || b.status === 'VERIFIED';
     if (activeTab === 'approved') return b.status === 'APPROVED';
     if (activeTab === 'returned') return b.status === 'RETURNED';
     if (activeTab === 'completed') return b.status === 'COMPLETED';
@@ -177,7 +177,7 @@ export default function UserDashboardPage() {
   };
 
   const approvedCount = countUniqueBookingApplications(userBookings.filter((b) => b.status === 'APPROVED'));
-  const pendingCount = countUniqueBookingApplications(userBookings.filter((b) => b.status === 'PENDING'));
+  const pendingCount = countUniqueBookingApplications(userBookings.filter((b) => b.status === 'PENDING' || b.status === 'VERIFIED'));
   const returnedCount = countUniqueBookingApplications(userBookings.filter((b) => b.status === 'RETURNED'));
   const completedCount = countUniqueBookingApplications(userBookings.filter((b) => b.status === 'COMPLETED'));
   const totalUserBookingsCount = countUniqueBookingApplications(userBookings);
@@ -195,15 +195,17 @@ export default function UserDashboardPage() {
   };
 
   const renderStepper = (booking: Booking) => {
-    // Satu tahap: Pengajuan -> Menunggu -> Disetujui; requiresYayasanApproval hanya label info.
+    // Dua tahap: Pengajuan -> Menunggu -> Terverifikasi (admin) -> Disetujui (superadmin).
     const steps = [
       { label: 'Pengajuan', key: 'SUBMITTED' },
       { label: 'Menunggu', key: 'PENDING' },
+      { label: 'Terverifikasi', key: 'VERIFIED' },
       { label: 'Disetujui', key: 'APPROVED' },
     ];
 
     let currentStepIndex = 1;
     if (booking.status === 'PENDING') currentStepIndex = 1;
+    else if (booking.status === 'VERIFIED') currentStepIndex = 2;
     else if (booking.status === 'APPROVED' || booking.status === 'COMPLETED')
       currentStepIndex = steps.length - 1;
     else if (booking.status === 'RETURNED' || booking.status === 'REJECTED' || booking.status === 'CANCELLED')
