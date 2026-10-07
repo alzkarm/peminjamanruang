@@ -55,6 +55,7 @@ function createSeedClient() {
   const booking = makeDelegate((row) => `${row.title}-${new Date(row.startTime).toISOString()}`);
   const approvalLog = makeDelegate((row) => `${row.bookingId}-${row.toStatus}`);
   const feedback = makeDelegate((row) => row.bookingId);
+  const cbtRoom = makeDelegate((row) => row.id);
 
   return {
     floor,
@@ -63,6 +64,7 @@ function createSeedClient() {
     booking,
     approvalLog,
     feedback,
+    cbtRoom,
   };
 }
 
@@ -91,7 +93,7 @@ describe('seedDatabase', () => {
     expect(firstCounts).toEqual({
       floors: 14,
       rooms: 203,
-      users: 4,
+      users: 7,
       bookings: 3,
       approvals: 3,
       feedbacks: 1,
