@@ -118,7 +118,7 @@ export class AuthService {
     }
 
     // Step 4: Map Role & Generate JWT Token
-    const mappedRole = this.mapUserRole(user.role as unknown as Role, user.unitName);
+    const mappedRole = this.mapUserRole(user.role);
 
     const payload = {
       sub: user.id,
@@ -265,7 +265,7 @@ export class AuthService {
   /**
    * Auto-provisions LDAP user profile to local database on first login.
    * Security: Newly provisioned LDAP users are strictly assigned Role.USER.
-   * Elevated administrative privileges (ADMIN_UNIV, ADMIN_YAYASAN) must be assigned
+   * Elevated administrative privileges (ADMIN) must be assigned
    * explicitly by Superadmin in the database, matching the ATK security architecture.
    */
   private async provisionLdapUser(username: string, ldapDisplayName?: string) {
@@ -353,14 +353,10 @@ export class AuthService {
     return safeUser;
   }
 
-  private mapUserRole(role: Role, unitName: string): string {
-    if ((role as any) === 'SUPERADMIN' || role === Role.SUPERADMIN) return 'superadmin';
-    if ((role as any) === 'ADMIN_UMUM' || role === Role.ADMIN_UMUM) return 'admin_umum';
-    if ((role as any) === 'ADMIN_LPF' || role === Role.ADMIN_LPF || role === Role.ADMIN_UNIV) return 'admin_lpf';
-    if ((role as any) === 'YAYASAN' || role === Role.YAYASAN || role === Role.ADMIN_YAYASAN) return 'admin_yayasan';
-    const u = (unitName || '').toLowerCase();
-    if (u.includes('dosen')) return 'dosen';
-    if (u.includes('tendik') || u.includes('tata usaha')) return 'tendik';
-    return 'mahasiswa';
+  private mapUserRole(role: unknown): string {
+    const normalized = String(role).toUpperCase();
+    if (normalized === Role.SUPERADMIN) return 'superadmin';
+    if (normalized === Role.ADMIN) return 'admin';
+    return 'user';
   }
 }

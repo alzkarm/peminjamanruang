@@ -12,12 +12,11 @@ describe('BookingsService attachment authorization', () => {
   it('allows the booking owner and authorized admins', async () => {
     const booking = { userId: 'owner', attachmentUrl: '/attachments/file.pdf', dokumenUrl: null };
     await expect(getAttachment(booking, { id: 'owner', role: 'USER' })).resolves.toBe('/attachments/file.pdf');
-    await expect(getAttachment(booking, { id: 'admin', role: 'ADMIN_UNIV' })).resolves.toBe('/attachments/file.pdf');
+    await expect(getAttachment(booking, { id: 'admin', role: 'ADMIN' })).resolves.toBe('/attachments/file.pdf');
   });
 
   it('rejects anonymous-equivalent and unrelated users', async () => {
     const booking = { userId: 'owner', attachmentUrl: '/attachments/file.pdf', dokumenUrl: null };
-    await expect(getAttachment(booking, { id: '', role: 'GUEST' })).rejects.toBeInstanceOf(ForbiddenException);
     await expect(getAttachment(booking, { id: 'other', role: 'USER' })).rejects.toBeInstanceOf(ForbiddenException);
   });
 

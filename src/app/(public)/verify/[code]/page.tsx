@@ -271,7 +271,7 @@ export default function VerifyBookingPage({
                       </h2>
                     </div>
                   </div>
-                ) : data.status === 'PENDING' || data.status === 'PENDING_LPF' || data.status === 'RECOMMENDED' ? (
+                ) : data.status === 'PENDING' || data.status === 'PENDING_LPF' || data.status === 'RECOMMENDED' || data.status === 'RECOMMENDED_YAYASAN' || data.status === 'VERIFIED' ? (
                   <div className="flex items-center gap-3.5 p-4 rounded-2xl bg-amber-500 text-white shadow-md shadow-amber-500/20 border border-amber-400">
                     <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
                       <Clock className="w-6 h-6 text-white" />

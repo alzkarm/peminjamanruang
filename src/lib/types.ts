@@ -1,13 +1,9 @@
-export type Role =
-  | 'mahasiswa'
-  | 'dosen'
-  | 'tendik'
-  | 'admin_umum'
-  | 'admin_lpf'
-  | 'admin_yayasan'
-  | 'superadmin'
-  | 'guest'
-  | 'security_cs';
+export type Role = 'user' | 'admin' | 'superadmin' | 'guest';
+
+// Migrasi role: backend internal UPPERCASE, response API lowercase; legacy admin_umum/admin_lpf/admin_yayasan -> admin, mahasiswa/dosen/tendik -> user.
+export function isAdminRole(r: Role | string | undefined | null): r is 'admin' | 'superadmin' {
+  return r === 'admin' || r === 'superadmin';
+}
 
 export type RoomType = 'auditorium' | 'classroom' | 'lab' | 'meeting' | 'studio' | 'hall';
 
@@ -62,7 +58,7 @@ export type BookingCategory =
   | 'kuliah'
   | 'ujian'
   | 'akreditasi'
-  | 'kemahasiswaan'
+  | 'ormawa'
   | 'yayasan'
   | 'lainnya';
 

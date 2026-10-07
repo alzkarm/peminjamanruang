@@ -110,9 +110,11 @@ export function checkRoomConflict(
     };
   }
 
-  // 2. Check active bookings (APPROVED, PENDING_LPF, RECOMMENDED_YAYASAN - STRICT HARD CONFLICT)
+  // 2. Check active bookings (APPROVED + PENDING antrean satu tingkat - STRICT HARD CONFLICT)
   const activeStatuses: BookingStatus[] = [
     "APPROVED",
+    "PENDING",
+    // legacy alias display-only: status lama tetap dianggap antrean aktif bila muncul dari data lama
     "PENDING_LPF",
     "RECOMMENDED_YAYASAN",
   ];
@@ -152,28 +154,28 @@ export function checkRoomConflict(
 
 export function getStatusBadgeConfig(status: BookingStatus) {
   switch (status) {
-    case "PENDING_LPF":
-    case "PENDING" as any:
+    case "PENDING":
+    case "PENDING_LPF": // legacy alias -> Menunggu
       return {
-        label: "Menunggu Verifikasi",
+        label: "Menunggu",
         bg: "bg-amber-50 text-amber-800 border-amber-300 ring-amber-500/20",
         dot: "bg-amber-500",
         iconName: "Clock",
       };
-    case "VERIFIED":
+    case "VERIFIED": // legacy alias -> Menunggu
       return {
-        label: "Terverifikasi (Admin)",
-        bg: "bg-indigo-50 text-indigo-800 border-indigo-300 ring-indigo-500/20",
-        dot: "bg-indigo-500",
-        iconName: "ShieldCheck",
+        label: "Menunggu",
+        bg: "bg-amber-50 text-amber-800 border-amber-300 ring-amber-500/20",
+        dot: "bg-amber-500",
+        iconName: "Clock",
       };
-    case "RECOMMENDED_YAYASAN":
-    case "RECOMMENDED" as any:
+    case "RECOMMENDED_YAYASAN": // legacy alias -> Menunggu
+    case "RECOMMENDED": // legacy alias -> Menunggu
       return {
-        label: "Direkomendasikan ke Yayasan",
-        bg: "bg-sky-50 text-sky-800 border-sky-300 ring-sky-500/20",
-        dot: "bg-sky-500",
-        iconName: "Building2",
+        label: "Menunggu",
+        bg: "bg-amber-50 text-amber-800 border-amber-300 ring-amber-500/20",
+        dot: "bg-amber-500",
+        iconName: "Clock",
       };
     case "APPROVED":
       return {
@@ -197,7 +199,6 @@ export function getStatusBadgeConfig(status: BookingStatus) {
         iconName: "XCircle",
       };
     case "CANCELLED":
-    case "CANCELED" as any:
       return {
         label: "Dibatalkan",
         bg: "bg-gray-100 text-gray-700 border-gray-300 ring-gray-400/20",

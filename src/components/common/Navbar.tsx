@@ -92,32 +92,20 @@ export function Navbar() {
   const isGuest = !currentUser || currentUser.role === 'guest';
   const role = currentUser?.role;
   const isSuperadmin = role === 'superadmin';
-  const isAdminUmum = role === 'admin_umum' || (role as string) === 'admin';
-  const isAdminLPF = role === 'admin_lpf';
-  const isYayasan = role === 'admin_yayasan';
-  const isAdminUser = isSuperadmin || isAdminUmum || isAdminLPF || isYayasan;
+  const isAdmin = role === 'admin' || role === 'superadmin';
+  const isAdminUser = isAdmin;
 
   const isHome = pathname === '/';
   const isOnAdminPath = pathname.startsWith('/admin');
 
-  // Compute pending counts (grouped by application so recurring series count as 1)
-  const pendingGeneralCount = countUniqueBookingApplications(
-    bookings.filter((b) => (b.status === 'PENDING_LPF' || b.status === 'VERIFIED') && !b.requiresYayasanApproval)
-  );
-  const pendingLPFCount = countUniqueBookingApplications(
-    bookings.filter((b) => b.status === 'PENDING_LPF' && b.requiresYayasanApproval)
-  );
-  const pendingYayasanCount = countUniqueBookingApplications(
-    bookings.filter((b) => b.status === 'RECOMMENDED_YAYASAN')
+  // Compute pending counts: antrean PENDING satu tingkat
+  const pendingCount = countUniqueBookingApplications(
+    bookings.filter((b) => b.status === 'PENDING')
   );
 
-  const adminPendingBadge = isYayasan
-    ? pendingYayasanCount
-    : isAdminLPF
-    ? pendingLPFCount
-    : pendingGeneralCount;
+  const adminPendingBadge = pendingCount;
 
-  const adminTargetUrl = isYayasan ? '/admin/approvals/yayasan' : '/admin/approvals';
+  const adminTargetUrl = '/admin/approvals';
 
   interface NavLinkItem {
     href: string;
@@ -158,28 +146,18 @@ export function Navbar() {
     switch (userRole) {
       case 'superadmin':
         return <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-purple-100 text-purple-900 border border-purple-300 dark:bg-purple-500/20 dark:text-purple-200 dark:border-purple-500/40">Superadmin</span>;
-      case 'admin_umum':
-        return <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-indigo-100 text-indigo-900 border border-indigo-300 dark:bg-indigo-500/20 dark:text-indigo-200 dark:border-indigo-500/40">Admin Umum</span>;
-      case 'admin_yayasan':
-        return <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-900 border border-amber-300 dark:bg-amber-500/20 dark:text-amber-200 dark:border-amber-500/40">Yayasan YARSI</span>;
-      case 'admin_lpf':
-        return <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-900 border border-emerald-300 dark:bg-emerald-500/20 dark:text-emerald-200 dark:border-emerald-500/40">Admin LPF</span>;
-      case 'dosen':
-        return <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-900 border border-blue-300 dark:bg-blue-500/20 dark:text-blue-200 dark:border-blue-500/40">Dosen</span>;
-      case 'tendik':
-        return <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-purple-100 text-purple-900 border border-purple-300 dark:bg-purple-500/20 dark:text-purple-200 dark:border-purple-500/40">Tendik</span>;
-      case 'mahasiswa':
-        return <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-teal-100 text-teal-900 border border-teal-300 dark:bg-teal-500/20 dark:text-teal-200 dark:border-teal-500/40">Mahasiswa</span>;
+      case 'admin':
+        return <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-900 border border-emerald-300 dark:bg-emerald-500/20 dark:text-emerald-200 dark:border-emerald-500/40">Admin</span>;
+      case 'user':
+        return <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-teal-100 text-teal-900 border border-teal-300 dark:bg-teal-500/20 dark:text-teal-200 dark:border-teal-500/40">User</span>;
       default:
-        return <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600">Mode Tamu</span>;
+        return <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600">Tamu</span>;
     }
   };
 
   const getRoleTitle = () => {
     if (isSuperadmin) return 'Superadmin';
-    if (isAdminUmum) return 'Admin Umum';
-    if (isAdminLPF) return 'Admin LPF';
-    if (isYayasan) return 'Pengurus Yayasan';
+    if (isAdmin) return 'Admin';
     return 'Pengelola';
   };
 
@@ -335,7 +313,7 @@ export function Navbar() {
                             <ShieldCheck className="w-4 h-4 text-yarsi-primary shrink-0" />
                             <div>
                               <p className="leading-tight">
-                                {isYayasan ? 'Persetujuan Yayasan' : 'Verifikasi Permohonan'}
+                                Persetujuan
                               </p>
                               <p className="text-[10px] text-slate-400 font-normal">Antrean permohonan ruang</p>
                             </div>
@@ -347,7 +325,7 @@ export function Navbar() {
                           )}
                         </Link>
 
-                        {(isSuperadmin || isAdminUmum || isAdminLPF) && (
+                        {(isSuperadmin || isAdmin) && (
                           <Link
                             href="/admin/academic-bulk"
                             onClick={() => setAdminDropdownOpen(false)}
@@ -570,7 +548,7 @@ export function Navbar() {
                               )}
                             </Link>
 
-                            {(isSuperadmin || isAdminUmum || isAdminLPF) && (
+                            {(isSuperadmin || isAdmin) && (
                               <Link
                                 href="/admin/academic-bulk"
                                 onClick={() => setUserDropdownOpen(false)}
@@ -725,11 +703,11 @@ export function Navbar() {
                     onClick={() => setMobileMenuOpen(false)}
                     className="flex items-center justify-between px-3 py-2 text-xs font-bold text-slate-800 hover:bg-emerald-50 rounded-lg dark:text-slate-200 dark:hover:bg-emerald-500/10"
                   >
-                    <span>{isYayasan ? 'Persetujuan Yayasan' : 'Verifikasi Permohonan'}</span>
+                    <span>Persetujuan</span>
                     <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
                   </Link>
 
-                  {(isSuperadmin || isAdminUmum || isAdminLPF) && (
+                  {(isSuperadmin || isAdmin) && (
                     <Link
                       href="/admin/academic-bulk"
                       onClick={() => setMobileMenuOpen(false)}

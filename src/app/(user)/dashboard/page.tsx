@@ -112,10 +112,11 @@ export default function UserDashboardPage() {
       .catch(() => undefined);
   }, [fetchBookings, fetchRooms]);
 
-  // Filter user's bookings (or all if admin)
+  // Filter user's bookings (admin sees all; pemilik tetap bisa lihat miliknya)
   const userBookings = bookings.filter((b) => {
     if (!currentUser) return false;
-    if (currentUser.role === 'admin_lpf' || currentUser.role === 'admin_yayasan') {
+    const isAdmin = currentUser.role === 'admin' || currentUser.role === 'superadmin';
+    if (isAdmin) {
       return true;
     }
     return b.userId === currentUser.id || b.userNimNidn === currentUser.identifier || (currentUser?.email && b.userEmail === currentUser.email);
@@ -123,7 +124,7 @@ export default function UserDashboardPage() {
 
   const filteredBookings = userBookings.filter((b) => {
     if (activeTab === 'all') return true;
-    if (activeTab === 'pending') return b.status === 'PENDING_LPF' || b.status === 'RECOMMENDED_YAYASAN';
+    if (activeTab === 'pending') return b.status === 'PENDING';
     if (activeTab === 'approved') return b.status === 'APPROVED';
     if (activeTab === 'returned') return b.status === 'RETURNED';
     if (activeTab === 'completed') return b.status === 'COMPLETED';
@@ -176,9 +177,7 @@ export default function UserDashboardPage() {
   };
 
   const approvedCount = countUniqueBookingApplications(userBookings.filter((b) => b.status === 'APPROVED'));
-  const pendingCount = countUniqueBookingApplications(
-    userBookings.filter((b) => b.status === 'PENDING_LPF' || b.status === 'RECOMMENDED_YAYASAN')
-  );
+  const pendingCount = countUniqueBookingApplications(userBookings.filter((b) => b.status === 'PENDING'));
   const returnedCount = countUniqueBookingApplications(userBookings.filter((b) => b.status === 'RETURNED'));
   const completedCount = countUniqueBookingApplications(userBookings.filter((b) => b.status === 'COMPLETED'));
   const totalUserBookingsCount = countUniqueBookingApplications(userBookings);
@@ -196,19 +195,15 @@ export default function UserDashboardPage() {
   };
 
   const renderStepper = (booking: Booking) => {
-    const isYayasan = booking.requiresYayasanApproval;
-
-    // Steps definition
+    // Satu tahap: Pengajuan -> Menunggu -> Disetujui; requiresYayasanApproval hanya label info.
     const steps = [
       { label: 'Pengajuan', key: 'SUBMITTED' },
-      { label: 'Review LPF', key: 'LPF' },
-      ...(isYayasan ? [{ label: 'Review Yayasan', key: 'YAYASAN' }] : []),
+      { label: 'Menunggu', key: 'PENDING' },
       { label: 'Disetujui', key: 'APPROVED' },
     ];
 
     let currentStepIndex = 1;
-    if (booking.status === 'PENDING_LPF') currentStepIndex = 1;
-    else if (booking.status === 'RECOMMENDED_YAYASAN') currentStepIndex = 2;
+    if (booking.status === 'PENDING') currentStepIndex = 1;
     else if (booking.status === 'APPROVED' || booking.status === 'COMPLETED')
       currentStepIndex = steps.length - 1;
     else if (booking.status === 'RETURNED' || booking.status === 'REJECTED' || booking.status === 'CANCELLED')
@@ -711,9 +706,7 @@ export default function UserDashboardPage() {
                             <span>Detail Pengajuan</span>
                           </button>
 
-                          {(booking.status === 'PENDING_LPF' ||
-                            booking.status === 'RECOMMENDED_YAYASAN' ||
-                            (booking.status as string) === 'PENDING') && (
+                          {booking.status === 'PENDING' && (
                             <button
                               type="button"
                               onClick={() => setRescheduleTarget(booking)}
@@ -730,9 +723,7 @@ export default function UserDashboardPage() {
                             </div>
                           )}
 
-                          {(booking.status === 'PENDING_LPF' ||
-                            booking.status === 'RECOMMENDED_YAYASAN' ||
-                            (booking.status as string) === 'PENDING') && (
+                          {booking.status === 'PENDING' && (
                             <button
                               type="button"
                               onClick={() => setCancelTargetId(booking.id)}

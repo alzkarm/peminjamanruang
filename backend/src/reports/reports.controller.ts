@@ -18,13 +18,13 @@ export class ReportsController {
   constructor(private readonly reportsService: ReportsService) {}
 
   @Get('export/excel')
-  @Roles(Role.ADMIN_UNIV, Role.ADMIN_YAYASAN)
+  @Roles(Role.SUPERADMIN, Role.ADMIN)
   async exportExcel(@Query() filter: ReportFilterDto, @Res() res: Response) {
     return this.reportsService.exportBookingsToExcelStream(res, filter);
   }
 
   @Get('summary')
-  @Roles(Role.ADMIN_UNIV, Role.ADMIN_YAYASAN)
+  @Roles(Role.SUPERADMIN, Role.ADMIN)
   async getSummary() {
     return this.reportsService.getSummaryMetrics();
   }

@@ -33,7 +33,7 @@ export default function AdminUsersPage() {
 
   // Form state (simplified LDAP invite)
   const [identifier, setIdentifier] = useState('');
-  const [role, setRole] = useState('mahasiswa');
+  const [role, setRole] = useState('user');
 
   // Feedback notifications
   const [notification, setNotification] = useState<{
@@ -107,7 +107,7 @@ export default function AdminUsersPage() {
       setIsModalOpen(false);
       // Reset form
       setIdentifier('');
-      setRole('mahasiswa');
+      setRole('user');
       await fetchUsers();
     } catch (err: any) {
       setNotification({
@@ -142,50 +142,26 @@ export default function AdminUsersPage() {
   };
 
   const getRoleBadge = (roleStr: string) => {
-    switch (roleStr) {
-      case 'superadmin':
-        return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-purple-100 dark:bg-purple-500/20 text-purple-900 dark:text-purple-200 border border-purple-300 dark:border-purple-500/40">
-            Superadmin
-          </span>
-        );
-      case 'admin_umum':
-        return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-indigo-100 dark:bg-indigo-500/20 text-indigo-900 dark:text-indigo-200 border border-indigo-300 dark:border-indigo-500/40">
-            Admin Umum
-          </span>
-        );
-      case 'admin_yayasan':
-        return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-amber-100 dark:bg-amber-500/15 text-amber-900 dark:text-amber-200 border border-amber-300 dark:border-amber-500/40">
-            Yayasan
-          </span>
-        );
-      case 'admin_lpf':
-        return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-100 dark:bg-emerald-500/15 text-emerald-900 dark:text-emerald-100 border border-emerald-300 dark:border-emerald-500/40">
-            Admin LPF
-          </span>
-        );
-      case 'dosen':
-        return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-blue-100 dark:bg-blue-500/20 text-blue-900 dark:text-blue-200 border border-blue-300 dark:border-blue-500/40">
-            Dosen
-          </span>
-        );
-      case 'tendik':
-        return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700">
-            Tendik
-          </span>
-        );
-      default:
-        return (
-          <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-teal-100 dark:bg-teal-500/20 text-teal-900 dark:text-teal-200 border border-teal-300 dark:border-teal-500/40">
-            Mahasiswa
-          </span>
-        );
+    const normalized = roleStr.toLowerCase();
+    if (normalized === 'superadmin') {
+      return (
+        <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-purple-100 dark:bg-purple-500/20 text-purple-900 dark:text-purple-200 border border-purple-300 dark:border-purple-500/40">
+          Superadmin
+        </span>
+      );
     }
+    if (normalized === 'admin') {
+      return (
+        <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-100 dark:bg-emerald-500/15 text-emerald-900 dark:text-emerald-100 border border-emerald-300 dark:border-emerald-500/40">
+          Admin
+        </span>
+      );
+    }
+    return (
+      <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-teal-100 dark:bg-teal-500/20 text-teal-900 dark:text-teal-200 border border-teal-300 dark:border-teal-500/40">
+        User
+      </span>
+    );
   };
 
   return (
@@ -252,25 +228,23 @@ export default function AdminUsersPage() {
           <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium mt-0.5">Pengguna terdaftar</p>
         </div>
         <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 shadow-sm">
-          <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Superadmin / Yayasan</p>
+          <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Superadmin</p>
           <p className="text-2xl font-black text-amber-700 dark:text-amber-400 mt-1">
-            {users.filter((u) => u.role === 'admin_yayasan').length}
+            {users.filter((u) => u.role.toLowerCase() === 'superadmin').length}
           </p>
-          <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">Akses tertinggi</p>
         </div>
         <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 shadow-sm">
-          <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Admin Fasilitas</p>
+          <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Admin</p>
           <p className="text-2xl font-black text-emerald-700 dark:text-emerald-300 mt-1">
-            {users.filter((u) => u.role === 'admin_lpf').length}
+            {users.filter((u) => u.role.toLowerCase() === 'admin').length}
           </p>
-          <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">LPF Kampus</p>
+          <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">Pengelola Kampus</p>
         </div>
         <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4 shadow-sm">
-          <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Dosen & Mahasiswa</p>
+          <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Civitas</p>
           <p className="text-2xl font-black text-blue-700 dark:text-blue-400 mt-1">
-            {users.filter((u) => u.role === 'dosen' || u.role === 'mahasiswa' || u.role === 'tendik').length}
+            {users.filter((u) => u.role.toLowerCase() === 'user').length}
           </p>
-          <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">Civitas Akademika</p>
         </div>
       </div>
 
@@ -295,12 +269,8 @@ export default function AdminUsersPage() {
           >
             <option value="ALL">Semua Peran</option>
             <option value="superadmin">Superadmin</option>
-            <option value="admin_umum">Admin Umum</option>
-            <option value="admin_lpf">Admin LPF</option>
-            <option value="admin_yayasan">Yayasan</option>
-            <option value="dosen">Dosen</option>
-            <option value="tendik">Tendik</option>
-            <option value="mahasiswa">Mahasiswa</option>
+            <option value="admin">Admin</option>
+            <option value="user">User</option>
           </select>
 
           <button
@@ -517,13 +487,9 @@ export default function AdminUsersPage() {
                   onChange={(e) => setRole(e.target.value)}
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-400 transition-all"
                 >
-                  <option value="mahasiswa">Mahasiswa (Peminjam Reguler)</option>
-                  <option value="dosen">Dosen (Peminjam &amp; Pengampu)</option>
-                  <option value="tendik">Tenaga Kependidikan (Tendik)</option>
-                  <option value="admin_umum">Admin Umum (Verifikator Ruangan Reguler)</option>
-                  <option value="admin_lpf">Admin LPF (Verifikator Ruangan Yayasan)</option>
-                  <option value="admin_yayasan">Pengurus Yayasan (Approval Yayasan)</option>
-                  <option value="superadmin">Superadmin (Full Control &amp; Approval Akhir)</option>
+                  <option value="user">User (Peminjam)</option>
+                  <option value="admin">Admin (Persetujuan)</option>
+                  <option value="superadmin">Superadmin (Kontrol Penuh)</option>
                 </select>
               </div>
 

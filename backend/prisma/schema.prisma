@@ -8,13 +8,8 @@ generator client {
 }
 
 enum Role {
-  GUEST
   USER
-  ADMIN_UNIV
-  ADMIN_YAYASAN
-  ADMIN_UMUM
-  ADMIN_LPF
-  YAYASAN
+  ADMIN
   SUPERADMIN
 }
 

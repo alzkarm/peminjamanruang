@@ -191,8 +191,7 @@ export default function ReportsAnalyticsPage() {
             <option value="all">Semua Status</option>
             <option value="APPROVED">Disetujui</option>
             <option value="COMPLETED">Selesai Digunakan</option>
-            <option value="PENDING_LPF">Pending LPF</option>
-            <option value="RECOMMENDED_YAYASAN">Antrean Yayasan</option>
+            <option value="PENDING">Menunggu Persetujuan</option>
             <option value="REJECTED">Ditolak</option>
           </select>
         </div>
@@ -298,7 +297,7 @@ export default function ReportsAnalyticsPage() {
               { key: 'seminar', label: 'Seminar & Kuliah Tamu', color: 'bg-emerald-500' },
               { key: 'workshop', label: 'Workshop & Pelatihan', color: 'bg-blue-500' },
               { key: 'rapat', label: 'Rapat Kerja & Pleno', color: 'bg-amber-500' },
-              { key: 'kemahasiswaan', label: 'Ormawa & BEM', color: 'bg-purple-500' },
+              { key: 'ormawa', label: 'Ormawa & BEM', color: 'bg-purple-500' },
               { key: 'kuliah', label: 'Perkuliahan', color: 'bg-teal-500' },
               { key: 'yayasan', label: 'Acara Yayasan', color: 'bg-rose-500' },
             ].map((cat) => {

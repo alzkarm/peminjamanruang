@@ -22,7 +22,7 @@ export class UsersController {
 
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.SUPERADMIN, Role.ADMIN_UMUM, Role.ADMIN_LPF, Role.ADMIN_UNIV, Role.YAYASAN, Role.ADMIN_YAYASAN)
+  @Roles(Role.SUPERADMIN, Role.ADMIN)
   async findAll() {
     return this.usersService.findAll();
   }
@@ -37,7 +37,7 @@ export class UsersController {
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.SUPERADMIN, Role.ADMIN_UMUM)
+  @Roles(Role.SUPERADMIN, Role.ADMIN)
   async remove(@Param('id') id: string) {
     return this.usersService.remove(id);
   }

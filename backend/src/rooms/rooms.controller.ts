@@ -86,7 +86,7 @@ export class RoomsController {
 
   @Post('maintenance')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.SUPERADMIN, Role.ADMIN_UNIV, Role.ADMIN_LPF, Role.ADMIN_YAYASAN)
+  @Roles(Role.SUPERADMIN, Role.ADMIN)
   async createMaintenance(
     @CurrentUser() currentUser: { fullName: string },
     @Body()
@@ -110,7 +110,7 @@ export class RoomsController {
 
   @Delete('maintenance/:id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.SUPERADMIN, Role.ADMIN_UNIV, Role.ADMIN_LPF, Role.ADMIN_YAYASAN)
+  @Roles(Role.SUPERADMIN, Role.ADMIN)
   async removeMaintenance(@Param('id') id: string) {
     return this.roomsService.removeMaintenance(id);
   }
@@ -122,14 +122,14 @@ export class RoomsController {
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.SUPERADMIN, Role.ADMIN_UNIV, Role.ADMIN_YAYASAN)
+  @Roles(Role.SUPERADMIN, Role.ADMIN)
   async create(@Body() dto: CreateRoomDto) {
     return this.roomsService.create(dto);
   }
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.SUPERADMIN, Role.ADMIN_UNIV, Role.ADMIN_YAYASAN)
+  @Roles(Role.SUPERADMIN, Role.ADMIN)
   async update(
     @Param('id') id: string,
     @Body() dto: import('./dto/create-room.dto').UpdateRoomDto,
@@ -146,7 +146,7 @@ export class RoomsController {
 
   @Patch(':id/toggle-status')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.SUPERADMIN, Role.ADMIN_UNIV, Role.ADMIN_YAYASAN)
+  @Roles(Role.SUPERADMIN, Role.ADMIN)
   async toggleStatus(@Param('id') id: string) {
     return this.roomsService.toggleStatus(id);
   }

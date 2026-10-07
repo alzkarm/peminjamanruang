@@ -167,7 +167,11 @@ export const useAppStore = create<AppState>()(
 
       fetchBookings: async () => {
         try {
-          const bookings = await bookingsApi.getAll();
+          const { currentUser } = get();
+          const bookings =
+            currentUser?.role === 'user' && currentUser?.id && currentUser.id !== 'guest'
+              ? await bookingsApi.getAll({ userId: currentUser.id })
+              : await bookingsApi.getAll();
           set({ bookings });
         } catch (err: any) {
           // Guest / tanpa token: GET /bookings wajib login (401). Jangan
@@ -337,23 +341,8 @@ export const useAppStore = create<AppState>()(
       approveBookingLPF: async (bookingId, notes, approverName, applyToRecurringGroup = true) => {
         set({ isSyncing: true });
         const booking = get().bookings.find((b) => b.id === bookingId);
-        const currentUserRole = get().currentUser?.role;
-        let targetStatus: 'VERIFIED' | 'RECOMMENDED' | 'APPROVED' = 'APPROVED';
-        let frontendTargetStatus: BookingStatus = 'APPROVED';
-
-        if (booking?.requiresYayasanApproval) {
-          targetStatus = 'RECOMMENDED';
-          frontendTargetStatus = 'RECOMMENDED_YAYASAN';
-        } else {
-          // Ruangan Umum: Admin Umum memverifikasi -> VERIFIED; Superadmin menyetujui -> APPROVED
-          if (currentUserRole === 'admin_umum') {
-            targetStatus = 'VERIFIED';
-            frontendTargetStatus = 'VERIFIED';
-          } else {
-            targetStatus = 'APPROVED';
-            frontendTargetStatus = 'APPROVED';
-          }
-        }
+        const targetStatus = 'APPROVED';
+        const frontendTargetStatus: BookingStatus = 'APPROVED';
 
         let relatedIds = [bookingId];
         if (applyToRecurringGroup && booking) {
@@ -385,14 +374,14 @@ export const useAppStore = create<AppState>()(
           }
 
           const now = new Date().toLocaleString('id-ID');
-          const approver = approverName || 'Bambang Sudibyo (LPF)';
+          const approver = approverName || 'Admin SIPERU';
           set((state) => ({
             bookings: state.bookings.map((b) =>
               relatedIds.includes(b.id)
                 ? {
                     ...b,
                     status: frontendTargetStatus as BookingStatus,
-                    lpfNotes: notes || (booking?.requiresYayasanApproval ? 'Diverifikasi LPF & Direkomendasikan ke Yayasan' : 'Disetujui oleh LPF'),
+                    lpfNotes: notes || 'Disetujui oleh Admin',
                     lpfApprovedAt: now,
                     lpfApprovedBy: approver,
                   }
@@ -411,61 +400,8 @@ export const useAppStore = create<AppState>()(
       },
 
       approveBookingYayasan: async (bookingId, notes, approverName, applyToRecurringGroup = true) => {
-        set({ isSyncing: true });
-        const booking = get().bookings.find((b) => b.id === bookingId);
-
-        let relatedIds = [bookingId];
-        if (applyToRecurringGroup && booking) {
-          if (booking.bulkGroupId) {
-            relatedIds = get().bookings
-              .filter((b) => b.bulkGroupId === booking.bulkGroupId && b.status === 'RECOMMENDED_YAYASAN')
-              .map((b) => b.id);
-          } else if (isRecurringBooking(booking)) {
-            relatedIds = get().bookings
-              .filter(
-                (b) =>
-                  b.userId === booking.userId &&
-                  b.roomId === booking.roomId &&
-                  b.title === booking.title &&
-                  b.status === 'RECOMMENDED_YAYASAN' &&
-                  isRecurringBooking(b)
-              )
-              .map((b) => b.id);
-          }
-        }
-        if (relatedIds.length === 0) relatedIds = [bookingId];
-
-        try {
-          if (relatedIds.length > 1) {
-            await bookingsApi.updateBatchStatus(relatedIds, 'APPROVED', notes);
-          } else {
-            await bookingsApi.updateStatus(bookingId, 'APPROVED', notes, applyToRecurringGroup);
-          }
-
-          const now = new Date().toLocaleString('id-ID');
-          const approver = approverName || 'Drs. H. M. Shadiq (Yayasan YARSI)';
-          set((state) => ({
-            bookings: state.bookings.map((b) =>
-              relatedIds.includes(b.id)
-                ? {
-                    ...b,
-                    status: 'APPROVED' as BookingStatus,
-                    yayasanNotes: notes || 'Disetujui oleh Sekretariat Yayasan YARSI',
-                    yayasanApprovedAt: now,
-                    yayasanApprovedBy: approver,
-                  }
-                : b
-            ),
-            isSyncing: false,
-          }));
-        } catch (err: unknown) {
-          set({
-            isSyncing: false,
-            error: err instanceof Error ? err.message : 'Gagal memproses persetujuan Yayasan.',
-          });
-          throw err;
-        }
-
+        // Alias kompatibilitas: approval satu tingkat — semua persetujuan lewat approveBookingLPF (APPROVED).
+        return get().approveBookingLPF(bookingId, notes, approverName, applyToRecurringGroup);
       },
 
       rejectBooking: async (bookingId, reason, rejectedBy, applyToRecurringGroup = true) => {

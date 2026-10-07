@@ -5,14 +5,12 @@ import { BookingStatus } from '@/lib/types';
 import { getStatusBadgeConfig } from '@/lib/utils';
 import {
   Clock,
-  Building2,
   CheckCircle2,
   XCircle,
   Ban,
   CheckCheck,
   GraduationCap,
   RotateCcw,
-  ShieldCheck,
 } from 'lucide-react';
 
 interface StatusBadgeProps {
@@ -32,10 +30,10 @@ export function StatusBadge({
 
   const darkStatusClasses: Record<BookingStatus, string> = {
     PENDING: 'dark:bg-amber-500/10 dark:text-amber-200 dark:border-amber-500/40',
-    PENDING_LPF: 'dark:bg-amber-500/10 dark:text-amber-200 dark:border-amber-500/40',
-    VERIFIED: 'dark:bg-indigo-500/10 dark:text-indigo-200 dark:border-indigo-500/40',
-    RECOMMENDED: 'dark:bg-sky-500/10 dark:text-sky-200 dark:border-sky-500/40',
-    RECOMMENDED_YAYASAN: 'dark:bg-sky-500/10 dark:text-sky-200 dark:border-sky-500/40',
+    PENDING_LPF: 'dark:bg-amber-500/10 dark:text-amber-200 dark:border-amber-500/40', // legacy alias -> Menunggu
+    VERIFIED: 'dark:bg-amber-500/10 dark:text-amber-200 dark:border-amber-500/40', // legacy alias -> Menunggu
+    RECOMMENDED: 'dark:bg-amber-500/10 dark:text-amber-200 dark:border-amber-500/40', // legacy alias -> Menunggu
+    RECOMMENDED_YAYASAN: 'dark:bg-amber-500/10 dark:text-amber-200 dark:border-amber-500/40', // legacy alias -> Menunggu
     APPROVED: 'dark:bg-emerald-500/10 dark:text-emerald-200 dark:border-emerald-500/40',
     REJECTED: 'dark:bg-rose-500/10 dark:text-rose-200 dark:border-rose-500/40',
     RETURNED: 'dark:bg-orange-500/10 dark:text-orange-200 dark:border-orange-500/40',
@@ -62,12 +60,14 @@ export function StatusBadge({
   const renderIcon = () => {
     const iconClass = iconSizeClasses[size];
     switch (status) {
-      case 'PENDING_LPF':
+      case 'PENDING':
+      case 'PENDING_LPF': // legacy alias display-only -> Menunggu
         return <Clock className={iconClass} />;
-      case 'VERIFIED':
-        return <ShieldCheck className={iconClass} />;
-      case 'RECOMMENDED_YAYASAN':
-        return <Building2 className={iconClass} />;
+      case 'VERIFIED': // legacy alias display-only -> Menunggu
+        return <Clock className={iconClass} />;
+      case 'RECOMMENDED': // legacy alias display-only -> Menunggu
+      case 'RECOMMENDED_YAYASAN': // legacy alias display-only -> Menunggu
+        return <Clock className={iconClass} />;
       case 'APPROVED':
         return <CheckCircle2 className={iconClass} />;
       case 'REJECTED':

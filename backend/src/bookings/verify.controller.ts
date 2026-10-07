@@ -17,7 +17,7 @@ export class VerifyController {
 
   @Get('quick-action/generate-link/:bookingId')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.SUPERADMIN, Role.YAYASAN, Role.ADMIN_YAYASAN, Role.ADMIN_LPF, Role.ADMIN_UNIV, Role.ADMIN_UMUM)
+  @Roles(Role.SUPERADMIN, Role.ADMIN)
   async getQuickApprovalLink(
     @Param('bookingId') bookingId: string,
     @Query('action') action: 'APPROVE' | 'REJECT',

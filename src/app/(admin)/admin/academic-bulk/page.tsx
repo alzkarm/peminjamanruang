@@ -241,7 +241,7 @@ export default function AcademicBulkPage() {
           <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
           <input
             type="text"
-            placeholder="Cari mata kuliah, dosen, ruang..."
+            placeholder="Cari mata kuliah, pengajar, ruang..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full md:w-64 pl-9 pr-3 py-1.5 min-h-11 md:min-h-0 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:bg-slate-900 dark:border-slate-700"

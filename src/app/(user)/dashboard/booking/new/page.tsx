@@ -679,7 +679,7 @@ function NewBookingForm() {
       emptyFields.push({
         name: 'isInternalApproved',
         ref: internalApprovalRef,
-        message: 'Anda wajib mencentang konfirmasi persetujuan internal fakultas/kemahasiswaan sebelum mengajukan permohonan.',
+        message: 'Anda wajib mencentang konfirmasi persetujuan internal fakultas sebelum mengajukan permohonan.',
       });
     }
 
@@ -787,7 +787,7 @@ function NewBookingForm() {
           userName: userName || currentUser?.name || 'Civitas YARSI',
           userEmail: currentUser?.email || `${userNimNidn || 'user'}@yarsi.ac.id`,
           userNimNidn: userNimNidn || currentUser?.identifier || '',
-          userRole: currentUser?.role || 'mahasiswa',
+          userRole: currentUser?.role || 'user',
           userPhone,
           userOrganization,
           department,
@@ -1638,7 +1638,7 @@ function NewBookingForm() {
                   <option value="kunjungan">Kunjungan</option>
                   <option value="kuliah_tamu">Kuliah / Kuliah Tamu</option>
                   <option value="akreditasi">Akreditasi</option>
-                  <option value="kemahasiswaan">Kegiatan Ormawa / Kemahasiswaan</option>
+                  <option value="ormawa">Kegiatan Ormawa / Civitas</option>
                   <option value="yayasan">Acara Yayasan</option>
                   <option value="lainnya">Lainnya</option>
                 </select>
@@ -1977,7 +1977,7 @@ function NewBookingForm() {
                 Konfirmasi Persetujuan Internal *
               </p>
               <p className={`text-xs leading-relaxed ${fieldErrors.isInternalApproved ? 'text-red-800 dark:text-rose-300' : 'text-emerald-800 dark:text-emerald-200'}`}>
-                Saya menyatakan bahwa kegiatan ini telah diketahui atau disetujui oleh pimpinan fakultas, dekanat, BEM/DPM, atau pembina kemahasiswaan terkait.
+                Saya menyatakan bahwa kegiatan ini telah diketahui atau disetujui oleh pimpinan fakultas, dekanat, BEM/DPM, atau pembina kegiatan terkait.
               </p>
             </label>
           </div>

@@ -58,9 +58,9 @@ const FALLBACK_SUBMISSIONS: SubmissionPin[] = [
     roomCode: 'MY-1201',
     floor: 'Lantai 12',
     title: 'YARSI Tech Festival 2026: AI Summit',
-    status: 'RECOMMENDED',
-    statusLabel: 'Rekomendasi LPF',
-    statusColor: 'sky',
+    status: 'PENDING',
+    statusLabel: 'Menunggu',
+    statusColor: 'amber',
     timeSlot: '08:00 - 16:00',
     dateStr: '20 Agu',
     applicant: 'BEM FTI',
@@ -187,19 +187,13 @@ export function InteractiveBuilding({
             const xPositions = [32, 54, 30, 52, 42];
             const xCoord = xPositions[idx % xPositions.length];
 
-            // Status label & color
-            let statusLabel = 'Menunggu Approval';
+            // Status label & color: PENDING/APPROVED aktif; alias lama display-only map ke Menunggu
+            let statusLabel = 'Menunggu';
             let statusColor: SubmissionPin['statusColor'] = 'amber';
             const rawStatus = (item.status || '').toUpperCase();
             if (rawStatus === 'APPROVED') {
               statusLabel = 'Disetujui';
               statusColor = 'emerald';
-            } else if (rawStatus === 'RECOMMENDED') {
-              statusLabel = 'Rekomendasi LPF';
-              statusColor = 'sky';
-            } else if (rawStatus === 'VERIFIED') {
-              statusLabel = 'Terverifikasi';
-              statusColor = 'blue';
             } else if (rawStatus === 'REJECTED') {
               statusLabel = 'Ditolak';
               statusColor = 'rose';
