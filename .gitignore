@@ -43,8 +43,16 @@ yarn-error.log*
 *.sln
 *.sw?
 
-# Antigravity / Agents
+## AI tooling (local only, never commit)
 .agents/
-
-# graft's local graph cache — regenerable, not committed (run `graft build`).
+.claude/
+.gemini/
+.cursor/
+.codex/
+.copilot/
+.mcp.json
+opencode.json
+AGENTS.md
+GEMINI.md
+skills-lock.json
 /graft/
