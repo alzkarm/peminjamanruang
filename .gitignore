@@ -55,4 +55,5 @@ opencode.json
 AGENTS.md
 GEMINI.md
 skills-lock.json
-/graft/
+anti-slop/
+.antislop/
