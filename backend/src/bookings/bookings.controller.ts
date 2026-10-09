@@ -66,7 +66,7 @@ export class BookingsController {
     }),
   )
   async create(
-    @CurrentUser('id') userId: string,
+    @CurrentUser() currentUser: { id: string; fullName: string },
     @Body() dto: CreateBookingDto,
     @UploadedFile() file?: Express.Multer.File,
   ) {
@@ -76,7 +76,7 @@ export class BookingsController {
     }
     const attachmentUrl = file ? `/attachments/${file.filename}` : undefined;
     try {
-      return await this.bookingsService.create(userId, dto, attachmentUrl);
+      return await this.bookingsService.create(currentUser.id, dto, attachmentUrl, currentUser.fullName);
     } catch (error) {
       if (file) await fs.unlink(file.path).catch(() => undefined);
       throw error;

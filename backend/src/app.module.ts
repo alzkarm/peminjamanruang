@@ -11,6 +11,7 @@ import { CbtRoomModule } from './cbt-room/cbt-room.module';
 import { UsersModule } from './users/users.module';
 import { FacultiesModule } from './faculties/faculties.module';
 import { FacilitiesModule } from './facilities/facilities.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { FacilitiesModule } from './facilities/facilities.module';
     CbtRoomModule,
     FacultiesModule,
     FacilitiesModule,
+    NotificationsModule,
   ],
 })
 export class AppModule {}

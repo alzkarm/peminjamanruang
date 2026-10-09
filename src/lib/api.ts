@@ -1178,4 +1178,27 @@ export const smartRoomsApi = {
     });
   },
 };
+export interface AppNotification {
+  id: string;
+  bookingId?: string | null;
+  title: string;
+  message: string;
+  isRead: boolean;
+  createdAt: string;
+}
+
+export const notificationsApi = {
+  async list(limit = 20): Promise<{ items: AppNotification[]; unread: number }> {
+    return request<{ items: AppNotification[]; unread: number }>(`/notifications?limit=${limit}`);
+  },
+  async markAllRead(): Promise<{ ok: boolean }> {
+    return request<{ ok: boolean }>('/notifications/read-all', { method: 'PATCH' });
+  },
+  async markOneRead(id: string): Promise<{ ok: boolean }> {
+    return request<{ ok: boolean }>(`/notifications/${id}/read`, { method: 'PATCH' });
+  },
+  async queueCounts(): Promise<{ pending: number; awaitingApproval: number; total: number }> {
+    return request<{ pending: number; awaitingApproval: number; total: number }>('/notifications/queue-counts');
+  },
+};
 

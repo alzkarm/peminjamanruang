@@ -18,20 +18,20 @@ import {
 import { BookingStatus, Role } from '@/common/types';
 import { BookingStatus as PrismaBookingStatus } from '@prisma/client';
 import { SchedulingService } from '../scheduling/scheduling.service';
-
+import { NotificationsService } from '../notifications/notifications.service';
 @Injectable()
 export class BookingsService {
   private readonly logger = new Logger(BookingsService.name);
-
   constructor(
     private readonly prisma: PrismaService,
     private readonly scheduling: SchedulingService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   /**
    * Collision-Proof Atomic Booking Creator (Supports Single & Recurring Semester Bookings)
    */
-  async create(userId: string, dto: CreateBookingDto, uploadedAttachmentUrl?: string) {
+  async create(userId: string, dto: CreateBookingDto, uploadedAttachmentUrl?: string, requesterName = 'Pemohon') {
     const baseStart = new Date(dto.startTime);
     const baseEnd = new Date(dto.endTime);
 
@@ -149,7 +149,9 @@ export class BookingsService {
           firstBooking = newBooking;
         }
       }
-
+      if (firstBooking) {
+        await this.notifications.notifyNewSubmission(tx, firstBooking.id, firstBooking.title, requesterName);
+      }
       this.logger.log(`Created atomic booking(s) in room ${dto.roomId} by user ${userId} (${dates.length} session(s))`);
       return firstBooking;
     });
@@ -289,6 +291,15 @@ export class BookingsService {
           },
         });
 
+        if (b.userId !== currentUser.id) {
+          await this.notifications.notifyBookingStatus(
+            tx, b.userId, b.id, b.title, targetStatus, currentUser.fullName, notes,
+          );
+        }
+
+        if (targetStatus === BookingStatus.VERIFIED) {
+          await this.notifications.notifyAwaitingApproval(tx, b.id, b.title, currentUser.fullName);
+        }
         if (b.id === booking.id || !primaryUpdated) {
           primaryUpdated = updated;
         }
@@ -409,6 +420,14 @@ export class BookingsService {
           },
         });
 
+        if (booking.userId !== currentUser.id) {
+          await this.notifications.notifyBookingStatus(
+            tx, booking.userId, booking.id, booking.title, targetStatus, currentUser.fullName, notes,
+          );
+        }
+        if (targetStatus === BookingStatus.VERIFIED) {
+          await this.notifications.notifyAwaitingApproval(tx, booking.id, booking.title, currentUser.fullName);
+        }
         results.push(updated);
       }
 
@@ -870,7 +889,11 @@ export class BookingsService {
     return `${b64Payload}.${sig}`;
   }
 
-  async verifyAndExecuteQuickAction(token: string) {
+  async verifyAndExecuteQuickAction(token: string, executor?: { id: string; role: string; fullName: string }) {
+    if (!executor?.id) {
+      throw new ForbiddenException('Eksekusi tautan persetujuan wajib login.');
+    }
+
     if (!token || !token.includes('.')) {
       throw new BadRequestException('Format token persetujuan cepat tidak valid.');
     }
@@ -932,27 +955,66 @@ export class BookingsService {
       throw new ForbiddenException('Penyetuju pada tautan ini tidak lagi terdaftar.');
     }
 
-    const targetStatus = action === 'APPROVE' ? PrismaBookingStatus.APPROVED : PrismaBookingStatus.REJECTED;
+    const executorDb = await this.prisma.user.findUnique({ where: { id: executor.id } });
+    if (!executorDb) {
+      throw new ForbiddenException('Akun eksekutor tidak lagi aktif.');
+    }
+    const executorRole = (executorDb as { role?: string }).role;
+    if (executorRole !== Role.ADMIN && executorRole !== Role.SUPERADMIN) {
+      throw new ForbiddenException('Hanya Admin atau Superadmin yang dapat mengeksekusi tautan persetujuan.');
+    }
+    // Eksekutor harus penyetuju yang ditunjuk, atau superadmin yang mengambil alih.
+    const isDesignatedApprover = executor.id === approver.id;
+    const isSuperadmin = executorRole === Role.SUPERADMIN;
+    if (!isDesignatedApprover && !isSuperadmin) {
+      throw new ForbiddenException('Tautan ini hanya dapat dieksekusi oleh penyetuju yang ditunjuk atau Superadmin.');
+    }
+    // Role penyetuju dicek ulang dari DB: yang diturunkan/dinonaktifkan tak bisa approve.
+    const approverRole = (approver as { role?: string }).role;
+    if (approverRole !== Role.ADMIN && approverRole !== Role.SUPERADMIN) {
+      throw new ForbiddenException('Penyetuju pada tautan ini tidak lagi berwenang (role berubah).');
+    }
+
+    // Tahap dua tingkat: admin → VERIFIED, final APPROVED hanya superadmin.
+    let targetStatus: PrismaBookingStatus = action === 'APPROVE' ? PrismaBookingStatus.APPROVED : PrismaBookingStatus.REJECTED;
+    if (action === 'APPROVE' && executorRole === Role.ADMIN) {
+      targetStatus = PrismaBookingStatus.VERIFIED;
+    }
+
+    // Cegah double-booking via link: cek konflik slot seperti jalur normal.
+    if (targetStatus === PrismaBookingStatus.APPROVED || targetStatus === PrismaBookingStatus.VERIFIED) {
+      await this.scheduling.assertAvailable(booking.roomId, booking.startTime, booking.endTime, booking.id);
+    }
     const existingPassToken: string | undefined =
       'passToken' in booking && typeof booking.passToken === 'string' ? booking.passToken : undefined;
     const passToken = existingPassToken || (targetStatus === PrismaBookingStatus.APPROVED ? `PASS-${randomUUID().replace(/-/g, '').slice(0, 12).toUpperCase()}` : undefined);
 
-    const updated = await this.prisma.booking.update({
-      where: { id: bookingId },
-      data: {
-        status: targetStatus,
-        ...(passToken ? { passToken } : {}),
-      },
-    });
-
-    await this.prisma.approvalLog.create({
-      data: {
-        bookingId: booking.id,
-        approverId: approver.id,
-        fromStatus: booking.status,
-        toStatus: targetStatus,
-        notes: `Tindakan dieksekusi secara instan melalui Tautan Resmi Persetujuan Cepat Pimpinan Yayasan YARSI (${action === 'APPROVE' ? 'Disetujui' : 'Ditolak'}).`,
-      },
+    const updated = await this.scheduling.inSerializableTransaction(async (tx) => {
+      const row = await tx.booking.update({
+        where: { id: bookingId },
+        data: {
+          status: targetStatus,
+          ...(passToken ? { passToken } : {}),
+        },
+      });
+      await tx.approvalLog.create({
+        data: {
+          bookingId: booking.id,
+          approverId: executor.id,
+          fromStatus: booking.status,
+          toStatus: targetStatus,
+          notes: `Tautan cepat (${action === 'APPROVE' ? 'Disetujui' : 'Ditolak'}): ditunjuk ${approver.fullName}, dieksekusi ${executor.fullName}.`,
+        },
+      });
+      if (booking.userId !== executor.id) {
+        await this.notifications.notifyBookingStatus(
+          tx, booking.userId, booking.id, booking.title, targetStatus, executor.fullName,
+        );
+      }
+      if (targetStatus === BookingStatus.VERIFIED) {
+        await this.notifications.notifyAwaitingApproval(tx, booking.id, booking.title, executor.fullName);
+      }
+      return row;
     });
 
     return {
@@ -964,8 +1026,8 @@ export class BookingsService {
       status: targetStatus,
       passToken: passToken || existingPassToken,
       message: action === 'APPROVE'
-        ? 'Permohonan peminjaman berhasil DISETUJUI secara resmi oleh Pimpinan Yayasan.'
-        : 'Permohonan peminjaman berhasil DITOLAK.',
+        ? `Permohonan peminjaman berhasil ${targetStatus === PrismaBookingStatus.VERIFIED ? 'DIVERIFIKASI' : 'DISETUJUI'} oleh ${executor.fullName}.`
+        : `Permohonan peminjaman ditolak oleh ${executor.fullName}.`,
     };
   }
 

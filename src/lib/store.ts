@@ -16,9 +16,11 @@ import {
   bookingsApi,
   academicBulkApi,
   feedbacksApi,
+  notificationsApi,
   mapFrontendCategoryToBackendActivityType,
   removeAuthToken,
   setAuthToken,
+  type AppNotification,
 } from './api';
 import { getJakartaDateTimeIso, isRecurringBooking } from './utils';
 import {
@@ -47,16 +49,23 @@ interface AppState {
   bookings: Booking[];
   academicBlocks: AcademicBlock[];
   feedbacks: Feedback[];
+  notifications: AppNotification[];
+  unreadNotifications: number;
+  queuePending: number;
+  queueAwaitingApproval: number;
+  queueFetched: boolean;
   hasHydrated: boolean;
   isLoading: boolean;
   isSyncing: boolean;
   error: string | null;
-
   // Sync actions
   fetchInitialData: () => Promise<void>;
   fetchBookings: () => Promise<void>;
   fetchRooms: () => Promise<void>;
   fetchAcademicBlocks: () => Promise<void>;
+  fetchNotifications: () => Promise<void>;
+  markNotificationsRead: () => Promise<void>;
+  markNotificationRead: (id: string) => Promise<void>;
 
   // Auth actions
   setCurrentUser: (user: UserSession) => void;
@@ -124,6 +133,11 @@ export const useAppStore = create<AppState>()(
       isLoading: false,
       isSyncing: false,
       error: null,
+      notifications: [],
+      unreadNotifications: 0,
+      queuePending: 0,
+      queueAwaitingApproval: 0,
+      queueFetched: false,
 
       clearError: () => set({ error: null }),
 
@@ -187,11 +201,51 @@ export const useAppStore = create<AppState>()(
         try {
           const academicBlocks = await academicBulkApi.getAll();
           set({ academicBlocks });
-        } catch (err: any) {
-          set({ error: err.message });
+        } catch (err: unknown) {
+          set({ error: err instanceof Error ? err.message : 'Gagal memuat blok akademik.' });
         }
       },
 
+      fetchNotifications: async () => {
+        const { currentUser } = get();
+        if (!currentUser || currentUser.role === 'guest') return;
+        try {
+          const res = await notificationsApi.list(20);
+          set({ notifications: res.items, unreadNotifications: res.unread });
+        } catch {
+          // endpoint belum tersedia / offline — bell diam, bukan error global
+        }
+        const role = currentUser.role;
+        if (role === 'admin' || role === 'superadmin') {
+          try {
+            const q = await notificationsApi.queueCounts();
+            set({ queuePending: q.pending, queueAwaitingApproval: q.awaitingApproval, queueFetched: true });
+          } catch {
+            // antrean opsional — badge navbar fallback ke hitungan lokal
+          }
+        }
+      },
+
+      markNotificationsRead: async () => {
+        try {
+          await notificationsApi.markAllRead();
+          set({ notifications: get().notifications.map((n) => ({ ...n, isRead: true })), unreadNotifications: 0 });
+        } catch {
+          // abaikan — optimistic reset tetap jalan
+          set({ notifications: get().notifications.map((n) => ({ ...n, isRead: true })), unreadNotifications: 0 });
+        }
+      },
+      markNotificationRead: async (id: string) => {
+        set({
+          notifications: get().notifications.map((n) => (n.id === id ? { ...n, isRead: true } : n)),
+          unreadNotifications: Math.max(0, get().unreadNotifications - 1),
+        });
+        try {
+          await notificationsApi.markOneRead(id);
+        } catch {
+          // optimistic — biarkan
+        }
+      },
       setCurrentUser: (user) => {
         if (user.token) setAuthToken(user.token);
         set({ currentUser: user });
@@ -215,8 +269,9 @@ export const useAppStore = create<AppState>()(
           set({ currentUser: res.user, isLoading: false });
           // Fetch updated bookings after login
           get().fetchBookings();
+          get().fetchNotifications();
           return res.user;
-        } catch (err: any) {
+        } catch (err: unknown) {
           // If backend API/LDAP is unavailable or returned error, fallback to local demo account
           if (demoUser) {
             set({ currentUser: demoUser, isLoading: false });
@@ -224,7 +279,7 @@ export const useAppStore = create<AppState>()(
           }
 
           const errorMessage =
-            err?.message ||
+            err instanceof Error ? err.message :
             'Gagal terhubung ke server autentikasi LDAP YARSI. Pastikan Anda terhubung ke jaringan kampus.';
           set({ isLoading: false, error: errorMessage });
           throw new Error(errorMessage);
@@ -235,6 +290,11 @@ export const useAppStore = create<AppState>()(
         removeAuthToken();
         set({
           currentUser: GUEST_USER,
+          notifications: [],
+          unreadNotifications: 0,
+          queuePending: 0,
+          queueAwaitingApproval: 0,
+          queueFetched: false,
         });
       },
 

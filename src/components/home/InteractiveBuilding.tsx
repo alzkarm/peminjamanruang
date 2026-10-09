@@ -403,7 +403,7 @@ export function InteractiveBuilding({
                 setActiveHotspot(activeHotspot === sub.id ? null : sub.id);
                 if (onSelectRoom) onSelectRoom(sub.roomName);
               }}
-              className={`absolute z-30 transition-all duration-300 cursor-pointer ${
+              className={`absolute z-30 hidden transition-all duration-300 cursor-pointer xl:block ${
                 isHovered || isActive ? 'scale-105 z-40' : 'scale-100'
               }`}
             >

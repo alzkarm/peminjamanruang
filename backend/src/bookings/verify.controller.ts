@@ -5,16 +5,19 @@ import { RolesGuard } from '@/common/guards/roles.guard';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { Role } from '@/common/types';
-
+import { QuickActionQueryDto } from './dto/quick-action-query.dto';
 @Controller('verify')
 export class VerifyController {
   constructor(private readonly bookingsService: BookingsService) {}
 
   @Get('quick-action/execute')
-  async executeQuickAction(@Query('token') token: string) {
-    return this.bookingsService.verifyAndExecuteQuickAction(token);
+  @UseGuards(JwtAuthGuard)
+  async executeQuickAction(
+    @Query() query: QuickActionQueryDto,
+    @CurrentUser() executor: { id: string; role: string; fullName: string },
+  ) {
+    return this.bookingsService.verifyAndExecuteQuickAction(query.token, executor);
   }
-
   @Get('quick-action/generate-link/:bookingId')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.SUPERADMIN, Role.ADMIN)

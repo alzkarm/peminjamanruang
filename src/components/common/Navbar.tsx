@@ -6,6 +6,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useAppStore } from '@/lib/store';
 import { Role } from '@/lib/types';
 import { AuthGateModal } from '@/components/common/AuthGateModal';
+import { NotificationBell } from '@/components/common/NotificationBell';
 import {
   CalendarDays,
   PlusCircle,
@@ -36,7 +37,7 @@ import { countUniqueBookingApplications } from '@/lib/utils';
 export function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { currentUser, logout, bookings, fetchInitialData } = useAppStore();
+  const { currentUser, logout, bookings, fetchInitialData, fetchNotifications, queuePending, queueAwaitingApproval, queueFetched } = useAppStore();
   const [mounted, setMounted] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [adminDropdownOpen, setAdminDropdownOpen] = useState(false);
@@ -50,6 +51,7 @@ export function Navbar() {
   useEffect(() => {
     setMounted(true);
     fetchInitialData();
+    fetchNotifications().catch(() => undefined);
   }, [fetchInitialData]);
 
   useEffect(() => {
@@ -98,12 +100,18 @@ export function Navbar() {
   const isHome = pathname === '/';
   const isOnAdminPath = pathname.startsWith('/admin');
 
-  // Compute pending counts: antrean PENDING satu tingkat
-  const pendingCount = countUniqueBookingApplications(
+  // Antrean per role dari server (fallback hitungan lokal hanya bila fetch gagal):
+  // admin → PENDING; superadmin → PENDING + VERIFIED.
+  const localPending = countUniqueBookingApplications(
     bookings.filter((b) => b.status === 'PENDING')
   );
-
-  const adminPendingBadge = pendingCount;
+  const serverQueue = isSuperadmin
+    ? queuePending + queueAwaitingApproval
+    : queuePending;
+  const queueReady = typeof queueFetched === 'boolean' ? queueFetched : (queuePending > 0 || queueAwaitingApproval > 0);
+  const adminPendingBadge = isAdminUser
+    ? (queueReady ? serverQueue : localPending)
+    : 0;
 
   const adminTargetUrl = '/admin/approvals';
 
@@ -631,6 +639,8 @@ export function Navbar() {
                 </div>
               )}
 
+              {/* Notification Bell (in-app, login only) */}
+              {mounted && <NotificationBell isHome={isHome} />}
               {/* Theme Toggle */}
               <button
                 type="button"
