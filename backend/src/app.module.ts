@@ -11,6 +11,7 @@ import { CbtRoomModule } from './cbt-room/cbt-room.module';
 import { UsersModule } from './users/users.module';
 import { FacultiesModule } from './faculties/faculties.module';
 import { FacilitiesModule } from './facilities/facilities.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 const activeEnv = process.env.NODE_ENV || 'development';
 
@@ -40,6 +41,7 @@ const activeEnv = process.env.NODE_ENV || 'development';
     CbtRoomModule,
     FacultiesModule,
     FacilitiesModule,
+    NotificationsModule,
   ],
 })
 export class AppModule {}

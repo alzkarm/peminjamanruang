@@ -19,20 +19,20 @@ import {
 import { BookingStatus, Role } from '@/common/types';
 import { BookingStatus as PrismaBookingStatus } from '@prisma/client';
 import { SchedulingService } from '../scheduling/scheduling.service';
-
+import { NotificationsService } from '../notifications/notifications.service';
 @Injectable()
 export class BookingsService {
   private readonly logger = new Logger(BookingsService.name);
-
   constructor(
     private readonly prisma: PrismaService,
     private readonly scheduling: SchedulingService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   /**
    * Collision-Proof Atomic Booking Creator (Supports Single & Recurring Semester Bookings)
    */
-  async create(userId: string, dto: CreateBookingDto, uploadedAttachmentUrl?: string) {
+  async create(userId: string, dto: CreateBookingDto, uploadedAttachmentUrl?: string, requesterName = 'Pemohon') {
     const baseStart = new Date(dto.startTime);
     const baseEnd = new Date(dto.endTime);
 
@@ -150,21 +150,17 @@ export class BookingsService {
           firstBooking = newBooking;
         }
       }
-
+      if (firstBooking) {
+        await this.notifications.notifyNewSubmission(tx, firstBooking.id, firstBooking.title, requesterName);
+      }
       this.logger.log(`Created atomic booking(s) in room ${dto.roomId} by user ${userId} (${dates.length} session(s))`);
       return firstBooking;
     });
   }
 
-  isSpecialOrYayasanRoom(room?: { isSpecialRoom?: boolean; name?: string } | null): boolean {
-    if (!room) return false;
-    if (room.isSpecialRoom) return true;
-    const n = (room.name || '').toLowerCase();
-    return n.includes('auditorium') || n.includes('senat') || n.includes('workshop');
-  }
-
   /**
-   * Dual-Tier State Machine Transition Handler
+   * Dua tahap persetujuan: PENDING -> VERIFIED (Admin/Superadmin) -> APPROVED (Superadmin).
+   * Admin yang menekan Setujui otomatis diarahkan ke VERIFIED; approval final hanya Superadmin.
    */
   async updateStatus(
     bookingId: string,
@@ -184,64 +180,45 @@ export class BookingsService {
       const currentStatus = booking.status as BookingStatus;
       let targetStatus = dto.status;
       const notes = (dto.notes || dto.catatan || '').trim();
-
       const userRole = currentUser.role as Role;
-
-      // Access Isolation enforcement for status updates:
-      const isAdminRole =
-        userRole === Role.SUPERADMIN ||
-        userRole === Role.ADMIN_LPF ||
-        userRole === Role.ADMIN_UNIV ||
-        userRole === Role.YAYASAN ||
-        userRole === Role.ADMIN_YAYASAN;
-      if (!isAdminRole && booking.userId !== currentUser.id) {
-        throw new ForbiddenException('Anda tidak berhak mengubah status peminjaman milik pengguna lain.');
-      }
+      const isAdmin = userRole === Role.ADMIN || userRole === Role.SUPERADMIN;
 
       // Validation for Catatan Wajib when returning or rejecting
       if (targetStatus === BookingStatus.REJECTED || targetStatus === BookingStatus.RETURNED) {
         if (!notes) {
           throw new BadRequestException('Catatan alasan wajib diisi ketika permohonan ditolak atau dikembalikan untuk revisi.');
         }
-        if (!isAdminRole) {
+        if (!isAdmin) {
           throw new ForbiddenException('Anda tidak berwenang menolak atau mengembalikan permohonan ini.');
         }
       }
 
-      // State Machine Transition Rules
+      // State Machine Transition Rules — dua tahap, dengan auto-routing admin.
       if (targetStatus === BookingStatus.CANCELED) {
-        if (booking.userId !== currentUser.id && !isAdminRole) {
+        const isOwner = booking.userId === currentUser.id;
+        if (!isOwner && !isAdmin) {
           throw new ForbiddenException('Hanya pemohon atau Admin yang dapat membatalkan permohonan.');
         }
         if (currentStatus === BookingStatus.APPROVED && userRole !== Role.SUPERADMIN) {
           throw new BadRequestException('Peminjaman yang telah disetujui hanya dapat dibatalkan oleh Superadmin.');
         }
-      } else {
-        // Alur Terpadu SIPERU: User -> Admin LPF (Verifikasi & Teruskan) -> Superadmin (Terima & Setujui Final)
-        if (userRole === Role.ADMIN_LPF || userRole === Role.ADMIN_UNIV) {
-          // Admin LPF memverifikasi pengajuan dan meneruskan ke Superadmin
-          if (
-            targetStatus === BookingStatus.VERIFIED ||
-            targetStatus === BookingStatus.APPROVED ||
-            targetStatus === BookingStatus.RECOMMENDED
-          ) {
-            targetStatus = BookingStatus.VERIFIED;
-            this.logger.log(`Admin LPF verified booking ${booking.id}, status diteruskan ke Superadmin (VERIFIED).`);
-          }
-        } else if (userRole === Role.SUPERADMIN) {
-          // Superadmin menerima dan memberikan approval akhir
-          if (
-            targetStatus === BookingStatus.APPROVED ||
-            targetStatus === BookingStatus.VERIFIED
-          ) {
-            targetStatus = BookingStatus.APPROVED;
-            this.logger.log(`Superadmin approved booking ${booking.id} (APPROVED).`);
-          }
-        } else if (userRole === Role.YAYASAN || userRole === Role.ADMIN_YAYASAN) {
-          if (targetStatus === BookingStatus.APPROVED) {
-            targetStatus = BookingStatus.APPROVED;
-          }
+      } else if (targetStatus === BookingStatus.VERIFIED) {
+        if (!isAdmin) {
+          throw new ForbiddenException('Hanya Admin atau Superadmin yang berwenang memverifikasi permohonan.');
         }
+      } else if (targetStatus === BookingStatus.APPROVED) {
+        if (userRole === Role.ADMIN) {
+          targetStatus = BookingStatus.VERIFIED;
+          this.logger.log(`Auto-routing booking ${booking.id} to VERIFIED for Superadmin final approval`);
+        } else if (userRole !== Role.SUPERADMIN) {
+          throw new ForbiddenException('Persetujuan final hanya dapat diberikan oleh Superadmin.');
+        }
+      } else if (targetStatus === BookingStatus.PENDING || targetStatus === BookingStatus.EXPIRED) {
+        if (booking.userId !== currentUser.id && !isAdmin) {
+          throw new ForbiddenException('Anda tidak berhak mengubah status peminjaman milik pengguna lain.');
+        }
+      } else if (booking.userId !== currentUser.id && !isAdmin) {
+        throw new ForbiddenException('Anda tidak berhak mengubah status peminjaman milik pengguna lain.');
       }
 
       // Determine if we should update all sessions in recurring series
@@ -260,7 +237,9 @@ export class BookingsService {
       let finalLogNote = notes;
       if (!finalLogNote) {
         if (targetStatus === BookingStatus.VERIFIED) {
-          finalLogNote = `Diverifikasi oleh Admin LPF (${currentUser.fullName}). Diteruskan ke Superadmin untuk persetujuan akhir.${shouldApplyToGroup ? ` (Seluruh ${targetBookings.length} sesi rutin)` : ''}`;
+          finalLogNote = `Diverifikasi oleh ${currentUser.fullName}.${shouldApplyToGroup ? ` (Seluruh ${targetBookings.length} sesi rutin)` : ''}`;
+        } else if (targetStatus === BookingStatus.RECOMMENDED) {
+          finalLogNote = `Direkomendasikan oleh ${currentUser.fullName}.${shouldApplyToGroup ? ` (Seluruh ${targetBookings.length} sesi rutin)` : ''}`;
         } else if (targetStatus === BookingStatus.APPROVED) {
           finalLogNote = `Permohonan disetujui resmi oleh ${currentUser.fullName} (${userRole}).${shouldApplyToGroup ? ` (Seluruh ${targetBookings.length} sesi rutin)` : ''}`;
         } else if (targetStatus === BookingStatus.CANCELED) {
@@ -313,6 +292,15 @@ export class BookingsService {
           },
         });
 
+        if (b.userId !== currentUser.id) {
+          await this.notifications.notifyBookingStatus(
+            tx, b.userId, b.id, b.title, targetStatus, currentUser.fullName, notes,
+          );
+        }
+
+        if (targetStatus === BookingStatus.VERIFIED) {
+          await this.notifications.notifyAwaitingApproval(tx, b.id, b.title, currentUser.fullName);
+        }
         if (b.id === booking.id || !primaryUpdated) {
           primaryUpdated = updated;
         }
@@ -324,7 +312,7 @@ export class BookingsService {
   }
 
   /**
-   * Batch Status Transition Handler (Supports Bulk Approval / Rejection)
+   * Batch Status Transition Handler — dua tahap (VERIFIED admin, APPROVED superadmin).
    */
   async updateBatchStatus(
     currentUser: { id: string; role: string; fullName: string },
@@ -345,33 +333,37 @@ export class BookingsService {
         const currentStatus = booking.status as BookingStatus;
         let targetStatus = dto.status;
         const notes = (dto.notes || dto.catatan || '').trim();
+        const isAdmin = userRole === Role.ADMIN || userRole === Role.SUPERADMIN;
 
-        // Alur Terpadu SIPERU: User -> Admin LPF (Verifikasi & Teruskan) -> Superadmin (Terima & Setujui Final)
         if (targetStatus === BookingStatus.REJECTED || targetStatus === BookingStatus.RETURNED) {
           if (!notes) {
             throw new BadRequestException('Catatan alasan wajib diisi ketika permohonan ditolak atau dikembalikan untuk revisi.');
           }
+          if (!isAdmin) {
+            throw new ForbiddenException('Anda tidak berwenang menolak atau mengembalikan permohonan ini.');
+          }
         }
 
-        if (userRole === Role.ADMIN_LPF || userRole === Role.ADMIN_UNIV) {
-          if (
-            targetStatus === BookingStatus.VERIFIED ||
-            targetStatus === BookingStatus.APPROVED ||
-            targetStatus === BookingStatus.RECOMMENDED
-          ) {
+        if (targetStatus === BookingStatus.CANCELED) {
+          const isOwner = booking.userId === currentUser.id;
+          if (!isOwner && !isAdmin) {
+            throw new ForbiddenException('Hanya pemohon atau Admin yang dapat membatalkan permohonan.');
+          }
+          if (currentStatus === BookingStatus.APPROVED && userRole !== Role.SUPERADMIN) {
+            throw new BadRequestException('Peminjaman yang telah disetujui hanya dapat dibatalkan oleh Superadmin.');
+          }
+        } else if (targetStatus === BookingStatus.VERIFIED) {
+          if (!isAdmin) {
+            throw new ForbiddenException('Hanya Admin atau Superadmin yang berwenang memverifikasi permohonan.');
+          }
+        } else if (targetStatus === BookingStatus.APPROVED) {
+          if (userRole === Role.ADMIN) {
             targetStatus = BookingStatus.VERIFIED;
+          } else if (userRole !== Role.SUPERADMIN) {
+            throw new ForbiddenException('Persetujuan final hanya dapat diberikan oleh Superadmin.');
           }
-        } else if (userRole === Role.SUPERADMIN) {
-          if (
-            targetStatus === BookingStatus.APPROVED ||
-            targetStatus === BookingStatus.VERIFIED
-          ) {
-            targetStatus = BookingStatus.APPROVED;
-          }
-        } else if (userRole === Role.YAYASAN || userRole === Role.ADMIN_YAYASAN) {
-          if (targetStatus === BookingStatus.APPROVED) {
-            targetStatus = BookingStatus.APPROVED;
-          }
+        } else if (booking.userId !== currentUser.id && !isAdmin) {
+          throw new ForbiddenException('Anda tidak berhak mengubah status peminjaman milik pengguna lain.');
         }
 
         if (
@@ -407,9 +399,9 @@ export class BookingsService {
         let finalLogNote = notes;
         if (!finalLogNote) {
           if (targetStatus === BookingStatus.VERIFIED) {
-            finalLogNote = `Diverifikasi oleh Admin Umum (${currentUser.fullName}). Menunggu approval akhir Superadmin.`;
+            finalLogNote = `Diverifikasi oleh ${currentUser.fullName}.`;
           } else if (targetStatus === BookingStatus.RECOMMENDED) {
-            finalLogNote = `Diverifikasi oleh Admin LPF (${currentUser.fullName}) & Direkomendasikan ke Yayasan YARSI.`;
+            finalLogNote = `Direkomendasikan oleh ${currentUser.fullName}.`;
           } else if (targetStatus === BookingStatus.APPROVED) {
             finalLogNote = `Permohonan disetujui secara resmi oleh ${currentUser.fullName} (${userRole}).`;
           } else if (targetStatus === BookingStatus.CANCELED) {
@@ -429,6 +421,14 @@ export class BookingsService {
           },
         });
 
+        if (booking.userId !== currentUser.id) {
+          await this.notifications.notifyBookingStatus(
+            tx, booking.userId, booking.id, booking.title, targetStatus, currentUser.fullName, notes,
+          );
+        }
+        if (targetStatus === BookingStatus.VERIFIED) {
+          await this.notifications.notifyAwaitingApproval(tx, booking.id, booking.title, currentUser.fullName);
+        }
         results.push(updated);
       }
 
@@ -454,52 +454,20 @@ export class BookingsService {
   async findAll(query: QueryBookingDto, currentUser?: { id: string; role: Role }) {
     const { status, roomId, userId, startDate, endDate, isSpecialRoom } = query;
 
-    // Security & User Isolation:
-    // Unauthenticated callers cannot see any user bookings
-    if (!currentUser) {
-      return [];
-    }
+    // Filter ruangan dari query (?isSpecialRoom=...) murni display, tanpa
+    // batasan akses berbasis role.
+    const roomFilter = isSpecialRoom !== undefined ? { room: { isSpecialRoom } } : {};
 
-    const r = currentUser.role as Role;
-    const isSuperadmin = r === Role.SUPERADMIN;
-    const isAdminLPF = r === Role.ADMIN_LPF || r === Role.ADMIN_UNIV;
-    const isYayasan = r === Role.YAYASAN || r === Role.ADMIN_YAYASAN;
-    const isAdmin = isSuperadmin || isAdminLPF || isYayasan;
-
-    // Strict User Isolation:
-    // If not admin, the user can ONLY see their own bookings!
-    let targetUserId = userId;
-    if (!isAdmin) {
-      targetUserId = currentUser.id;
-    }
-
-    const roomConditions: any[] = [];
-    if (isSpecialRoom !== undefined) {
-      roomConditions.push({ isSpecialRoom });
-    }
-    if (r === Role.YAYASAN || r === Role.ADMIN_YAYASAN) {
-      roomConditions.push({
-        OR: [
-          { isSpecialRoom: true },
-          { name: { contains: 'auditorium', mode: 'insensitive' } },
-          { name: { contains: 'senat', mode: 'insensitive' } },
-          { name: { contains: 'workshop', mode: 'insensitive' } },
-        ],
-      });
-    }
-
-    const roomFilter =
-      roomConditions.length === 0
-        ? {}
-        : roomConditions.length === 1
-          ? { room: roomConditions[0] }
-          : { AND: roomConditions.map((c) => ({ room: c })) };
+    // Role USER hanya boleh melihat miliknya sendiri; ADMIN/SUPERADMIN tanpa filter user.
+    const isAdmin =
+      currentUser != null && (currentUser.role === Role.ADMIN || currentUser.role === Role.SUPERADMIN);
+    const effectiveUserId = !currentUser || isAdmin ? userId : currentUser.id;
 
     return this.prisma.booking.findMany({
       where: {
         ...(status ? { status: status as PrismaBookingStatus } : {}),
         ...(roomId ? { roomId } : {}),
-        ...(targetUserId ? { userId: targetUserId } : {}),
+        ...(effectiveUserId ? { userId: effectiveUserId } : {}),
         ...(startDate || endDate
           ? {
               startTime: {
@@ -547,15 +515,11 @@ export class BookingsService {
       throw new NotFoundException(`Peminjaman dengan ID '${id}' tidak ditemukan.`);
     }
 
-    const r = currentUser.role as Role;
-    const isSuperadmin = r === Role.SUPERADMIN;
-    const isAdminLPF = r === Role.ADMIN_LPF || r === Role.ADMIN_UNIV;
-    const isYayasan = r === Role.YAYASAN || r === Role.ADMIN_YAYASAN;
-    const isAdmin = isSuperadmin || isAdminLPF || isYayasan;
-
-    // Strict User Isolation:
-    if (!isAdmin && booking.userId !== currentUser.id) {
-      throw new ForbiddenException('Anda tidak berhak melihat rincian peminjaman milik pengguna lain.');
+    if (currentUser) {
+      const isAdmin = currentUser.role === Role.ADMIN || currentUser.role === Role.SUPERADMIN;
+      if (booking.userId !== currentUser.id && !isAdmin) {
+        throw new ForbiddenException('Anda tidak berhak melihat peminjaman milik pengguna lain.');
+      }
     }
 
     return booking;
@@ -571,11 +535,8 @@ export class BookingsService {
     });
     if (!booking) throw new NotFoundException('Peminjaman tidak ditemukan.');
 
-    const userRole = currentUser.role as Role;
-    const isSuperadmin = userRole === Role.SUPERADMIN;
-    const isAdminLPF = userRole === Role.ADMIN_LPF || userRole === Role.ADMIN_UNIV;
-    const isYayasan = userRole === Role.YAYASAN || userRole === Role.ADMIN_YAYASAN;
-    const isAdmin = isSuperadmin || isAdminLPF || isYayasan;
+    const requesterRole = String(currentUser.role).toUpperCase();
+    const isAdmin = requesterRole === Role.ADMIN || requesterRole === Role.SUPERADMIN;
 
     if (booking.userId !== currentUser.id && !isAdmin) {
       throw new ForbiddenException('Anda tidak berhak mengakses lampiran ini.');
@@ -805,13 +766,7 @@ export class BookingsService {
     if (!booking) {
       throw new NotFoundException('Data peminjaman tidak ditemukan.');
     }
-    const operationalRoles: Role[] = [
-      Role.SUPERADMIN,
-      Role.ADMIN_LPF,
-      Role.ADMIN_UNIV,
-      Role.ADMIN_YAYASAN,
-      Role.YAYASAN,
-    ];
+    const operationalRoles: Role[] = [Role.SUPERADMIN, Role.ADMIN];
     if (booking.userId !== currentUser.id && !operationalRoles.includes(currentUser.role)) {
       throw new ForbiddenException('Anda tidak berhak mengubah checklist kesiapan peminjaman milik pengguna lain.');
     }
@@ -939,7 +894,11 @@ export class BookingsService {
     return `${b64Payload}.${sig}`;
   }
 
-  async verifyAndExecuteQuickAction(token: string) {
+  async verifyAndExecuteQuickAction(token: string, executor?: { id: string; role: string; fullName: string }) {
+    if (!executor?.id) {
+      throw new ForbiddenException('Eksekusi tautan persetujuan wajib login.');
+    }
+
     if (!token || !token.includes('.')) {
       throw new BadRequestException('Format token persetujuan cepat tidak valid.');
     }
@@ -1001,27 +960,66 @@ export class BookingsService {
       throw new ForbiddenException('Penyetuju pada tautan ini tidak lagi terdaftar.');
     }
 
-    const targetStatus = action === 'APPROVE' ? PrismaBookingStatus.APPROVED : PrismaBookingStatus.REJECTED;
+    const executorDb = await this.prisma.user.findUnique({ where: { id: executor.id } });
+    if (!executorDb) {
+      throw new ForbiddenException('Akun eksekutor tidak lagi aktif.');
+    }
+    const executorRole = (executorDb as { role?: string }).role;
+    if (executorRole !== Role.ADMIN && executorRole !== Role.SUPERADMIN) {
+      throw new ForbiddenException('Hanya Admin atau Superadmin yang dapat mengeksekusi tautan persetujuan.');
+    }
+    // Eksekutor harus penyetuju yang ditunjuk, atau superadmin yang mengambil alih.
+    const isDesignatedApprover = executor.id === approver.id;
+    const isSuperadmin = executorRole === Role.SUPERADMIN;
+    if (!isDesignatedApprover && !isSuperadmin) {
+      throw new ForbiddenException('Tautan ini hanya dapat dieksekusi oleh penyetuju yang ditunjuk atau Superadmin.');
+    }
+    // Role penyetuju dicek ulang dari DB: yang diturunkan/dinonaktifkan tak bisa approve.
+    const approverRole = (approver as { role?: string }).role;
+    if (approverRole !== Role.ADMIN && approverRole !== Role.SUPERADMIN) {
+      throw new ForbiddenException('Penyetuju pada tautan ini tidak lagi berwenang (role berubah).');
+    }
+
+    // Tahap dua tingkat: admin → VERIFIED, final APPROVED hanya superadmin.
+    let targetStatus: PrismaBookingStatus = action === 'APPROVE' ? PrismaBookingStatus.APPROVED : PrismaBookingStatus.REJECTED;
+    if (action === 'APPROVE' && executorRole === Role.ADMIN) {
+      targetStatus = PrismaBookingStatus.VERIFIED;
+    }
+
+    // Cegah double-booking via link: cek konflik slot seperti jalur normal.
+    if (targetStatus === PrismaBookingStatus.APPROVED || targetStatus === PrismaBookingStatus.VERIFIED) {
+      await this.scheduling.assertAvailable(booking.roomId, booking.startTime, booking.endTime, booking.id);
+    }
     const existingPassToken: string | undefined =
       'passToken' in booking && typeof booking.passToken === 'string' ? booking.passToken : undefined;
     const passToken = existingPassToken || (targetStatus === PrismaBookingStatus.APPROVED ? `PASS-${randomUUID().replace(/-/g, '').slice(0, 12).toUpperCase()}` : undefined);
 
-    const updated = await this.prisma.booking.update({
-      where: { id: bookingId },
-      data: {
-        status: targetStatus,
-        ...(passToken ? { passToken } : {}),
-      },
-    });
-
-    await this.prisma.approvalLog.create({
-      data: {
-        bookingId: booking.id,
-        approverId: approver.id,
-        fromStatus: booking.status,
-        toStatus: targetStatus,
-        notes: `Tindakan dieksekusi secara instan melalui Tautan Resmi Persetujuan Cepat Pimpinan Yayasan YARSI (${action === 'APPROVE' ? 'Disetujui' : 'Ditolak'}).`,
-      },
+    const updated = await this.scheduling.inSerializableTransaction(async (tx) => {
+      const row = await tx.booking.update({
+        where: { id: bookingId },
+        data: {
+          status: targetStatus,
+          ...(passToken ? { passToken } : {}),
+        },
+      });
+      await tx.approvalLog.create({
+        data: {
+          bookingId: booking.id,
+          approverId: executor.id,
+          fromStatus: booking.status,
+          toStatus: targetStatus,
+          notes: `Tautan cepat (${action === 'APPROVE' ? 'Disetujui' : 'Ditolak'}): ditunjuk ${approver.fullName}, dieksekusi ${executor.fullName}.`,
+        },
+      });
+      if (booking.userId !== executor.id) {
+        await this.notifications.notifyBookingStatus(
+          tx, booking.userId, booking.id, booking.title, targetStatus, executor.fullName,
+        );
+      }
+      if (targetStatus === BookingStatus.VERIFIED) {
+        await this.notifications.notifyAwaitingApproval(tx, booking.id, booking.title, executor.fullName);
+      }
+      return row;
     });
 
     return {
@@ -1033,8 +1031,8 @@ export class BookingsService {
       status: targetStatus,
       passToken: passToken || existingPassToken,
       message: action === 'APPROVE'
-        ? 'Permohonan peminjaman berhasil DISETUJUI secara resmi oleh Pimpinan Yayasan.'
-        : 'Permohonan peminjaman berhasil DITOLAK.',
+        ? `Permohonan peminjaman berhasil ${targetStatus === PrismaBookingStatus.VERIFIED ? 'DIVERIFIKASI' : 'DISETUJUI'} oleh ${executor.fullName}.`
+        : `Permohonan peminjaman ditolak oleh ${executor.fullName}.`,
     };
   }
 
@@ -1055,7 +1053,7 @@ export class BookingsService {
       throw new NotFoundException('Data peminjaman tidak ditemukan.');
     }
 
-    const isAdmin = ['SUPERADMIN', 'ADMIN_LPF', 'ADMIN_UNIV', 'ADMIN_YAYASAN'].includes(currentUser.role);
+    const isAdmin = currentUser.role === 'SUPERADMIN' || currentUser.role === 'ADMIN';
     if (!isAdmin && booking.userId !== currentUser.id) {
       throw new ForbiddenException('Anda tidak berhak mereschedule peminjaman ini.');
     }

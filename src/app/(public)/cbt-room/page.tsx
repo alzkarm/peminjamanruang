@@ -399,8 +399,9 @@ export default function CbtRoomPage() {
                       const bStatus = b.status || 'PENDING';
                       const isApproved = bStatus === 'APPROVED';
                       const isAdmin =
-                        currentUser?.role === 'admin_lpf' ||
-                        currentUser?.role === 'superadmin';
+                        currentUser?.role === 'admin' ||
+                        currentUser?.role === 'superadmin' ||
+                        currentUser?.role === 'admin_lpf';
                       const isOwner = Boolean(currentUser?.id && b.userId === currentUser.id);
                       const canViewDetails = isAdmin || isOwner;
 

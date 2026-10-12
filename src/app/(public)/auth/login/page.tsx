@@ -178,9 +178,10 @@ function LoginFormContent() {
 
         router.push(fullRedirect);
       } else if (
+        data.user?.role === 'admin' ||
+        data.user?.role === 'superadmin' ||
         data.user?.role === 'admin_lpf' ||
-        data.user?.role === 'admin_yayasan' ||
-        data.user?.role === 'superadmin'
+        data.user?.role === 'admin_yayasan'
       ) {
         router.push(data.user?.role === 'admin_yayasan' ? '/admin/approvals/yayasan' : '/admin/approvals');
       } else {
@@ -248,9 +249,10 @@ function LoginFormContent() {
       if (redirectUrl) {
         router.push(redirectUrl);
       } else if (
+        data.user?.role === 'admin' ||
+        data.user?.role === 'superadmin' ||
         data.user?.role === 'admin_lpf' ||
-        data.user?.role === 'admin_yayasan' ||
-        data.user?.role === 'superadmin'
+        data.user?.role === 'admin_yayasan'
       ) {
         router.push(data.user?.role === 'admin_yayasan' ? '/admin/approvals/yayasan' : '/admin/approvals');
       } else {
@@ -523,43 +525,32 @@ function LoginFormContent() {
                   Klik untuk uji coba login
                 </span>
               </div>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                 <button
                   type="button"
                   onClick={() => handleQuickDemo('1402022001', 'password123')}
                   className="flex flex-col items-start p-2.5 rounded-xl border border-teal-200 bg-teal-50/60 hover:bg-teal-100/70 transition-all text-left group dark:border-teal-500/30 dark:bg-teal-500/10 dark:hover:bg-teal-500/15"
                 >
                   <span className="text-[11px] font-bold text-teal-900 group-hover:text-teal-950 dark:text-teal-200 dark:group-hover:text-teal-100">
-                    🎓 Mahasiswa
+                    👤 User
                   </span>
                   <span className="text-[10px] text-teal-700 dark:text-teal-400">1402022001</span>
                 </button>
 
                 <button
                   type="button"
-                  onClick={() => handleQuickDemo('0314058201', 'password123')}
-                  className="flex flex-col items-start p-2.5 rounded-xl border border-blue-200 bg-blue-50/60 hover:bg-blue-100/70 transition-all text-left group dark:border-blue-500/30 dark:bg-blue-500/10 dark:hover:bg-blue-500/15"
+                  onClick={() => handleQuickDemo('admin', 'password123')}
+                  className="flex flex-col items-start p-2.5 rounded-xl border border-indigo-200 bg-indigo-50/60 hover:bg-indigo-100/70 transition-all text-left group dark:border-indigo-500/30 dark:bg-indigo-500/10 dark:hover:bg-indigo-500/15"
                 >
-                  <span className="text-[11px] font-bold text-blue-900 group-hover:text-blue-950 dark:text-blue-200 dark:group-hover:text-blue-100">
-                    👨‍🏫 Dosen
+                  <span className="text-[11px] font-bold text-indigo-900 group-hover:text-indigo-950 dark:text-indigo-200 dark:group-hover:text-indigo-100">
+                    🛠️ Admin
                   </span>
-                  <span className="text-[10px] text-blue-700 dark:text-blue-400">0314058201</span>
+                  <span className="text-[10px] text-indigo-700 dark:text-indigo-400">admin</span>
                 </button>
 
                 <button
                   type="button"
-                  onClick={() => handleQuickDemo('19880210201402', 'password123')}
-                  className="flex flex-col items-start p-2.5 rounded-xl border border-purple-200 bg-purple-50/60 hover:bg-purple-100/70 transition-all text-left group dark:border-purple-500/30 dark:bg-purple-500/10 dark:hover:bg-purple-500/15"
-                >
-                  <span className="text-[11px] font-bold text-purple-900 group-hover:text-purple-950 dark:text-purple-200 dark:group-hover:text-purple-100">
-                    💼 Tendik
-                  </span>
-                  <span className="text-[10px] text-purple-700 dark:text-purple-400">19880210201402</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleQuickDemo('lpf.admin', 'password123')}
+                  onClick={() => handleQuickDemo('superadmin', 'password123')}
                   className="flex flex-col items-start p-2.5 rounded-xl border border-rose-200 bg-rose-50/60 hover:bg-rose-100/70 transition-all text-left group dark:border-rose-500/30 dark:bg-rose-500/10 dark:hover:bg-rose-500/15"
                 >
                   <span className="text-[11px] font-bold text-rose-900 group-hover:text-rose-950 dark:text-rose-200 dark:group-hover:text-rose-100">
@@ -568,27 +559,6 @@ function LoginFormContent() {
                   <span className="text-[10px] text-rose-700 dark:text-rose-400">superadmin</span>
                 </button>
 
-                <button
-                  type="button"
-                  onClick={() => handleQuickDemo('lpf.admin', 'password123')}
-                  className="flex flex-col items-start p-2.5 rounded-xl border border-emerald-200 bg-emerald-50/60 hover:bg-emerald-100/70 transition-all text-left group dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:hover:bg-emerald-500/15"
-                >
-                  <span className="text-[11px] font-bold text-emerald-900 group-hover:text-emerald-950 dark:text-emerald-200 dark:group-hover:text-emerald-100">
-                    🛡️ Admin LPF
-                  </span>
-                  <span className="text-[10px] text-emerald-700 dark:text-emerald-300">lpf.admin</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleQuickDemo('yayasan.admin', 'password123')}
-                  className="flex flex-col items-start p-2.5 rounded-xl border border-amber-200 bg-amber-50/60 hover:bg-amber-100/70 transition-all text-left group col-span-2 sm:col-span-1 dark:border-amber-500/30 dark:bg-amber-500/10 dark:hover:bg-amber-500/15"
-                >
-                  <span className="text-[11px] font-bold text-amber-900 group-hover:text-amber-950 dark:text-amber-200 dark:group-hover:text-amber-100">
-                    🏛️ Yayasan
-                  </span>
-                  <span className="text-[10px] text-amber-700 dark:text-amber-400">yayasan.admin</span>
-                </button>
               </div>
             </div>
           </div>

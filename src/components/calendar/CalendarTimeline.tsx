@@ -263,12 +263,10 @@ export function CalendarTimeline({
   // Status Filter Toggles (Semua Aktif secara default)
   const [filterStatuses, setFilterStatuses] = useState<{
     approved: boolean;
-    recommended: boolean;
     pending: boolean;
     available: boolean;
   }>({
     approved: true,
-    recommended: true,
     pending: true,
     available: true,
   });
@@ -755,22 +753,7 @@ export function CalendarTimeline({
           {filterStatuses.approved && <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100/80 px-1.5 py-0.2 rounded-full dark:text-emerald-300 dark:bg-emerald-500/15">✓ Aktif</span>}
         </button>
 
-        {/* 2. Rekomendasi Yayasan */}
-        <button
-          type="button"
-          onClick={() => toggleStatus('recommended')}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all shadow-2xs border cursor-pointer ${filterStatuses.recommended
-            ? 'bg-sky-50 border-sky-300 text-sky-900 ring-1 ring-sky-500/30 dark:bg-sky-500/10 dark:border-sky-500/40 dark:text-sky-200'
-            : 'bg-slate-100 border-slate-200 text-slate-400 opacity-60 dark:bg-slate-800 dark:border-slate-700'
-            }`}
-          title={filterStatuses.recommended ? 'Status aktif. Klik untuk sembunyikan.' : 'Status nonaktif. Klik untuk tampilkan.'}
-        >
-          <span className={`w-3 h-3 rounded-full inline-block ${filterStatuses.recommended ? 'bg-sky-500' : 'bg-slate-300'}`} />
-          <span>Rekomendasi Yayasan</span>
-          {filterStatuses.recommended && <span className="text-[10px] font-bold text-sky-700 bg-sky-100/80 px-1.5 py-0.2 rounded-full dark:text-sky-400 dark:bg-sky-500/15">✓ Aktif</span>}
-        </button>
-
-        {/* 3. Menunggu persetujuan */}
+        {/* 2. Menunggu persetujuan */}
         <button
           type="button"
           onClick={() => toggleStatus('pending')}
@@ -845,12 +828,13 @@ export function CalendarTimeline({
 
                 const slotBookings = bookings.filter((b) => {
                   if (b.date !== currentDateStr) return false;
+                  // PENDING/APPROVED aktif; alias lama display-only ikut tampil sebagai antrean
                   if (
                     ![
                       'APPROVED',
                       'PENDING',
-                      'RECOMMENDED',
                       'PENDING_LPF',
+                      'RECOMMENDED',
                       'RECOMMENDED_YAYASAN',
                     ].includes(b.status)
                   )
@@ -858,13 +842,14 @@ export function CalendarTimeline({
                   if (!checkTimeOverlap(slot, nextH, b.startTime, b.endTime)) return false;
 
                   const isAppr = b.status === 'APPROVED';
-                  const isRec =
-                    b.status === 'RECOMMENDED' || b.status === 'RECOMMENDED_YAYASAN';
+                  // alias lama -> antrean pending (display-only)
                   const isPend =
-                    b.status === 'PENDING' || b.status === 'PENDING_LPF';
+                    b.status === 'PENDING' ||
+                    b.status === 'PENDING_LPF' ||
+                    b.status === 'RECOMMENDED' ||
+                    b.status === 'RECOMMENDED_YAYASAN';
 
                   if (isAppr && !filterStatuses.approved) return false;
-                  if (isRec && !filterStatuses.recommended) return false;
                   if (isPend && !filterStatuses.pending) return false;
 
                   // Respect room filters if applied
@@ -921,9 +906,6 @@ export function CalendarTimeline({
 
                       {slotBookings.map((booking) => {
                         const isApproved = booking.status === 'APPROVED';
-                        const isRecommended =
-                          booking.status === 'RECOMMENDED' ||
-                          booking.status === 'RECOMMENDED_YAYASAN';
 
                         return (
                           <button
@@ -932,9 +914,7 @@ export function CalendarTimeline({
                             onClick={() => handleOpenBooking(booking)}
                             className={`flex-1 min-w-[240px] text-left p-2 rounded-r-lg border-l-4 shadow-xs transition-colors ${isApproved
                               ? 'border-emerald-600 bg-emerald-50 hover:bg-emerald-100 text-emerald-950 dark:bg-emerald-500/10 dark:hover:bg-emerald-500/20 dark:text-emerald-200'
-                              : isRecommended
-                                ? 'border-sky-500 bg-sky-50 hover:bg-sky-100 text-sky-950 dark:bg-sky-500/10 dark:hover:bg-sky-500/20 dark:text-sky-200'
-                                : 'border-amber-500 bg-amber-50 hover:bg-amber-100 text-amber-950 dark:bg-amber-500/10 dark:hover:bg-amber-500/20 dark:text-amber-200'
+                              : 'border-amber-500 bg-amber-50 hover:bg-amber-100 text-amber-950 dark:bg-amber-500/10 dark:hover:bg-amber-500/20 dark:text-amber-200'
                               }`}
                           >
                             <div className="flex items-center justify-between">
@@ -944,19 +924,8 @@ export function CalendarTimeline({
                                   return r?.code ? `${booking.roomName || r.name} (${r.code})` : (booking.roomName || 'Ruangan Kampus');
                                 })()}
                               </p>
-                              <span
-                                className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${isApproved
-                                  ? 'bg-emerald-200 text-emerald-900 dark:bg-emerald-500/20 dark:text-emerald-200'
-                                  : isRecommended
-                                    ? 'bg-sky-200 text-sky-900 dark:bg-sky-500/20 dark:text-sky-200'
-                                    : 'bg-amber-200 text-amber-900 dark:bg-amber-500/20 dark:text-amber-200'
-                                  }`}
-                              >
-                                {isApproved
-                                  ? 'Disetujui'
-                                  : isRecommended
-                                    ? 'Rekomendasi Yayasan'
-                                    : 'Menunggu'}
+                              <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${isApproved ? 'bg-emerald-200 text-emerald-900 dark:bg-emerald-500/20 dark:text-emerald-200' : 'bg-amber-200 text-amber-900 dark:bg-amber-500/20 dark:text-amber-200'}`}>
+                                {isApproved ? 'Disetujui' : 'Menunggu'}
                               </span>
                             </div>
                             {booking.title && (
@@ -1019,26 +988,27 @@ export function CalendarTimeline({
               const dayBookings = bookings
                 .filter((booking) => {
                   if (booking.date !== dayDateStr) return false;
+                  // PENDING/APPROVED aktif; alias lama display-only ikut tampil sebagai antrean
                   if (
                     ![
                       'APPROVED',
                       'PENDING',
-                      'RECOMMENDED',
                       'PENDING_LPF',
+                      'RECOMMENDED',
                       'RECOMMENDED_YAYASAN',
                     ].includes(booking.status)
                   )
                     return false;
 
                   const isAppr = booking.status === 'APPROVED';
-                  const isRec =
+                  // alias lama -> antrean pending (display-only)
+                  const isPend =
+                    booking.status === 'PENDING' ||
+                    booking.status === 'PENDING_LPF' ||
                     booking.status === 'RECOMMENDED' ||
                     booking.status === 'RECOMMENDED_YAYASAN';
-                  const isPend =
-                    booking.status === 'PENDING' || booking.status === 'PENDING_LPF';
 
                   if (isAppr && !filterStatuses.approved) return false;
-                  if (isRec && !filterStatuses.recommended) return false;
                   if (isPend && !filterStatuses.pending) return false;
 
                   return true;
@@ -1212,12 +1182,13 @@ export function CalendarTimeline({
 
                           const bookingList = bookings.filter((b) => {
                             if (b.date !== dayDateStr) return false;
+                            // PENDING/APPROVED aktif; alias lama display-only ikut tampil sebagai antrean
                             if (
                               ![
                                 'APPROVED',
                                 'PENDING',
-                                'RECOMMENDED',
                                 'PENDING_LPF',
+                                'RECOMMENDED',
                                 'RECOMMENDED_YAYASAN',
                               ].includes(b.status)
                             )
@@ -1225,14 +1196,14 @@ export function CalendarTimeline({
                             if (!checkTimeOverlap(slot, nextH, b.startTime, b.endTime)) return false;
 
                             const isAppr = b.status === 'APPROVED';
-                            const isRec =
+                            // alias lama -> antrean pending (display-only)
+                            const isPend =
+                              b.status === 'PENDING' ||
+                              b.status === 'PENDING_LPF' ||
                               b.status === 'RECOMMENDED' ||
                               b.status === 'RECOMMENDED_YAYASAN';
-                            const isPend =
-                              b.status === 'PENDING' || b.status === 'PENDING_LPF';
 
                             if (isAppr && !filterStatuses.approved) return false;
-                            if (isRec && !filterStatuses.recommended) return false;
                             if (isPend && !filterStatuses.pending) return false;
 
                             // Room filter
@@ -1276,9 +1247,6 @@ export function CalendarTimeline({
 
                                 {bookingList.map((booking) => {
                                   const isApproved = booking.status === 'APPROVED';
-                                  const isRecommended =
-                                    booking.status === 'RECOMMENDED' ||
-                                    booking.status === 'RECOMMENDED_YAYASAN';
 
                                   return (
                                     <button
@@ -1287,9 +1255,7 @@ export function CalendarTimeline({
                                       onClick={() => handleOpenBooking(booking)}
                                       className={`w-full p-1.5 text-left rounded-r-md border-l-[3px] shadow-2xs block transition-colors ${isApproved
                                         ? 'border-emerald-600 bg-emerald-50 hover:bg-emerald-100 text-emerald-950 dark:bg-emerald-500/10 dark:hover:bg-emerald-500/20 dark:text-emerald-200'
-                                        : isRecommended
-                                          ? 'border-sky-500 bg-sky-50 hover:bg-sky-100 text-sky-950 dark:bg-sky-500/10 dark:hover:bg-sky-500/20 dark:text-sky-200'
-                                          : 'border-amber-500 bg-amber-50 hover:bg-amber-100 text-amber-950 dark:bg-amber-500/10 dark:hover:bg-amber-500/20 dark:text-amber-200'
+                                        : 'border-amber-500 bg-amber-50 hover:bg-amber-100 text-amber-950 dark:bg-amber-500/10 dark:hover:bg-amber-500/20 dark:text-amber-200'
                                         }`}
                                     >
                                       <p className="text-[10px] font-bold line-clamp-1">
@@ -1345,13 +1311,14 @@ export function CalendarTimeline({
           rooms={filteredRooms}
           bookings={bookings.filter((b) => {
             const isAppr = b.status === 'APPROVED';
-            const isRec =
-              b.status === 'RECOMMENDED' || b.status === 'RECOMMENDED_YAYASAN';
+            // alias lama display-only -> antrean pending
             const isPend =
-              b.status === 'PENDING' || b.status === 'PENDING_LPF';
+              b.status === 'PENDING' ||
+              b.status === 'PENDING_LPF' ||
+              b.status === 'RECOMMENDED' ||
+              b.status === 'RECOMMENDED_YAYASAN';
 
             if (isAppr && !filterStatuses.approved) return false;
-            if (isRec && !filterStatuses.recommended) return false;
             if (isPend && !filterStatuses.pending) return false;
 
             // Room filter

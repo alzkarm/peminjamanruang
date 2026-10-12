@@ -236,7 +236,7 @@ export default function FeedbackPage() {
                   rows={2}
                   value={reportedIssue}
                   onChange={(e) => setReportedIssue(e.target.value)}
-                  placeholder="Contoh: Mic wireless 2 baterai habis, remote AC di meja dosen tidak menyala..."
+                  placeholder="Contoh: Mic wireless 2 baterai habis, remote AC di meja pengajar tidak menyala..."
                   className="w-full px-3 py-2 text-xs bg-white dark:bg-slate-900 border border-amber-300 dark:border-amber-500/40 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 text-slate-900 dark:text-slate-100"
                 />
               </div>

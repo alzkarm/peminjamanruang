@@ -23,7 +23,7 @@ export class FeedbacksService {
       throw new NotFoundException('Data peminjaman tidak ditemukan.');
     }
 
-    if (booking.userId !== userId && userRole !== Role.SUPERADMIN) {
+    if (booking.userId !== userId && userRole !== Role.SUPERADMIN && userRole !== Role.ADMIN) {
       throw new ForbiddenException('Anda tidak berhak mengisi feedback untuk peminjaman milik pengguna lain.');
     }
 

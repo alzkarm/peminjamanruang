@@ -175,7 +175,8 @@ export function CalendarGrid({
           const dayBookings = bookings.filter(
             (b) =>
               b.date === dateStr &&
-              ['APPROVED', 'PENDING', 'RECOMMENDED', 'PENDING_LPF', 'RECOMMENDED_YAYASAN'].includes(b.status)
+              // PENDING/APPROVED aktif; alias lama display-only ikut tampil sebagai antrean
+              ['APPROVED', 'PENDING', 'PENDING_LPF', 'RECOMMENDED', 'RECOMMENDED_YAYASAN'].includes(b.status)
           );
 
           return (
@@ -228,8 +229,6 @@ export function CalendarGrid({
                     className={`block w-full truncate rounded px-1.5 py-0.5 text-left text-[10px] font-medium border-l-2 shadow-2xs transition-colors ${
                       b.status === 'APPROVED'
                         ? 'border-emerald-600 bg-emerald-50 hover:bg-emerald-100 text-emerald-950 dark:bg-emerald-500/10 dark:hover:bg-emerald-500/20 dark:text-emerald-200'
-                        : b.status === 'RECOMMENDED' || b.status === 'RECOMMENDED_YAYASAN'
-                        ? 'border-sky-500 bg-sky-50 hover:bg-sky-100 text-sky-950 dark:bg-sky-500/10 dark:hover:bg-sky-500/20 dark:text-sky-200'
                         : 'border-amber-500 bg-amber-50 hover:bg-amber-100 text-amber-950 dark:bg-amber-500/10 dark:hover:bg-amber-500/20 dark:text-amber-200'
                     }`}
                   >

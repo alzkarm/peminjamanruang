@@ -189,25 +189,38 @@ const book = async (token, roomId, title, days) => {
       return `invite -> ${inv.status} (hasLocalPassword=false); login "password123" -> ${l.status}; seed lokal tetap OK`;
     }, true);
 
-    // Cek #3 pakai generate-link dengan token (endpoint-nya memang guarded).
-    await check(3, 'CRITICAL', 'Setujui booking tanpa login + audit dipalsukan', async () => {
+    // Cek #3 (FIX): execute wajib login penyetuju/superadmin + audit jujur + tahap benar.
+    await check(3, 'CRITICAL', 'Setujui booking tanpa login + audit dipalsukan (FIX #3)', async () => {
       const b = await book(mhs, generalRoom.id, 'Korban quick-action', 10);
       assert(b.status === 201, `booking ${b.status}`);
       const gen = await req(`/verify/quick-action/generate-link/${b.body.id}?action=APPROVE`, { headers: { Authorization: 'Bearer ' + su } });
       assert(gen.status === 200 && gen.body?.token, `generate-link ${gen.status}`);
-      const ex = await req('/verify/quick-action/execute?token=' + encodeURIComponent(gen.body.token));
+      // Tanpa login -> 401.
+      const anon = await req('/verify/quick-action/execute?token=' + encodeURIComponent(gen.body.token));
+      assert(anon.status === 401, `execute tanpa login balas ${anon.status}, seharusnya 401`);
+      // Mahasiswa (bukan penyetuju) -> 403.
+      const mhsEx = await req('/verify/quick-action/execute?token=' + encodeURIComponent(gen.body.token), { headers: { Authorization: 'Bearer ' + mhs } });
+      assert(mhsEx.status === 403, `execute oleh mahasiswa balas ${mhsEx.status}, seharusnya 403`);
+      // Superadmin penyetuju -> APPROVED + audit atas nama eksekutor.
+      const ex = await req('/verify/quick-action/execute?token=' + encodeURIComponent(gen.body.token), { headers: { Authorization: 'Bearer ' + su } });
       assert(ex.body?.status === 'APPROVED', `execute -> ${ex.status} ${JSON.stringify(ex.body).slice(0, 60)}`);
       const detail = (await req('/bookings/' + b.body.id, { headers: { Authorization: 'Bearer ' + su } })).body;
       const last = detail.approvalLogs?.[0];
-      return `generate-link pakai token -> status=${ex.body.status}; log approval atas nama "${last?.approver?.fullName}" = pemilik booking`;
-    });
+      assert(last?.approver?.fullName === 'Super Administrator YARSI', `audit atas nama ${last?.approver?.fullName}, seharusnya Super Administrator YARSI`);
+      // Link admin -> VERIFIED (bukan final APPROVED).
+      const b2 = await book(mhs, generalRoom.id, 'Korban quick-action 2', 11);
+      const genAdmin = await req(`/verify/quick-action/generate-link/${b2.body.id}?action=APPROVE`, { headers: { Authorization: 'Bearer ' + umum } });
+      const exAdmin = await req('/verify/quick-action/execute?token=' + encodeURIComponent(genAdmin.body.token), { headers: { Authorization: 'Bearer ' + umum } });
+      assert(exAdmin.body?.status === 'VERIFIED', `link admin -> ${exAdmin.body?.status}, seharusnya VERIFIED`);
+      return `anon -> ${anon.status}; mahasiswa -> ${mhsEx.status}; su -> ${ex.body.status} (audit ${last?.approver?.fullName}); admin -> ${exAdmin.body?.status}`;
+    }, true);
 
     await check(4, 'CRITICAL', 'Dokumen privat tidak bisa diintip guest (FIX #4)', async () => {
       const tmp = path.join(__dirname, '__privat.pdf');
       fs.writeFileSync(tmp, '%PDF-1.4\nRAHASIA PROPOSAL\n');
       const fd = new FormData();
       fd.append('roomId', generalRoom.id); fd.append('title', 'Dokumen Rahasia'); fd.append('activityType', 'SEMINAR');
-      fd.append('startTime', slot(11).start); fd.append('endTime', slot(11).end);
+      fd.append('startTime', slot(21).start); fd.append('endTime', slot(21).end);
       fd.append('attachment', new Blob([fs.readFileSync(tmp)], { type: 'application/pdf' }), 'privat.pdf');
       const up = await req('/bookings', { method: 'POST', headers: { Authorization: 'Bearer ' + mhs }, body: fd });
       fs.unlinkSync(tmp);
@@ -254,7 +267,7 @@ const book = async (token, roomId, title, days) => {
     }, true);
 
     await check(7, 'HIGH', 'Mahasiswa ubah status booking orang lain', async () => {
-      const b = await book(su, generalRoom.id, 'Booking milik admin', 13);
+      const b = await book(su, generalRoom.id, 'Booking milik admin', 22);
       const r = await req(`/bookings/${b.body.id}/status`, { method: 'PATCH', headers: authed(mhs), body: JSON.stringify({ status: 'PENDING' }) });
       assert(r.status === 200 && r.body?.status === 'PENDING', `status ${r.status} / ${r.body?.status}`);
       return `mahasiswa -> PATCH status PENDING atas booking orang lain: ${r.status}, status jadi ${r.body.status}`;
@@ -272,12 +285,13 @@ const book = async (token, roomId, title, days) => {
       return `A=VERIFIED & B=APPROVED di slot sama; approve A -> ${retry.status} (A terkunci permanen)`;
     });
 
-    await check(9, 'HIGH', 'Pemesanan kursi CBT: roomId tidak dikirim frontend', async () => {
+    await check(9, 'HIGH', 'Pemesanan kursi CBT tanpa roomId ditolak 400 (FIX #9)', async () => {
       const r = await req('/cbt-room/book', { method: 'POST', headers: authed(mhs), body: JSON.stringify({
         title: 'Ujian', faculty: 'FTI', seatStart: 1, seatEnd: 40, startTime: slot(5).start, endTime: slot(5).end, notes: '' }) });
       assert(r.status === 400, `balas ${r.status}, bukan 400`);
-      return `payload dari UI (tanpa roomId) -> ${r.status}: ${JSON.stringify(r.body?.error?.message).slice(0, 70)}`;
-    });
+      const msg = r.body?.error?.message ?? r.body?.message?.message ?? r.body?.message;
+      return `payload dari UI (tanpa roomId) -> ${r.status}: ${JSON.stringify(msg).slice(0, 70)}`;
+    }, true);
 
     await check(10, 'HIGH', 'Kursi Ruang CBT 197-355 tapi batas backend cuma 159', async () => {
       const r = await req('/cbt-room/book', { method: 'POST', headers: authed(mhs), body: JSON.stringify({
@@ -367,8 +381,9 @@ const book = async (token, roomId, title, days) => {
   const fixed = results.filter((r) => r.ok && /\(FIX #/.test(r.title)).length;
   const fixedFail = results.filter((r) => !r.ok && /\(FIX #/.test(r.title)).length;
   const proven = results.filter((r) => r.ok && !/\(FIX #/.test(r.title)).length;
+  const unproven = results.filter((r) => !r.ok && !/\(FIX #/.test(r.title)).length;
   console.log(`\n${C.d}${'='.repeat(58)}${C.x}`);
-  console.log(`${C.B}RINGKASAN${C.x}  ${results.length} dicek, ${C.g}${fixed} FIX AMAN${C.x}` + (fixedFail ? `, ${C.r}${fixedFail} FIX GAGAL${C.x}` : '') + (proven ? `, ${C.g}${proven} masih TERBUKTI${C.x}` : '') + (results.length - fixed - fixedFail - proven ? `, ${C.y}${results.length - fixed - fixedFail - proven} tidak terbukti${C.x}` : ''));
+  console.log(`${C.B}RINGKASAN${C.x}  ${results.length} dicek, ${C.g}${fixed} FIX AMAN${C.x}` + (fixedFail ? `, ${C.r}${fixedFail} FIX GAGAL${C.x}` : '') + (proven ? `, ${C.r}${proven} masih TERBUKTI${C.x}` : '') + (unproven ? `, ${C.y}${unproven} tidak terbukti${C.x}` : ''));
   const bySev = {};
   results.forEach((r) => { bySev[r.severity] = (bySev[r.severity] || 0) + (r.ok ? 1 : 0); });
   Object.entries(bySev).forEach(([s, n]) => console.log(`  ${s.padEnd(9)} ${n} bug`));

@@ -6,8 +6,9 @@ Dokumen ini mencatat perkembangan sistem peminjaman ruangan kampus YARSI.
 
 ## 📌 Status Terkini
 
-- **Tanggal Pembaruan**: 10 September 2026
-- **Kondisi Aplikasi**: 
+- **Tanggal Pembaruan**: 8 Oktober 2026
+- **Review mattpocock/code-review (Standards + Spec) atas kerjaan notifikasi antrean + quick-action**: temuan diperbaiki semua — FacilitiesModule dikembalikan (sempat tertimpa NotificationsModule), `Notification.bookingId` kini FK cascade + index, notif owner/antrean lewat NotificationsService (duplikasi helper dihapus, termasuk path quick-action), query `limit`/`token` divalidasi DTO, role eksekutor quick-action dibaca ulang dari DB, badge navbar server-first (flag queueFetched), item bell link ke /admin/approvals untuk antrean + tandai-baca per item.
+- **Kondisi Aplikasi**:
   - Frontend (Next.js 14) aktif dan berjalan di `http://localhost:3000`.
   - Backend API (NestJS) aktif dan berjalan di `http://localhost:4000/api`.
   - Database PostgreSQL terhubung di port 5433 (`siperu_yarsi`), skema Prisma tersinkronisasi, dan data seed ruangan serta pengguna demo berhasil dimuat.

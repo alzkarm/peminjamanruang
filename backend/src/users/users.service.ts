@@ -41,7 +41,7 @@ export class UsersService {
       fullName: u.fullName,
       email: u.email,
       unitName: u.unitName,
-      role: this.mapRole(u.role as unknown as Role, u.unitName),
+      role: this.mapRole(u.role),
       rawRole: u.role,
       hasLocalPassword: Boolean(u.passwordHash),
       createdAt: u.createdAt,
@@ -110,16 +110,15 @@ export class UsersService {
     if (!unitName) {
       if (dto.role === 'superadmin' || prismaRole === Role.SUPERADMIN) {
         unitName = 'Pusat Data dan Informasi (PUSDATIN)';
-      } else if (dto.role === 'admin_yayasan' || dto.role === 'yayasan' || prismaRole === Role.YAYASAN || prismaRole === Role.ADMIN_YAYASAN) {
-        unitName = 'Biro Sekretariat & Aset Yayasan YARSI';
-      } else if (dto.role === 'admin_lpf' || prismaRole === Role.ADMIN_LPF || prismaRole === Role.ADMIN_UNIV) {
+      } else if (
+        dto.role === 'admin' ||
+        dto.role === 'admin_lpf' ||
+        dto.role === 'admin_yayasan' ||
+        prismaRole === Role.ADMIN
+      ) {
         unitName = 'Biro Layanan Pengelolaan Fasilitas (LPF)';
-      } else if (dto.role === 'dosen') {
-        unitName = 'Fakultas Kedokteran (Dosen)';
-      } else if (dto.role === 'tendik') {
-        unitName = 'Bagian Tata Usaha Kampus';
       } else {
-        unitName = 'Fakultas Teknologi Informasi (Mahasiswa)';
+        unitName = 'Fakultas Teknologi Informasi';
       }
     }
 
@@ -133,7 +132,7 @@ export class UsersService {
         email,
         fullName,
         unitName,
-        role: prismaRole as any,
+        role: prismaRole,
         passwordHash: null,
       },
     });
@@ -148,7 +147,7 @@ export class UsersService {
         fullName: newUser.fullName,
         email: newUser.email,
         unitName: newUser.unitName,
-        role: this.mapRole(newUser.role as unknown as Role, newUser.unitName),
+        role: this.mapRole(newUser.role as unknown as Role),
         hasLocalPassword: false,
         createdAt: newUser.createdAt,
       },
@@ -169,22 +168,38 @@ export class UsersService {
     return { message: `Pengguna ${existing.username} berhasil dihapus dari whitelist.` };
   }
 
-  private toPrismaRole(roleStr?: string): Role {
+  private toPrismaRole(roleStr?: string): any {
     if (!roleStr) return Role.USER;
-    const r = roleStr.toLowerCase();
-    if (r === 'superadmin') return Role.SUPERADMIN;
-    if (r === 'admin_lpf' || r === 'admin_univ') return Role.ADMIN_LPF;
-    if (r === 'admin_yayasan' || r === 'yayasan') return Role.YAYASAN;
+    const normalized = roleStr.trim().toUpperCase();
+    if (normalized === 'SUPERADMIN' || normalized === Role.SUPERADMIN) return Role.SUPERADMIN;
+    if (
+      normalized === 'ADMIN' ||
+      normalized === Role.ADMIN ||
+      normalized === 'ADMIN_LPF' ||
+      normalized === 'ADMIN_UNIV' ||
+      normalized === 'ADMIN_UMUM' ||
+      normalized === 'ADMIN_YAYASAN' ||
+      normalized === 'YAYASAN'
+    ) {
+      return Role.ADMIN;
+    }
     return Role.USER;
   }
 
-  private mapRole(role: Role, unitName: string): string {
-    if (role === Role.SUPERADMIN) return 'superadmin';
-    if (role === Role.ADMIN_LPF || role === Role.ADMIN_UNIV) return 'admin_lpf';
-    if (role === Role.YAYASAN || role === Role.ADMIN_YAYASAN) return 'admin_yayasan';
-    const u = (unitName || '').toLowerCase();
-    if (u.includes('dosen')) return 'dosen';
-    if (u.includes('tendik') || u.includes('tata usaha')) return 'tendik';
-    return 'mahasiswa';
+  private mapRole(role: unknown, unitName?: string): string {
+    const normalized = String(role || '').toUpperCase();
+    if (normalized === 'SUPERADMIN' || normalized === Role.SUPERADMIN) return 'superadmin';
+    if (
+      normalized === 'ADMIN' ||
+      normalized === Role.ADMIN ||
+      normalized === 'ADMIN_LPF' ||
+      normalized === 'ADMIN_UNIV' ||
+      normalized === 'ADMIN_UMUM' ||
+      normalized === 'ADMIN_YAYASAN' ||
+      normalized === 'YAYASAN'
+    ) {
+      return 'admin';
+    }
+    return 'user';
   }
 }

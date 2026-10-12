@@ -203,7 +203,7 @@ export function mapFrontendCategoryToBackendActivityType(category?: string): str
       return 'UJIAN_CBT';
     case 'akreditasi':
       return 'AKREDITASI';
-    case 'kemahasiswaan':
+    case 'ormawa':
     case 'yayasan':
     case 'lainnya':
     default:
@@ -281,16 +281,21 @@ export function mapBackendBookingToFrontend(b: any): Booking {
   const floorNumber = b.room?.floor?.level ?? 1;
   const buildingName = '';
 
+  const rawName = String(b.user?.role ?? '');
+  const rawUp = rawName.toUpperCase();
   const userRole: Role =
-    b.user?.role === 'SUPERADMIN'
+    rawUp === 'SUPERADMIN'
       ? 'superadmin'
-      : b.user?.role === 'ADMIN_YAYASAN' || b.user?.role === 'YAYASAN'
-      ? 'admin_yayasan'
-      : b.user?.role === 'ADMIN_UNIV' || b.user?.role === 'ADMIN_LPF' || b.user?.role === 'ADMIN_UMUM'
-      ? 'admin_lpf'
-      : b.user?.username?.startsWith('03')
-      ? 'dosen'
-      : 'mahasiswa';
+      : rawUp === 'ADMIN' ||
+        rawUp === 'ADMIN_UMUM' ||
+        rawUp === 'ADMIN_LPF' ||
+        rawUp === 'ADMIN_UNIV' ||
+        rawUp === 'ADMIN_YAYASAN' ||
+        rawUp === 'YAYASAN'
+      ? 'admin'
+      : rawUp === 'GUEST'
+      ? 'guest'
+      : 'user';
 
   const rawNotes = b.notes || b.catatan || '';
   const hasRecurringNote =
@@ -423,35 +428,39 @@ export const authApi = {
       setAuthToken(data.accessToken);
     }
 
-    const roleMap: Record<string, Role> = {
-      SUPERADMIN: 'superadmin',
-      superadmin: 'superadmin',
-      ADMIN_UMUM: 'admin_lpf',
-      admin_umum: 'admin_lpf',
-      ADMIN_YAYASAN: 'admin_yayasan',
-      YAYASAN: 'admin_yayasan',
-      admin_yayasan: 'admin_yayasan',
-      ADMIN_UNIV: 'admin_lpf',
-      ADMIN_LPF: 'admin_lpf',
-      admin_lpf: 'admin_lpf',
-      dosen: 'dosen',
-      tendik: 'tendik',
-      mahasiswa: 'mahasiswa',
-      USER: username.startsWith('03') ? 'dosen' : 'mahasiswa',
-      GUEST: 'guest',
+    const normalizeRole = (raw: unknown): Role => {
+      const up = String(raw ?? '').toUpperCase();
+      if (up === 'SUPERADMIN') return 'superadmin';
+      if (
+        up === 'ADMIN' ||
+        up === 'ADMIN_UMUM' ||
+        up === 'ADMIN_LPF' ||
+        up === 'ADMIN_UNIV' ||
+        up === 'ADMIN_YAYASAN' ||
+        up === 'YAYASAN'
+      )
+        return 'admin';
+      if (up === 'GUEST') return 'guest';
+      return 'user';
     };
 
     const user: UserSession = {
       id: data.user.id,
       name: data.user.fullName || data.user.name,
       identifier: data.user.username || data.user.identifier,
-      role: (roleMap[data.user.role] || data.user.role || (username.startsWith('03') ? 'dosen' : 'mahasiswa')) as Role,
+      role: normalizeRole(data.user.role),
       email: data.user.email || `${data.user.username || username}@yarsi.ac.id`,
       department: data.user.unitName || data.user.department,
       organization: data.user.unitName || data.user.department,
       phone: data.user.phone || '0812-9876-5432',
       token: data.accessToken,
     };
+
+    if (data.accessToken) {
+      setAuthToken(data.accessToken, user.role);
+    } else {
+      setAuthRoleCookie(user.role);
+    }
 
     return {
       message: data.message,
@@ -462,26 +471,26 @@ export const authApi = {
 
   async getProfile(): Promise<UserSession> {
     const data = await request<any>('/auth/profile');
-    const roleMap: Record<string, Role> = {
-      SUPERADMIN: 'superadmin',
-      superadmin: 'superadmin',
-      ADMIN_UMUM: 'admin_lpf',
-      admin_umum: 'admin_lpf',
-      ADMIN_YAYASAN: 'admin_yayasan',
-      YAYASAN: 'admin_yayasan',
-      admin_yayasan: 'admin_yayasan',
-      ADMIN_UNIV: 'admin_lpf',
-      ADMIN_LPF: 'admin_lpf',
-      admin_lpf: 'admin_lpf',
-      USER: data.username?.startsWith('03') ? 'dosen' : 'mahasiswa',
-      GUEST: 'guest',
-    };
+    const up = String(data.role ?? '').toUpperCase();
+    const role: Role =
+      up === 'SUPERADMIN'
+        ? 'superadmin'
+        : up === 'ADMIN' ||
+          up === 'ADMIN_UMUM' ||
+          up === 'ADMIN_LPF' ||
+          up === 'ADMIN_UNIV' ||
+          up === 'ADMIN_YAYASAN' ||
+          up === 'YAYASAN'
+        ? 'admin'
+        : up === 'GUEST'
+        ? 'guest'
+        : 'user';
 
     return {
       id: data.id,
       name: data.fullName,
       identifier: data.username,
-      role: roleMap[data.role] || 'mahasiswa',
+      role,
       email: data.email || `${data.username}@yarsi.ac.id`,
       department: data.unitName,
       organization: data.unitName,
@@ -1198,6 +1207,29 @@ export const smartRoomsApi = {
       method: 'POST',
       body: JSON.stringify(params),
     });
+  },
+};
+export interface AppNotification {
+  id: string;
+  bookingId?: string | null;
+  title: string;
+  message: string;
+  isRead: boolean;
+  createdAt: string;
+}
+
+export const notificationsApi = {
+  async list(limit = 20): Promise<{ items: AppNotification[]; unread: number }> {
+    return request<{ items: AppNotification[]; unread: number }>(`/notifications?limit=${limit}`);
+  },
+  async markAllRead(): Promise<{ ok: boolean }> {
+    return request<{ ok: boolean }>('/notifications/read-all', { method: 'PATCH' });
+  },
+  async markOneRead(id: string): Promise<{ ok: boolean }> {
+    return request<{ ok: boolean }>(`/notifications/${id}/read`, { method: 'PATCH' });
+  },
+  async queueCounts(): Promise<{ pending: number; awaitingApproval: number; total: number }> {
+    return request<{ pending: number; awaitingApproval: number; total: number }>('/notifications/queue-counts');
   },
 };
 

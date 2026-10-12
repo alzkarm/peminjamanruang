@@ -50,8 +50,8 @@ export function EventDetailModal({
   const isGuestOrAnonymous = !currentUser || currentUser.role === 'guest';
   const isOwnerOrAdmin =
     currentUser &&
-    (currentUser.role === 'admin_lpf' ||
-      currentUser.role === 'admin_yayasan' ||
+    (currentUser.role === 'admin' ||
+      currentUser.role === 'superadmin' ||
       currentUser.id === booking?.userId ||
       currentUser.identifier === booking?.userNimNidn);
 

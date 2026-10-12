@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 
 import { countUniqueBookingApplications } from '@/lib/utils';
+import { isAdminRole } from '@/lib/types';
 
 export function AdminSidebar() {
   const pathname = usePathname();
@@ -42,63 +43,32 @@ export function AdminSidebar() {
 
   const role = currentUser?.role;
   const isSuperadmin = role === 'superadmin';
-  const isAdminLPF = role === 'admin_lpf';
-  const isYayasan = role === 'admin_yayasan';
+  const isAdmin = isAdminRole(role);
 
-  const pendingLPFCount = countUniqueBookingApplications(
-    bookings.filter((b) => b.status === 'PENDING_LPF' || b.status === 'PENDING')
-  );
-  const pendingSuperadminCount = countUniqueBookingApplications(
-    bookings.filter((b) => b.status === 'VERIFIED')
-  );
-  const pendingYayasanCount = countUniqueBookingApplications(
-    bookings.filter((b) => b.status === 'RECOMMENDED_YAYASAN')
+  const pendingCount = countUniqueBookingApplications(
+    bookings.filter((b) =>
+      isSuperadmin
+        ? b.status === 'PENDING' || b.status === 'VERIFIED'
+        : b.status === 'PENDING' || b.status === 'PENDING_LPF'
+    )
   );
 
   const navItems = [];
 
-  // 1. Approval Items:
-  if (isAdminLPF) {
+  // 1. Persetujuan tunggal untuk admin + superadmin
+  if (isAdmin) {
     navItems.push({
       href: '/admin/approvals',
-      label: 'Verifikasi LPF',
-      description: 'Verifikasi & teruskan ke Superadmin',
+      label: 'Persetujuan',
+      description: 'Antrean permohonan menunggu keputusan',
       icon: ShieldCheck,
-      badge: pendingLPFCount,
+      badge: pendingCount,
       badgeColor: 'bg-emerald-500',
-    });
-  } else if (isSuperadmin) {
-    navItems.push(
-      {
-        href: '/admin/approvals',
-        label: 'Persetujuan Final',
-        description: 'Approval akhir pengajuan terverifikasi',
-        icon: ShieldCheck,
-        badge: pendingSuperadminCount,
-        badgeColor: 'bg-purple-500',
-      },
-      {
-        href: '/admin/approvals/yayasan',
-        label: 'Persetujuan Yayasan',
-        description: 'Auditorium Ar-Rahman & R. Senat',
-        icon: Building2,
-        badge: pendingYayasanCount,
-        badgeColor: 'bg-sky-500',
-      }
-    );
-  } else if (isYayasan) {
-    navItems.push({
-      href: '/admin/approvals/yayasan',
-      label: 'Persetujuan Yayasan',
-      description: 'Auditorium Ar-Rahman & R. Senat',
-      icon: Building2,
-      badge: pendingYayasanCount,
-      badgeColor: 'bg-sky-500',
     });
   }
 
-  // 2. Academic schedule: Superadmin, Admin LPF
-  if (isSuperadmin || isAdminLPF) {
+  // 2. Jadwal Akademik / Runsheet / Maintenance / Laporan untuk admin + superadmin
+  if (isAdmin) {
     navItems.push({
       href: '/admin/academic-bulk',
       label: 'Jadwal Akademik',
@@ -107,16 +77,18 @@ export function AdminSidebar() {
     });
   }
 
-  // Agenda Hari Ini (Run-Sheet Operasional)
-  navItems.push({
-    href: '/admin/runsheet',
-    label: 'Agenda Hari Ini (Run-Sheet)',
-    description: 'Checklist kesiapan ruangan & logistik',
-    icon: PackageCheck,
-  });
+  // Agenda Hari Ini (Run-Sheet Operasional) — admin + superadmin
+  if (isAdmin) {
+    navItems.push({
+      href: '/admin/runsheet',
+      label: 'Agenda Hari Ini (Run-Sheet)',
+      description: 'Checklist kesiapan ruangan & logistik',
+      icon: PackageCheck,
+    });
+  }
 
-  // Pemeliharaan Ruang (Maintenance Scheduler)
-  if (isSuperadmin || isAdminLPF) {
+  // Pemeliharaan Ruang — admin + superadmin
+  if (isAdmin) {
     navItems.push({
       href: '/admin/maintenance',
       label: 'Pemeliharaan Ruang',
@@ -125,13 +97,15 @@ export function AdminSidebar() {
     });
   }
 
-  // 3. Reports: all admin roles
-  navItems.push({
-    href: '/admin/reports',
-    label: 'Laporan & Ekspor',
-    description: 'Rekap pemanfaatan ruang',
-    icon: BarChart3,
-  });
+  // 3. Reports — admin + superadmin
+  if (isAdmin) {
+    navItems.push({
+      href: '/admin/reports',
+      label: 'Laporan & Ekspor',
+      description: 'Rekap pemanfaatan ruang',
+      icon: BarChart3,
+    });
+  }
 
   // 4. Superadmin only menus
   if (isSuperadmin) {
@@ -275,9 +249,11 @@ export function AdminSidebar() {
             <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-900 border border-emerald-300 dark:bg-emerald-500/20 dark:text-emerald-200 dark:border-emerald-500/40">
               {isSuperadmin
                 ? 'Superadmin'
-                : isAdminLPF
+                : role === 'admin_lpf'
                 ? 'Admin LPF'
-                : 'Pengurus Yayasan'}
+                : role === 'admin_yayasan'
+                ? 'Pengurus Yayasan'
+                : 'Admin'}
             </span>
           </div>
         </div>

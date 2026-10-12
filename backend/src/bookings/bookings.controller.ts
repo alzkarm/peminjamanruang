@@ -66,7 +66,7 @@ export class BookingsController {
     }),
   )
   async create(
-    @CurrentUser('id') userId: string,
+    @CurrentUser() currentUser: { id: string; fullName: string },
     @Body() dto: CreateBookingDto,
     @UploadedFile() file?: Express.Multer.File,
   ) {
@@ -76,7 +76,7 @@ export class BookingsController {
     }
     const attachmentUrl = file ? `/attachments/${file.filename}` : undefined;
     try {
-      return await this.bookingsService.create(userId, dto, attachmentUrl);
+      return await this.bookingsService.create(currentUser.id, dto, attachmentUrl, currentUser.fullName);
     } catch (error) {
       if (file) await fs.unlink(file.path).catch(() => undefined);
       throw error;
@@ -144,7 +144,7 @@ export class BookingsController {
 
   @Post('detect-no-show')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.SUPERADMIN, Role.ADMIN_UNIV, Role.ADMIN_LPF)
+  @Roles(Role.SUPERADMIN, Role.ADMIN)
   async detectNoShow() {
     return this.bookingsService.detectNoShowBookings();
   }
@@ -157,14 +157,14 @@ export class BookingsController {
 
   @Get('penalties/all')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.SUPERADMIN, Role.ADMIN_UNIV, Role.ADMIN_LPF)
+  @Roles(Role.SUPERADMIN, Role.ADMIN)
   async getAllPenalties() {
     return this.bookingsService.getAllPenalties();
   }
 
   @Patch('penalties/:id/revoke')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.SUPERADMIN, Role.ADMIN_UNIV, Role.ADMIN_LPF)
+  @Roles(Role.SUPERADMIN, Role.ADMIN)
   async revokePenalty(@Param('id') id: string) {
     return this.bookingsService.revokePenalty(id);
   }
@@ -199,7 +199,7 @@ export class BookingsController {
 
   @Patch('batch-status')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.SUPERADMIN, Role.ADMIN_UNIV, Role.ADMIN_LPF, Role.ADMIN_YAYASAN, Role.YAYASAN)
+  @Roles(Role.ADMIN, Role.SUPERADMIN)
   async updateBatchStatus(
     @CurrentUser() currentUser: { id: string; role: Role; fullName: string },
     @Body() dto: UpdateBatchStatusDto,
@@ -209,7 +209,7 @@ export class BookingsController {
 
   @Patch(':id/status')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.SUPERADMIN, Role.ADMIN_UNIV, Role.ADMIN_LPF, Role.ADMIN_YAYASAN, Role.YAYASAN)
+  @Roles(Role.ADMIN, Role.SUPERADMIN)
   async updateStatus(
     @Param('id') id: string,
     @CurrentUser() currentUser: { id: string; role: Role; fullName: string },
@@ -217,7 +217,6 @@ export class BookingsController {
   ) {
     return this.bookingsService.updateStatus(id, currentUser, dto);
   }
-
   @Patch(':id/cancel')
   @UseGuards(JwtAuthGuard)
   async cancel(

@@ -4,8 +4,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAppStore } from '@/lib/store';
-import { Role } from '@/lib/types';
+import { Role, isAdminRole } from '@/lib/types';
 import { AuthGateModal } from '@/components/common/AuthGateModal';
+import { NotificationBell } from '@/components/common/NotificationBell';
 import {
   CalendarDays,
   PlusCircle,
@@ -36,7 +37,7 @@ import { countUniqueBookingApplications } from '@/lib/utils';
 export function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { currentUser, logout, bookings, fetchInitialData } = useAppStore();
+  const { currentUser, logout, bookings, fetchInitialData, fetchNotifications, queuePending, queueAwaitingApproval, queueFetched } = useAppStore();
   const [mounted, setMounted] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [adminDropdownOpen, setAdminDropdownOpen] = useState(false);
@@ -50,6 +51,7 @@ export function Navbar() {
   useEffect(() => {
     setMounted(true);
     fetchInitialData();
+    fetchNotifications().catch(() => undefined);
   }, [fetchInitialData]);
 
   useEffect(() => {
@@ -92,15 +94,8 @@ export function Navbar() {
   const isGuest = !currentUser || currentUser.role === 'guest';
   const role = currentUser?.role;
   const isSuperadmin = role === 'superadmin';
-  const isAdminLPF = role === 'admin_lpf';
-  const isYayasan = role === 'admin_yayasan';
-  const isAdminUser =
-    isSuperadmin ||
-    isAdminLPF ||
-    isYayasan ||
-    (role as string) === 'admin' ||
-    role === 'security_cs' ||
-    (typeof role === 'string' && role.toLowerCase().includes('admin'));
+  const isAdmin = isAdminRole(role);
+  const isAdminUser = isAdmin;
 
   // Menu Peminjaman Saya hanya tampil bagi akun dengan role user (mahasiswa, dosen, tendik, user)
   const isUserRole = Boolean(
@@ -113,24 +108,24 @@ export function Navbar() {
   const isHome = pathname === '/';
   const isOnAdminPath = pathname.startsWith('/admin');
 
-  // Compute pending counts (grouped by application so recurring series count as 1)
-  const pendingLPFCount = countUniqueBookingApplications(
-    bookings.filter((b) => b.status === 'PENDING_LPF' || b.status === 'PENDING')
+  // Antrean per role dari server (fallback hitungan lokal hanya bila fetch gagal):
+  // admin → PENDING; superadmin → PENDING + VERIFIED.
+  const localPending = countUniqueBookingApplications(
+    bookings.filter((b) =>
+      isSuperadmin
+        ? b.status === 'PENDING' || b.status === 'VERIFIED'
+        : b.status === 'PENDING' || b.status === 'PENDING_LPF'
+    )
   );
-  const pendingSuperadminCount = countUniqueBookingApplications(
-    bookings.filter((b) => b.status === 'VERIFIED')
-  );
-  const pendingYayasanCount = countUniqueBookingApplications(
-    bookings.filter((b) => b.status === 'RECOMMENDED_YAYASAN')
-  );
+  const serverQueue = isSuperadmin
+    ? queuePending + queueAwaitingApproval
+    : queuePending;
+  const queueReady = typeof queueFetched === 'boolean' ? queueFetched : (queuePending > 0 || queueAwaitingApproval > 0);
+  const adminPendingBadge = isAdminUser
+    ? (queueReady ? serverQueue : localPending)
+    : 0;
 
-  const adminPendingBadge = isYayasan
-    ? pendingYayasanCount
-    : isAdminLPF
-    ? pendingLPFCount
-    : pendingSuperadminCount;
-
-  const adminTargetUrl = isYayasan ? '/admin/approvals/yayasan' : '/admin/approvals';
+  const adminTargetUrl = '/admin/approvals';
 
   interface NavLinkItem {
     href: string;
@@ -173,10 +168,14 @@ export function Navbar() {
     switch (userRole) {
       case 'superadmin':
         return <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-purple-100 text-purple-900 border border-purple-300 dark:bg-purple-500/20 dark:text-purple-200 dark:border-purple-500/40">Superadmin</span>;
+      case 'admin':
+        return <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-900 border border-emerald-300 dark:bg-emerald-500/20 dark:text-emerald-200 dark:border-emerald-500/40">Admin</span>;
       case 'admin_yayasan':
         return <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-900 border border-amber-300 dark:bg-amber-500/20 dark:text-amber-200 dark:border-amber-500/40">Yayasan YARSI</span>;
       case 'admin_lpf':
         return <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-emerald-100 text-emerald-900 border border-emerald-300 dark:bg-emerald-500/20 dark:text-emerald-200 dark:border-emerald-500/40">Admin LPF</span>;
+      case 'user':
+        return <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-teal-100 text-teal-900 border border-teal-300 dark:bg-teal-500/20 dark:text-teal-200 dark:border-teal-500/40">User</span>;
       case 'dosen':
         return <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-900 border border-blue-300 dark:bg-blue-500/20 dark:text-blue-200 dark:border-blue-500/40">Dosen</span>;
       case 'tendik':
@@ -184,14 +183,15 @@ export function Navbar() {
       case 'mahasiswa':
         return <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-teal-100 text-teal-900 border border-teal-300 dark:bg-teal-500/20 dark:text-teal-200 dark:border-teal-500/40">Mahasiswa</span>;
       default:
-        return <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600">Mode Tamu</span>;
+        return <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:border-slate-600">Tamu</span>;
     }
   };
 
   const getRoleTitle = () => {
     if (isSuperadmin) return 'Superadmin';
-    if (isAdminLPF) return 'Admin LPF';
-    if (isYayasan) return 'Pengurus Yayasan';
+    if (role === 'admin_lpf') return 'Admin LPF';
+    if (role === 'admin_yayasan') return 'Pengurus Yayasan';
+    if (isAdmin) return 'Admin';
     return 'Pengelola';
   };
 
@@ -347,7 +347,7 @@ export function Navbar() {
                             <ShieldCheck className="w-4 h-4 text-yarsi-primary shrink-0" />
                             <div>
                               <p className="leading-tight">
-                                {isYayasan ? 'Persetujuan Yayasan' : 'Verifikasi Permohonan'}
+                                Persetujuan
                               </p>
                               <p className="text-[10px] text-slate-400 font-normal">Antrean permohonan ruang</p>
                             </div>
@@ -359,7 +359,7 @@ export function Navbar() {
                           )}
                         </Link>
 
-                        {(isSuperadmin || isAdminLPF) && (
+                        {isAdmin && (
                           <Link
                             href="/admin/academic-bulk"
                             onClick={() => setAdminDropdownOpen(false)}
@@ -584,7 +584,7 @@ export function Navbar() {
                               )}
                             </Link>
 
-                            {(isSuperadmin || isAdminLPF) && (
+                            {isAdmin && (
                               <Link
                                 href="/admin/academic-bulk"
                                 onClick={() => setUserDropdownOpen(false)}
@@ -667,6 +667,8 @@ export function Navbar() {
                 </div>
               )}
 
+              {/* Notification Bell (in-app, login only) */}
+              {mounted && <NotificationBell isHome={isHome} />}
               {/* Theme Toggle */}
               <button
                 type="button"
@@ -739,11 +741,11 @@ export function Navbar() {
                     onClick={() => setMobileMenuOpen(false)}
                     className="flex items-center justify-between px-3 py-2 text-xs font-bold text-slate-800 hover:bg-emerald-50 rounded-lg dark:text-slate-200 dark:hover:bg-emerald-500/10"
                   >
-                    <span>{isYayasan ? 'Persetujuan Yayasan' : 'Verifikasi Permohonan'}</span>
+                    <span>Persetujuan</span>
                     <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
                   </Link>
 
-                  {(isSuperadmin || isAdminLPF) && (
+                  {isAdmin && (
                     <Link
                       href="/admin/academic-bulk"
                       onClick={() => setMobileMenuOpen(false)}

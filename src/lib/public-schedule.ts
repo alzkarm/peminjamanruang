@@ -99,7 +99,8 @@ export function usePublicSchedule(
       const response = await roomsApi.getPublicSchedule(range.startTime, range.endTime);
       setEvents(
         response.events.filter((event) =>
-          ['APPROVED', 'PENDING', 'RECOMMENDED', 'PENDING_LPF', 'RECOMMENDED_YAYASAN'].includes(
+          // PENDING/APPROVED aktif; alias lama display-only ikut tampil sebagai antrean
+          ['APPROVED', 'PENDING', 'PENDING_LPF', 'RECOMMENDED', 'RECOMMENDED_YAYASAN'].includes(
             event.status,
           ),
         ),

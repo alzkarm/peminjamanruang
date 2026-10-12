@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { useAppStore } from '@/lib/store';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
+import { isAdminRole } from '@/lib/types';
 import { ShieldAlert, ArrowLeft, Lock } from 'lucide-react';
 
 export default function AdminLayout({
@@ -12,10 +13,7 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const { currentUser } = useAppStore();
-  const isAdmin =
-    currentUser?.role === 'admin_lpf' ||
-    currentUser?.role === 'admin_yayasan' ||
-    currentUser?.role === 'superadmin';
+  const isAdmin = isAdminRole(currentUser?.role);
 
   if (!isAdmin) {
     return (

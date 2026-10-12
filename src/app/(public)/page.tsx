@@ -233,8 +233,8 @@ export default function HomePage() {
         <div className="hero-architectural-grid absolute inset-0 -z-20 opacity-75" aria-hidden="true" />
         <div className="hero-contour-lines absolute inset-0 -z-10 opacity-50" aria-hidden="true" />
 
-        <div className="relative mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)] items-center gap-4 pt-8 lg:min-h-[520px] lg:grid-cols-[0.72fr_1.28fr] lg:pt-1">
-          <div className="relative z-20 min-w-0 max-w-xl py-8 lg:py-12">
+        <div className="relative mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)] items-center gap-4 pt-8 xl:min-h-[520px] xl:grid-cols-[0.72fr_1.28fr] xl:pt-1">
+          <div className="relative z-20 min-w-0 max-w-xl py-8 xl:py-12">
             <p className="mb-5 flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.14em] text-emerald-200/80">
               <span className="h-px w-7 bg-emerald-300" aria-hidden="true" />
               Sistem Peminjaman Ruangan Universitas YARSI
@@ -291,7 +291,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="relative mx-auto flex min-h-[300px] w-full min-w-0 max-w-[780px] items-center justify-center overflow-visible sm:min-h-[370px] lg:min-h-[420px]" aria-label="Layanan Peminjaman Ruangan SIPERU">
+          <div className="relative mx-auto flex min-h-[300px] w-full min-w-0 max-w-[780px] items-center justify-center overflow-hidden sm:min-h-[370px] xl:min-h-[420px] xl:overflow-visible" aria-label="Layanan Peminjaman Ruangan SIPERU">
             <InteractiveBuilding
               selectedDate={selectedDateStr}
               activeBookings={activeBookingsForDate}
@@ -660,7 +660,7 @@ export default function HomePage() {
           )}
         </section>
 
-        <section className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-labelledby="akses-cepat-heading">
+        <section className="mt-5 grid gap-4 md:grid-cols-2 min-[1700px]:grid-cols-4" aria-labelledby="akses-cepat-heading">
           <h2 id="akses-cepat-heading" className="sr-only">Akses cepat SIPERU</h2>
           {quickAccessItems.map((item) => {
             const Icon = item.icon;
@@ -669,7 +669,7 @@ export default function HomePage() {
                 key={item.title}
                 href={item.href}
                 onClick={(event) => handleProtectedClick(event, item.requiresAuth)}
-                className="feature-access-card group grid min-h-[190px] grid-cols-[0.75fr_1.25fr] gap-4 overflow-hidden border border-slate-200 bg-white p-4 shadow-sm focus-visible:ring-2 focus-visible:ring-yarsi-primary dark:border-slate-800 dark:bg-slate-900 dark:focus-visible:ring-emerald-500"
+                className="feature-access-card group grid min-h-[190px] grid-cols-1 gap-4 overflow-hidden border border-slate-200 bg-white p-4 shadow-sm focus-visible:ring-2 focus-visible:ring-yarsi-primary min-[1700px]:grid-cols-[0.75fr_1.25fr] dark:border-slate-800 dark:bg-slate-900 dark:focus-visible:ring-emerald-500"
               >
                 <span className="flex min-w-0 flex-col">
                   <Icon className="h-5 w-5 text-yarsi-primary dark:text-emerald-400" aria-hidden="true" />

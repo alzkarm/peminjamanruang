@@ -21,7 +21,7 @@ export class AcademicBulkController {
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN_UNIV, Role.ADMIN_YAYASAN)
+  @Roles(Role.SUPERADMIN, Role.ADMIN)
   async createBulk(
     @CurrentUser('id') userId: string,
     @Body() dto: CreateAcademicBulkDto,
@@ -36,14 +36,14 @@ export class AcademicBulkController {
 
   @Get('groups')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN_UNIV, Role.ADMIN_YAYASAN)
+  @Roles(Role.SUPERADMIN, Role.ADMIN)
   async findAllGroups() {
     return this.academicBulkService.findAllGroups();
   }
 
   @Delete(':bulkGroupId')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN_UNIV, Role.ADMIN_YAYASAN)
+  @Roles(Role.SUPERADMIN, Role.ADMIN)
   async deleteGroup(@Param('bulkGroupId') bulkGroupId: string) {
     return this.academicBulkService.deleteGroup(bulkGroupId);
   }

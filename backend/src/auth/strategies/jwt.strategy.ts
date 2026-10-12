@@ -33,12 +33,21 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new UnauthorizedException('Pengguna tidak ditemukan dalam sistem.');
     }
 
+    // Normalisasi defensif role legacy dari DB agar aman sebelum/sesudah migrasi.
+    const rawRole = String(user.role).toUpperCase();
+    const role =
+      rawRole === 'SUPERADMIN'
+        ? 'SUPERADMIN'
+        : rawRole === 'ADMIN' || rawRole === 'ADMIN_UMUM' || rawRole === 'ADMIN_LPF' || rawRole === 'ADMIN_UNIV' || rawRole === 'ADMIN_YAYASAN' || rawRole === 'YAYASAN'
+          ? 'ADMIN'
+          : 'USER';
+
     return {
       id: user.id,
       username: user.username,
       fullName: user.fullName,
       email: user.email,
-      role: user.role,
+      role,
       unitName: user.unitName,
     };
   }
