@@ -32,6 +32,45 @@ export function middleware(request: NextRequest) {
     return response;
   }
 
+  // Route Guard: /peminjaman-saya & /dashboard
+  // Batasi agar hanya dapat diakses oleh akun role user (mahasiswa, dosen, tendik, user).
+  // Role admin / superadmin / manajerial lainnya otomatis diredirect ke admin portal.
+  if (
+    pathname === '/peminjaman-saya' ||
+    pathname.startsWith('/peminjaman-saya/') ||
+    pathname === '/dashboard'
+  ) {
+    const userRole = request.cookies.get('siperu_user_role')?.value;
+
+    // Jika belum login / guest -> arahkan ke halaman login
+    if (!userRole || userRole === 'guest') {
+      const loginUrl = new URL('/auth/login', request.url);
+      loginUrl.searchParams.set('redirect', pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+
+    const normalizedRole = userRole.toLowerCase();
+    const isManagerialRole = [
+      'superadmin',
+      'admin_lpf',
+      'admin_yayasan',
+      'admin',
+      'admin_univ',
+      'admin_umum',
+      'yayasan',
+      'security_cs',
+    ].includes(normalizedRole);
+
+    // Jika akun berstatus admin/superadmin -> redirect ke panel verifikasi admin
+    if (isManagerialRole) {
+      const targetAdmin =
+        normalizedRole === 'admin_yayasan' || normalizedRole === 'yayasan'
+          ? '/admin/approvals/yayasan'
+          : '/admin/approvals';
+      return NextResponse.redirect(new URL(targetAdmin, request.url));
+    }
+  }
+
   // Set standard security and cache headers
   const response = NextResponse.next();
   response.headers.set('X-Frame-Options', 'DENY');

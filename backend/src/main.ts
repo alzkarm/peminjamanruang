@@ -25,7 +25,9 @@ async function bootstrap() {
     .map((origin) => origin.trim())
     .filter((origin) => origin.length > 0);
   const allowedOrigins =
-    configuredOrigins.length > 0 ? configuredOrigins : ['http://localhost:3000'];
+    configuredOrigins.length > 0
+      ? configuredOrigins
+      : ['http://localhost:3000', 'http://127.0.0.1:3000'];
 
   logger.log(`🔐 CORS allowed origins: ${allowedOrigins.join(', ')}`);
 
@@ -54,8 +56,10 @@ async function bootstrap() {
   const port = process.env.PORT || 4000;
   await app.listen(port, '0.0.0.0');
 
+  const currentEnv = process.env.NODE_ENV || 'development';
   logger.log(`=======================================================`);
   logger.log(`🚀 SIPERU YARSI Backend running on: http://localhost:${port}/api`);
+  logger.log(`🌐 Mode: ${currentEnv.toUpperCase()}`);
   logger.log(`📦 Database ORM: Prisma Client (PostgreSQL)`);
   logger.log(`🔐 Authentication: Passport-JWT & LDAP YARSI SSO`);
   logger.log(`=======================================================`);

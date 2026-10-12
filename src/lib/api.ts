@@ -38,15 +38,27 @@ export const getAuthToken = (): string | null => {
   return localStorage.getItem(TOKEN_STORAGE_KEY);
 };
 
-export const setAuthToken = (token: string): void => {
+export const setAuthToken = (token: string, role?: string): void => {
   if (typeof window !== 'undefined') {
     localStorage.setItem(TOKEN_STORAGE_KEY, token);
+    document.cookie = `siperu_auth_token=${encodeURIComponent(token)}; path=/; max-age=604800; SameSite=Lax`;
+    if (role) {
+      document.cookie = `siperu_user_role=${encodeURIComponent(role)}; path=/; max-age=604800; SameSite=Lax`;
+    }
+  }
+};
+
+export const setAuthRoleCookie = (role: string): void => {
+  if (typeof window !== 'undefined') {
+    document.cookie = `siperu_user_role=${encodeURIComponent(role)}; path=/; max-age=604800; SameSite=Lax`;
   }
 };
 
 export const removeAuthToken = (): void => {
   if (typeof window !== 'undefined') {
     localStorage.removeItem(TOKEN_STORAGE_KEY);
+    document.cookie = 'siperu_auth_token=; path=/; max-age=0';
+    document.cookie = 'siperu_user_role=; path=/; max-age=0';
   }
 };
 

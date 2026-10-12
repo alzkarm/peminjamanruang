@@ -30,6 +30,7 @@ import {
   Download,
   RotateCcw,
   ShieldCheck,
+  ShieldAlert,
   PackageCheck,
   Check,
   Repeat,
@@ -326,6 +327,53 @@ export default function UserDashboardPage() {
         <div className="animate-pulse space-y-4 text-center">
           <div className="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-500/15 mx-auto" />
           <p className="text-xs text-slate-400 font-medium">Memuat data sesi SIPERU...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const isManagerialOrAdmin =
+    currentUser?.role === 'superadmin' ||
+    currentUser?.role === 'admin_lpf' ||
+    currentUser?.role === 'admin_yayasan' ||
+    (currentUser?.role as string) === 'admin' ||
+    currentUser?.role === 'security_cs' ||
+    (typeof currentUser?.role === 'string' && currentUser.role.toLowerCase().includes('admin'));
+
+  if (mounted && isManagerialOrAdmin) {
+    const adminLink =
+      currentUser?.role === 'admin_yayasan'
+        ? '/admin/approvals/yayasan'
+        : '/admin/approvals';
+
+    return (
+      <div className="max-w-4xl mx-auto px-4 py-16">
+        <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200/80 dark:border-slate-700 shadow-2xl p-8 sm:p-12 text-center space-y-6">
+          <div className="w-16 h-16 rounded-3xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 text-amber-600 dark:text-amber-400 mx-auto flex items-center justify-center shadow-inner">
+            <ShieldAlert className="w-8 h-8" />
+          </div>
+
+          <div className="max-w-md mx-auto space-y-2">
+            <span className="text-xs font-bold uppercase tracking-wider text-amber-700 dark:text-amber-300 bg-amber-50 dark:bg-amber-500/10 px-3 py-1 rounded-full border border-amber-200 dark:border-amber-500/30">
+              Hak Akses Terbatas
+            </span>
+            <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-slate-100 mt-2">
+              Menu Khusus Akun Peminjam
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+              Halaman <strong>Peminjaman Saya</strong> hanya dapat diakses oleh akun peminjam ruangan (Mahasiswa, Dosen, Tendik). Akun pengelola/admin mengelola permohonan melalui Portal Admin.
+            </p>
+          </div>
+
+          <div className="pt-2">
+            <Link
+              href={adminLink}
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-yarsi-primary dark:bg-emerald-600 hover:bg-yarsi-dark dark:hover:bg-emerald-500 text-white font-bold text-sm shadow-md transition-all"
+            >
+              <ShieldCheck className="w-4 h-4" />
+              <span>Buka Dashboard Pengelolaan Admin</span>
+            </Link>
+          </div>
         </div>
       </div>
     );

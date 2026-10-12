@@ -19,6 +19,7 @@ import {
   mapFrontendCategoryToBackendActivityType,
   removeAuthToken,
   setAuthToken,
+  setAuthRoleCookie,
 } from './api';
 import { getJakartaDateTimeIso, isRecurringBooking } from './utils';
 import {
@@ -189,7 +190,8 @@ export const useAppStore = create<AppState>()(
       },
 
       setCurrentUser: (user) => {
-        if (user.token) setAuthToken(user.token);
+        if (user.token) setAuthToken(user.token, user.role);
+        else if (user.role) setAuthRoleCookie(user.role);
         set({ currentUser: user });
       },
 
@@ -208,6 +210,8 @@ export const useAppStore = create<AppState>()(
 
         try {
           const res = await authApi.login(username, password);
+          if (res.user.token) setAuthToken(res.user.token, res.user.role);
+          else if (res.user.role) setAuthRoleCookie(res.user.role);
           set({ currentUser: res.user, isLoading: false });
           // Fetch updated bookings after login
           get().fetchBookings();
@@ -215,6 +219,7 @@ export const useAppStore = create<AppState>()(
         } catch (err: any) {
           // If backend API/LDAP is unavailable or returned error, fallback to local demo account
           if (demoUser) {
+            setAuthRoleCookie(demoUser.role);
             set({ currentUser: demoUser, isLoading: false, bookings: [] });
             return demoUser;
           }
@@ -732,6 +737,12 @@ export const useAppStore = create<AppState>()(
       onRehydrateStorage: () => (state) => {
         if (state) {
           state.hasHydrated = true;
+          if (state.currentUser && state.currentUser.role && state.currentUser.role !== 'guest') {
+            setAuthRoleCookie(state.currentUser.role);
+            if (state.currentUser.token) {
+              setAuthToken(state.currentUser.token, state.currentUser.role);
+            }
+          }
           // Trigger background fetch directly from DB
           state.fetchInitialData();
         }

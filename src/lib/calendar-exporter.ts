@@ -45,7 +45,7 @@ export function getGoogleCalendarUrl(booking: Booking): string {
       `Unit/Organisasi: ${booking.userOrganization || booking.department || '-'}\n` +
       `Ruangan: ${booking.roomName} (Lt. ${booking.floor})\n` +
       `Kegiatan: ${booking.title}\n` +
-      `Verifikasi Dokumen: https://siperu.yarsi.ac.id/verify/${booking.passToken || booking.bookingCode}\n\n` +
+      `Verifikasi Dokumen: ${(process.env.NEXT_PUBLIC_SITE_URL || 'https://siperu.yarsi.ac.id').replace(/\/$/, '')}/verify/${booking.passToken || booking.bookingCode}\n\n` +
       `Catatan: Harap hadir 15 menit sebelum acara dimulai dan tunjukkan QR Pass kepada petugas satpam/CS.`
     );
 

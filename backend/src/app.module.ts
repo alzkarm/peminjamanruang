@@ -12,9 +12,23 @@ import { UsersModule } from './users/users.module';
 import { FacultiesModule } from './faculties/faculties.module';
 import { FacilitiesModule } from './facilities/facilities.module';
 
+const activeEnv = process.env.NODE_ENV || 'development';
+
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: [
+        `.env.${activeEnv}.local`,
+        `.env.${activeEnv}`,
+        '.env.local',
+        '.env',
+        `backend/.env.${activeEnv}.local`,
+        `backend/.env.${activeEnv}`,
+        'backend/.env.local',
+        'backend/.env',
+      ],
+    }),
     PrismaModule,
     AuthModule,
     UsersModule,

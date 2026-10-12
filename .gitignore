@@ -21,10 +21,19 @@ backend/uploads/*
 # Environment variables
 .env
 .env.local
+.env.development
 .env.development.local
-.env.test.local
+.env.production
 .env.production.local
+.env.test.local
 backend/.env
+backend/.env.local
+backend/.env.development
+backend/.env.development.local
+backend/.env.production
+backend/.env.production.local
+backend/.env.test.local
+
 
 # Logs
 npm-debug.log*

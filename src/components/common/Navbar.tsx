@@ -94,7 +94,21 @@ export function Navbar() {
   const isSuperadmin = role === 'superadmin';
   const isAdminLPF = role === 'admin_lpf';
   const isYayasan = role === 'admin_yayasan';
-  const isAdminUser = isSuperadmin || isAdminLPF || isYayasan;
+  const isAdminUser =
+    isSuperadmin ||
+    isAdminLPF ||
+    isYayasan ||
+    (role as string) === 'admin' ||
+    role === 'security_cs' ||
+    (typeof role === 'string' && role.toLowerCase().includes('admin'));
+
+  // Menu Peminjaman Saya hanya tampil bagi akun dengan role user (mahasiswa, dosen, tendik, user)
+  const isUserRole = Boolean(
+    currentUser &&
+    currentUser.role &&
+    !isGuest &&
+    !isAdminUser
+  );
 
   const isHome = pathname === '/';
   const isOnAdminPath = pathname.startsWith('/admin');
@@ -131,7 +145,9 @@ export function Navbar() {
     { href: '/', label: 'Beranda', icon: CalendarDays },
     { href: '/schedule', label: 'Kalender Ruangan', icon: CalendarDays },
     { href: '/cbt-room', label: 'Ruang CBT', icon: Monitor },
-    { href: '/dashboard', label: 'Peminjaman Saya', icon: LayoutDashboard, requiresAuth: true },
+    ...(isUserRole
+      ? [{ href: '/peminjaman-saya', label: 'Peminjaman Saya', icon: LayoutDashboard, requiresAuth: true }]
+      : []),
   ];
 
   const handleNavClick = (e: React.MouseEvent, item: NavLinkItem) => {
@@ -519,26 +535,28 @@ export function Navbar() {
                           </div>
                         </div>
 
-                        {/* Standard User Links */}
-                        <div className="py-1 space-y-0.5 text-xs">
-                          <Link
-                            href="/dashboard"
-                            onClick={() => setUserDropdownOpen(false)}
-                            className="w-full flex items-center gap-2 px-3 py-2 text-slate-700 hover:text-yarsi-primary hover:bg-emerald-50 rounded-lg transition-colors font-medium dark:text-slate-200 dark:hover:text-emerald-300 dark:hover:bg-emerald-500/10"
-                          >
-                            <LayoutDashboard className="w-4 h-4 text-slate-400" />
-                            <span>Peminjaman Saya</span>
-                          </Link>
+                        {/* Standard User Links (Hanya untuk akun role user) */}
+                        {isUserRole && (
+                          <div className="py-1 space-y-0.5 text-xs">
+                            <Link
+                              href="/peminjaman-saya"
+                              onClick={() => setUserDropdownOpen(false)}
+                              className="w-full flex items-center gap-2 px-3 py-2 text-slate-700 hover:text-yarsi-primary hover:bg-emerald-50 rounded-lg transition-colors font-medium dark:text-slate-200 dark:hover:text-emerald-300 dark:hover:bg-emerald-500/10"
+                            >
+                              <LayoutDashboard className="w-4 h-4 text-slate-400" />
+                              <span>Peminjaman Saya</span>
+                            </Link>
 
-                          <Link
-                            href="/dashboard/booking/new"
-                            onClick={() => setUserDropdownOpen(false)}
-                            className="w-full flex items-center gap-2 px-3 py-2 text-slate-700 hover:text-yarsi-primary hover:bg-emerald-50 rounded-lg transition-colors font-medium dark:text-slate-200 dark:hover:text-emerald-300 dark:hover:bg-emerald-500/10"
-                          >
-                            <PlusCircle className="w-4 h-4 text-slate-400" />
-                            <span>Ajukan Peminjaman Baru</span>
-                          </Link>
-                        </div>
+                            <Link
+                              href="/dashboard/booking/new"
+                              onClick={() => setUserDropdownOpen(false)}
+                              className="w-full flex items-center gap-2 px-3 py-2 text-slate-700 hover:text-yarsi-primary hover:bg-emerald-50 rounded-lg transition-colors font-medium dark:text-slate-200 dark:hover:text-emerald-300 dark:hover:bg-emerald-500/10"
+                            >
+                              <PlusCircle className="w-4 h-4 text-slate-400" />
+                              <span>Ajukan Peminjaman Baru</span>
+                            </Link>
+                          </div>
+                        )}
 
                         {/* Special Role-Based Admin Quick Links (Opsi B Requirement) */}
                         {isAdminUser && (

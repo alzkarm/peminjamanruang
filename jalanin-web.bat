@@ -1,6 +1,6 @@
 @echo off
 REM SIPERU YARSI - nyalakan backend + frontend (double-click aja)
-cd /d "E:\PLT\peminjaman-ruang"
+cd /d "%~dp0"
 
 echo [1/4] Matikan proses lama di port 3000/4000...
 for /f "tokens=5" %%P in ('netstat -aon ^| findstr :3000 ^| findstr LISTENING') do taskkill /F /PID %%P >nul 2>&1

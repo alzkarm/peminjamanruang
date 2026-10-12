@@ -720,7 +720,7 @@ export class BookingsService {
       digitalStamp: {
         issuer: 'Biro Pengelolaan Fasilitas & Logistik (LPF) Universitas YARSI',
         status: booking.status === 'APPROVED' ? 'SAH & TERVERIFIKASI' : 'BELUM FINAL',
-        verificationUrl: `https://siperu.yarsi.ac.id/verify/${booking.passToken || bookingCode}`,
+        verificationUrl: `${(process.env.FRONTEND_URL || 'https://siperu.yarsi.ac.id').replace(/\/$/, '')}/verify/${booking.passToken || bookingCode}`,
         algorithm: 'SHA256-DIGITAL-TOKEN-VERIFIED',
       },
       createdAt: booking.createdAt,

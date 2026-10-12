@@ -24,6 +24,8 @@ import {
   X,
   Repeat,
   CalendarRange,
+  Loader2,
+  Check,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -174,7 +176,7 @@ function NewBookingForm() {
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState<BookingCategory>('seminar');
   const [description, setDescription] = useState('');
-  const [estimatedAttendees, setEstimatedAttendees] = useState(50);
+  const [estimatedAttendees, setEstimatedAttendees] = useState<string>('50');
   const [isPerSemester, setIsPerSemester] = useState(false);
   const [repeatType, setRepeatType] = useState<'consecutive' | 'recurring'>('consecutive');
   const [tenggatPelaksanaan, setTenggatPelaksanaan] = useState('');
@@ -257,8 +259,54 @@ function NewBookingForm() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadedFileName, setUploadedFileName] = useState<string>('');
 
-  // Prioritas 5: Internal Approval Confirmation Checkbox
-  const [isInternalApproved, setIsInternalApproved] = useState<boolean>(true);
+  // Prioritas 5: Internal Approval Confirmation Checkbox (2-Step Verification)
+  const [isInternalApproved, setIsInternalApproved] = useState<boolean>(false);
+  const [approvalStep, setApprovalStep] = useState<'idle' | 'reading' | 'ready'>('idle');
+  const approvalTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (approvalTimerRef.current) clearTimeout(approvalTimerRef.current);
+    };
+  }, []);
+
+  const handleApprovalToggle = (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    // Jika saat ini sudah tercentang, user mengklik untuk uncheck kembali
+    if (isInternalApproved) {
+      setIsInternalApproved(false);
+      setApprovalStep('idle');
+      if (approvalTimerRef.current) clearTimeout(approvalTimerRef.current);
+      return;
+    }
+
+    // Klik ke-1: Mengaktifkan status verifikasi/baca dan memicu timer delay 1.5 detik
+    if (approvalStep === 'idle') {
+      setApprovalStep('reading');
+
+      if (approvalTimerRef.current) clearTimeout(approvalTimerRef.current);
+      approvalTimerRef.current = setTimeout(() => {
+        setApprovalStep('ready');
+      }, 1500);
+      return;
+    }
+
+    // Klik saat masih status 'reading' (sebelum 1.5 detik selesai): Abaikan
+    if (approvalStep === 'reading') {
+      return;
+    }
+
+    // Klik ke-2: Timer 1.5 detik sudah selesai (status 'ready') -> Berhasil dicentang!
+    if (approvalStep === 'ready') {
+      setIsInternalApproved(true);
+      setApprovalStep('idle');
+      clearFieldError('isInternalApproved');
+    }
+  };
 
   // Dynamic Facilities from Superadmin Master Data
   const [facilities, setFacilities] = useState<Facility[]>([]);
@@ -447,9 +495,10 @@ function NewBookingForm() {
       : 'Sudah Dibooking';
   };
 
-  const isCapacityExceeded = selectedRoom?.capacity !== null && selectedRoom !== undefined
-    ? estimatedAttendees > selectedRoom.capacity
-    : false;
+  const isCapacityExceeded =
+    selectedRoom?.capacity !== null && selectedRoom !== undefined && Boolean(estimatedAttendees)
+      ? Number(estimatedAttendees) > selectedRoom.capacity
+      : false;
 
   // Validation State & Refs for Interactive Feedback & Auto-Scroll
   const [fieldErrors, setFieldErrors] = useState<Record<string, boolean>>({});
@@ -484,7 +533,7 @@ function NewBookingForm() {
     const isEndTimeValid = Boolean(endTime && (!startTime || endTime > startTime));
     const isMultiDayValid = !isPerSemester || Boolean(tenggatPelaksanaan && (!date || tenggatPelaksanaan >= date));
     const isTitleValid = Boolean(title.trim());
-    const isAttendeesValid = Number(estimatedAttendees) > 0 && !isCapacityExceeded;
+    const isAttendeesValid = Boolean(estimatedAttendees) && Number(estimatedAttendees) > 0 && !isCapacityExceeded;
     const isOrgValid = Boolean(userOrganization.trim());
     const isDescValid = Boolean(description.trim());
     const isApprovalValid = Boolean(isInternalApproved);
@@ -642,13 +691,14 @@ function NewBookingForm() {
     }
 
     // 7. Estimated Attendees
-    if (!estimatedAttendees || Number(estimatedAttendees) <= 0 || isCapacityExceeded) {
+    const attendeesNum = estimatedAttendees ? Number(estimatedAttendees) : 0;
+    if (!estimatedAttendees || attendeesNum <= 0 || isCapacityExceeded) {
       newErrors.estimatedAttendees = true;
       emptyFields.push({
         name: 'estimatedAttendees',
         ref: attendeesInputRef,
         message: isCapacityExceeded
-          ? `Jumlah peserta (${estimatedAttendees}) melebihi kapasitas ruangan (${selectedRoom?.capacity ?? 0} orang).`
+          ? `Jumlah peserta (${attendeesNum}) melebihi kapasitas ruangan (${selectedRoom?.capacity ?? 0} orang).`
           : 'Estimasi jumlah peserta wajib diisi lebih dari 0.',
       });
     }
@@ -1652,14 +1702,50 @@ function NewBookingForm() {
                 </label>
                 <input
                   ref={attendeesInputRef}
-                  type="number"
-                  min={1}
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  placeholder="Contoh: 50"
                   value={estimatedAttendees}
+                  onKeyDown={(e) => {
+                    // Izinkan tombol kontrol, navigasi, dan kombinasi shortcut
+                    if (
+                      [
+                        'Backspace',
+                        'Delete',
+                        'Tab',
+                        'Escape',
+                        'Enter',
+                        'ArrowLeft',
+                        'ArrowRight',
+                        'ArrowUp',
+                        'ArrowDown',
+                        'Home',
+                        'End',
+                      ].includes(e.key) ||
+                      e.ctrlKey ||
+                      e.metaKey
+                    ) {
+                      return;
+                    }
+                    // Tolak karakter huruf dan simbol non-numerik
+                    if (!/^[0-9]$/.test(e.key)) {
+                      e.preventDefault();
+                    }
+                  }}
                   onChange={(e) => {
-                    const val = parseInt(e.target.value) || 0;
-                    setEstimatedAttendees(val);
-                    if (val > 0 && (!selectedRoom?.capacity || val <= selectedRoom.capacity)) {
+                    // Filter hanya karakter angka, izinkan string kosong saat dihapus/backspace
+                    const cleanDigits = e.target.value.replace(/[^0-9]/g, '');
+                    setEstimatedAttendees(cleanDigits);
+                    const num = Number(cleanDigits);
+                    if (cleanDigits && num > 0 && (!selectedRoom?.capacity || num <= selectedRoom.capacity)) {
                       clearFieldError('estimatedAttendees');
+                    }
+                  }}
+                  onBlur={() => {
+                    const num = Number(estimatedAttendees);
+                    if (!estimatedAttendees || num <= 0 || isCapacityExceeded) {
+                      setFieldErrors((prev) => ({ ...prev, estimatedAttendees: true }));
                     }
                   }}
                   className={`w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium border rounded-xl focus:outline-none transition-all ${
@@ -1669,7 +1755,9 @@ function NewBookingForm() {
                   }`}
                 />
                 {fieldErrors.estimatedAttendees && !isCapacityExceeded && (
-                  <p className="text-[11px] font-semibold text-red-600 mt-1 dark:text-rose-400">Estimasi jumlah peserta wajib diisi lebih dari 0.</p>
+                  <p className="text-[11px] font-semibold text-red-600 mt-1 dark:text-rose-400">
+                    Estimasi jumlah peserta wajib diisi lebih dari 0.
+                  </p>
                 )}
                 {isCapacityExceeded && (
                   <p className="text-[11px] text-rose-600 mt-1 font-semibold dark:text-rose-400">
@@ -1950,39 +2038,67 @@ function NewBookingForm() {
         {/* STEP 5: VERIFIKASI INTERNAL HIMA / BEM (PRIORITAS 5) */}
         <div
           ref={internalApprovalContainerRef}
-          className={`space-y-4 rounded-[18px_4px_18px_18px] border p-6 sm:p-8 transition-all ${
+          className={`space-y-3 rounded-2xl border p-5 sm:p-6 transition-colors duration-150 ${
             fieldErrors.isInternalApproved
-              ? 'border-red-500 ring-2 ring-red-500 bg-red-50/70 dark:border-rose-500/60 dark:ring-rose-500/30 dark:bg-rose-500/10'
-              : 'border-emerald-300 bg-emerald-50/80 dark:border-emerald-500/40 dark:bg-emerald-500/10'
+              ? 'border-red-400 bg-red-50/30 dark:border-rose-500/50 dark:bg-rose-500/10'
+              : isInternalApproved
+              ? 'border-emerald-200 bg-emerald-50/20 dark:border-emerald-900/40 dark:bg-emerald-950/10'
+              : 'border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900'
           }`}
         >
           <div className="flex items-start gap-3">
-            <input
-              ref={internalApprovalRef}
-              type="checkbox"
-              id="internalApprovalCheck"
-              checked={isInternalApproved}
-              onChange={(e) => {
-                setIsInternalApproved(e.target.checked);
-                if (e.target.checked) clearFieldError('isInternalApproved');
-              }}
-              className={`mt-1 w-5 h-5 rounded focus:ring-yarsi-primary cursor-pointer ${
-                fieldErrors.isInternalApproved
-                  ? 'text-red-600 border-red-500 focus:ring-red-500 dark:text-rose-400 dark:border-rose-500'
-                  : 'text-yarsi-primary border-emerald-400 focus:ring-yarsi-primary dark:text-emerald-400 dark:border-emerald-500'
-              }`}
-            />
-            <label htmlFor="internalApprovalCheck" className="cursor-pointer space-y-1">
-              <p className={`text-sm font-bold leading-snug ${fieldErrors.isInternalApproved ? 'text-red-950 dark:text-rose-300' : 'text-emerald-950 dark:text-emerald-300'}`}>
+            <div className="relative mt-0.5 shrink-0">
+              <button
+                type="button"
+                id="internalApprovalCheck"
+                role="checkbox"
+                aria-checked={isInternalApproved}
+                onClick={(e) => handleApprovalToggle(e)}
+                className={`w-5 h-5 rounded flex items-center justify-center transition-colors duration-150 cursor-pointer select-none focus:outline-none focus:ring-2 focus:ring-yarsi-primary/40 focus:ring-offset-1 ${
+                  isInternalApproved
+                    ? 'bg-yarsi-primary border border-yarsi-primary text-white dark:bg-emerald-600 dark:border-emerald-600'
+                    : fieldErrors.isInternalApproved
+                    ? 'bg-white dark:bg-slate-900 border border-red-500'
+                    : approvalStep === 'reading'
+                    ? 'bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600'
+                    : approvalStep === 'ready'
+                    ? 'bg-white dark:bg-slate-900 border border-emerald-500'
+                    : 'bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 hover:border-slate-400'
+                }`}
+              >
+                {isInternalApproved ? (
+                  <Check className="w-3.5 h-3.5 text-white stroke-[2.5]" />
+                ) : approvalStep === 'reading' ? (
+                  <Loader2 className="w-3 h-3 text-slate-400 animate-spin" />
+                ) : null}
+              </button>
+
+              {/* Hidden native input untuk form ref dan aksesibilitas */}
+              <input
+                ref={internalApprovalRef}
+                type="checkbox"
+                checked={isInternalApproved}
+                onChange={() => {}}
+                className="sr-only"
+                tabIndex={-1}
+                aria-hidden="true"
+              />
+            </div>
+            <div
+              onClick={handleApprovalToggle}
+              className="cursor-pointer space-y-1 flex-1 select-none"
+            >
+              <p className={`text-sm font-semibold leading-snug ${fieldErrors.isInternalApproved ? 'text-red-950 dark:text-rose-300' : 'text-slate-900 dark:text-slate-100'}`}>
                 Konfirmasi Persetujuan Internal *
               </p>
-              <p className={`text-xs leading-relaxed ${fieldErrors.isInternalApproved ? 'text-red-800 dark:text-rose-300' : 'text-emerald-800 dark:text-emerald-200'}`}>
+
+              <p className={`text-xs leading-relaxed ${fieldErrors.isInternalApproved ? 'text-red-800 dark:text-rose-300' : 'text-slate-500 dark:text-slate-400'}`}>
                 Saya menyatakan bahwa kegiatan ini telah diketahui atau disetujui oleh pimpinan fakultas, dekanat, BEM/DPM, atau pembina kemahasiswaan terkait.
               </p>
-            </label>
+            </div>
           </div>
           {fieldErrors.isInternalApproved && (
-            <p className="text-xs font-bold text-red-600 dark:text-rose-400">
+            <p className="text-xs font-medium text-red-600 mt-1 dark:text-rose-400">
               Anda wajib mencentang konfirmasi persetujuan internal sebelum mengirim permohonan.
             </p>
           )}

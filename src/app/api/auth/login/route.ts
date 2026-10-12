@@ -6,7 +6,9 @@ export async function POST(req: NextRequest) {
     // NOTE: pakai 127.0.0.1 — hostname 'localhost' kadang resolve ke ::1
     // (IPv6) dari proses Next.js dan fetch gagal padahal backend jalan.
     const backendUrl =
-      process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:4000/api';
+      process.env.BACKEND_INTERNAL_URL ||
+      process.env.NEXT_PUBLIC_API_URL ||
+      'http://127.0.0.1:4000/api';
 
     const backendRes = await fetch(`${backendUrl}/auth/login`, {
       method: 'POST',
