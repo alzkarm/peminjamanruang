@@ -13,6 +13,11 @@ import { FacultiesModule } from './faculties/faculties.module';
 import { FacilitiesModule } from './facilities/facilities.module';
 import { NotificationsModule } from './notifications/notifications.module';
 
+import { ScheduleModule } from '@nestjs/schedule';
+import { ThrottlerModule } from '@nestjs/throttler';
+import { StorageModule } from './storage/storage.module';
+import { HealthModule } from './health/health.module';
+
 const activeEnv = process.env.NODE_ENV || 'development';
 
 @Module({
@@ -30,6 +35,12 @@ const activeEnv = process.env.NODE_ENV || 'development';
         'backend/.env',
       ],
     }),
+    ScheduleModule.forRoot(),
+    ThrottlerModule.forRoot([{
+      name: 'default',
+      ttl: 60000,
+      limit: 60,
+    }]),
     PrismaModule,
     AuthModule,
     UsersModule,
@@ -42,6 +53,8 @@ const activeEnv = process.env.NODE_ENV || 'development';
     FacultiesModule,
     FacilitiesModule,
     NotificationsModule,
+    StorageModule,
+    HealthModule,
   ],
 })
 export class AppModule {}

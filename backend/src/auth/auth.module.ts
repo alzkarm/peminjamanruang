@@ -11,14 +11,20 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
-      useFactory: (configService: ConfigService) => ({
-        secret:
-          configService.get<string>('JWT_SECRET') ||
-          'YARSI_SMART_CAMPUS_SECRET_KEY_2026_SUPER_SECURE',
-        signOptions: {
-          expiresIn: configService.get<string>('JWT_EXPIRES_IN') || '7d',
-        },
-      }),
+      useFactory: (configService: ConfigService) => {
+        const secret = configService.get<string>('JWT_SECRET');
+        if (!secret || secret.trim().length === 0) {
+          throw new Error(
+            'FATAL SECURITY ERROR: JWT_SECRET environment variable is missing or empty. Server cannot boot securely.',
+          );
+        }
+        return {
+          secret,
+          signOptions: {
+            expiresIn: configService.get<string>('JWT_EXPIRES_IN') || '7d',
+          },
+        };
+      },
       inject: [ConfigService],
     }),
   ],

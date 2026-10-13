@@ -30,6 +30,8 @@ export class AcademicBulkController {
   }
 
   @Get()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.SUPERADMIN, Role.ADMIN)
   async findAll() {
     return this.academicBulkService.findAll();
   }

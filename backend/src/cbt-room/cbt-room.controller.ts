@@ -12,6 +12,9 @@ import {
 import { CbtRoomService } from './cbt-room.service';
 import { CreateCbtBookingDto, QueryCbtSeatsDto } from './dto/cbt-room.dto';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
+import { RolesGuard } from '@/common/guards/roles.guard';
+import { Roles } from '@/common/decorators/roles.decorator';
+import { Role } from '@/common/types';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 
 @Controller('cbt-room')
@@ -41,21 +44,33 @@ export class CbtRoomController {
   }
 
   /**
+   * GET /api/cbt-room/my-bookings
+   * Authenticated — lists CBT bookings for the logged-in user only.
+   */
+  @Get('my-bookings')
+  @UseGuards(JwtAuthGuard)
+  async getMyBookings(@CurrentUser('id') userId: string) {
+    return this.cbtRoomService.getUserBookings(userId);
+  }
+
+  /**
    * GET /api/cbt-room/bookings
-   * Authenticated — lists all CBT bookings.
+   * Authenticated — lists all CBT bookings (Admin & Superadmin only).
    */
   @Get('bookings')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.SUPERADMIN)
   async getAllBookings() {
     return this.cbtRoomService.getAllBookings();
   }
 
   /**
    * PATCH /api/cbt-room/bookings/:id/status
-   * Authenticated — approve or reject a CBT booking.
+   * Authenticated — approve or reject a CBT booking (Admin & Superadmin only).
    */
   @Patch('bookings/:id/status')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.ADMIN, Role.SUPERADMIN)
   async updateBookingStatus(
     @Param('id') id: string,
     @Body('status') status: 'APPROVED' | 'REJECTED' | 'PENDING',

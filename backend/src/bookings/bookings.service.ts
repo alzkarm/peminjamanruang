@@ -5,6 +5,7 @@ import {
   NotFoundException,
   ForbiddenException,
   UnauthorizedException,
+  InternalServerErrorException,
   Logger,
 } from '@nestjs/common';
 import { randomUUID, createHmac } from 'crypto';
@@ -20,6 +21,7 @@ import { BookingStatus, Role } from '@/common/types';
 import { BookingStatus as PrismaBookingStatus } from '@prisma/client';
 import { SchedulingService } from '../scheduling/scheduling.service';
 import { NotificationsService } from '../notifications/notifications.service';
+import { Cron } from '@nestjs/schedule';
 @Injectable()
 export class BookingsService {
   private readonly logger = new Logger(BookingsService.name);
@@ -252,15 +254,20 @@ export class BookingsService {
       let primaryUpdated: any = null;
 
       for (const b of targetBookings) {
+        const isReschedulePending = b.status === PrismaBookingStatus.RESCHEDULE_PENDING;
+        const checkRoomId = (isReschedulePending && (b as any).rescheduleRoomId) || b.roomId;
+        const checkStartTime = (isReschedulePending && (b as any).rescheduleStartTime) || b.startTime;
+        const checkEndTime = (isReschedulePending && (b as any).rescheduleEndTime) || b.endTime;
+
         if (
           targetStatus === BookingStatus.APPROVED ||
           targetStatus === BookingStatus.RECOMMENDED ||
           targetStatus === BookingStatus.VERIFIED
         ) {
           await this.scheduling.assertAvailable(
-            b.roomId,
-            b.startTime,
-            b.endTime,
+            checkRoomId,
+            checkStartTime,
+            checkEndTime,
             b.id,
             tx,
           );
@@ -268,11 +275,30 @@ export class BookingsService {
 
         const passToken = (b as any).passToken || (targetStatus === BookingStatus.APPROVED ? `PASS-${randomUUID().replace(/-/g, '').slice(0, 12).toUpperCase()}` : undefined);
 
+        const rescheduleCommitData = isReschedulePending && targetStatus === BookingStatus.APPROVED
+          ? {
+              startTime: checkStartTime,
+              endTime: checkEndTime,
+              roomId: checkRoomId,
+              rescheduleStartTime: null,
+              rescheduleEndTime: null,
+              rescheduleRoomId: null,
+              rescheduleReason: null,
+            }
+          : isReschedulePending && (targetStatus === BookingStatus.REJECTED || targetStatus === BookingStatus.RETURNED || targetStatus === BookingStatus.CANCELED)
+            ? {
+                rescheduleStartTime: null,
+                rescheduleEndTime: null,
+                rescheduleRoomId: null,
+              }
+            : {};
+
         const updated = await tx.booking.update({
           where: { id: b.id },
           data: {
             status: targetStatus as PrismaBookingStatus,
             ...(passToken ? { passToken } : {}),
+            ...rescheduleCommitData,
           },
           include: {
             room: { include: { floor: true } },
@@ -366,15 +392,20 @@ export class BookingsService {
           throw new ForbiddenException('Anda tidak berhak mengubah status peminjaman milik pengguna lain.');
         }
 
+        const isReschedulePending = booking.status === PrismaBookingStatus.RESCHEDULE_PENDING;
+        const checkRoomId = (isReschedulePending && (booking as any).rescheduleRoomId) || booking.roomId;
+        const checkStartTime = (isReschedulePending && (booking as any).rescheduleStartTime) || booking.startTime;
+        const checkEndTime = (isReschedulePending && (booking as any).rescheduleEndTime) || booking.endTime;
+
         if (
           targetStatus === BookingStatus.APPROVED ||
           targetStatus === BookingStatus.RECOMMENDED ||
           targetStatus === BookingStatus.VERIFIED
         ) {
           await this.scheduling.assertAvailable(
-            booking.roomId,
-            booking.startTime,
-            booking.endTime,
+            checkRoomId,
+            checkStartTime,
+            checkEndTime,
             booking.id,
             tx,
           );
@@ -382,11 +413,30 @@ export class BookingsService {
 
         const passToken = (booking as any).passToken || (targetStatus === BookingStatus.APPROVED ? `PASS-${randomUUID().replace(/-/g, '').slice(0, 12).toUpperCase()}` : undefined);
 
+        const rescheduleCommitData = isReschedulePending && targetStatus === BookingStatus.APPROVED
+          ? {
+              startTime: checkStartTime,
+              endTime: checkEndTime,
+              roomId: checkRoomId,
+              rescheduleStartTime: null,
+              rescheduleEndTime: null,
+              rescheduleRoomId: null,
+              rescheduleReason: null,
+            }
+          : isReschedulePending && (targetStatus === BookingStatus.REJECTED || targetStatus === BookingStatus.RETURNED || targetStatus === BookingStatus.CANCELED)
+            ? {
+                rescheduleStartTime: null,
+                rescheduleEndTime: null,
+                rescheduleRoomId: null,
+              }
+            : {};
+
         const updated = await tx.booking.update({
           where: { id: bookingId },
           data: {
             status: targetStatus as PrismaBookingStatus,
             ...(passToken ? { passToken } : {}),
+            ...rescheduleCommitData,
           },
           include: {
             room: { include: { floor: true } },
@@ -555,31 +605,35 @@ export class BookingsService {
     const cleanCode = code.trim();
     const cleanUpper = cleanCode.toUpperCase();
     const cleanPrefix = cleanUpper.replace(/^YARSI-BK-/i, '').toLowerCase();
+    const isPassTokenQuery = cleanUpper.startsWith('PASS-');
 
     let booking: any = null;
 
     // 1. Cek pencarian berdasarkan passToken
-    booking = await (this.prisma.booking as any).findFirst({
-      where: {
-        OR: [
-          { passToken: cleanUpper },
-          { passToken: cleanCode },
-        ],
-      },
-      include: {
-        room: { include: { floor: true } },
-        user: { select: { id: true, fullName: true, username: true, unitName: true, email: true, role: true } },
-        logistik: true,
-        approvalLogs: {
-          include: { approver: { select: { fullName: true, role: true } } },
-          orderBy: { createdAt: 'desc' },
+    if (isPassTokenQuery) {
+      booking = await (this.prisma.booking as any).findFirst({
+        where: {
+          OR: [
+            { passToken: cleanUpper },
+            { passToken: cleanCode },
+          ],
         },
-      },
-    });
+        include: {
+          room: { include: { floor: true } },
+          user: { select: { id: true, fullName: true, username: true, unitName: true, email: true, role: true } },
+          logistik: true,
+          approvalLogs: {
+            include: { approver: { select: { fullName: true, role: true } } },
+            orderBy: { createdAt: 'desc' },
+          },
+        },
+      });
+    }
 
-    // 2. Jika tidak ditemukan via passToken, cari via UUID / kode awalan
+    // 2. Jika tidak ditemukan via passToken, cari via UUID / kode awalan (minimal 8 karakter hex)
     if (!booking) {
       const isFullUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cleanPrefix);
+      const isShortUuid = /^[0-9a-f]{8}$/i.test(cleanPrefix);
 
       if (isFullUuid) {
         booking = await this.prisma.booking.findUnique({
@@ -594,10 +648,10 @@ export class BookingsService {
             },
           },
         });
-      } else {
+      } else if (isShortUuid) {
         try {
           const matchedRows: any[] = await this.prisma.$queryRaw`
-            SELECT id FROM bookings WHERE id::text ILIKE ${cleanPrefix + '%'} ORDER BY "createdAt" DESC LIMIT 1
+            SELECT id FROM bookings WHERE id::text ILIKE ${cleanPrefix + '-%'} ORDER BY "createdAt" DESC LIMIT 1
           `;
           if (matchedRows && matchedRows.length > 0) {
             booking = await this.prisma.booking.findUnique({
@@ -650,11 +704,13 @@ export class BookingsService {
     const endMM = String(endDate.getMinutes()).padStart(2, '0');
 
     const bookingCode = `YARSI-BK-${booking.id.slice(0, 8).toUpperCase()}`;
+    const wasQueriedWithPassToken = isPassTokenQuery && booking.passToken && (cleanUpper === booking.passToken.toUpperCase() || cleanCode === booking.passToken);
 
     return {
       id: booking.id,
       bookingCode,
-      passToken: booking.passToken || bookingCode,
+      // Pass token fisik dirahasiakan jika pencarian hanya dilakukan via kode publik
+      passToken: wasQueriedWithPassToken ? booking.passToken : bookingCode,
       title: booking.title,
       activityType: booking.activityType,
       roomName: booking.room?.name || 'Ruangan Kampus',
@@ -681,7 +737,7 @@ export class BookingsService {
       digitalStamp: {
         issuer: 'Biro Pengelolaan Fasilitas & Logistik (LPF) Universitas YARSI',
         status: booking.status === 'APPROVED' ? 'SAH & TERVERIFIKASI' : 'BELUM FINAL',
-        verificationUrl: `${(process.env.FRONTEND_URL || 'https://siperu.yarsi.ac.id').replace(/\/$/, '')}/verify/${booking.passToken || bookingCode}`,
+        verificationUrl: `${(process.env.FRONTEND_URL || 'https://siperu.yarsi.ac.id').replace(/\/$/, '')}/verify/${wasQueriedWithPassToken ? booking.passToken : bookingCode}`,
         algorithm: 'SHA256-DIGITAL-TOKEN-VERIFIED',
       },
       createdAt: booking.createdAt,
@@ -767,8 +823,8 @@ export class BookingsService {
       throw new NotFoundException('Data peminjaman tidak ditemukan.');
     }
     const operationalRoles: Role[] = [Role.SUPERADMIN, Role.ADMIN];
-    if (booking.userId !== currentUser.id && !operationalRoles.includes(currentUser.role)) {
-      throw new ForbiddenException('Anda tidak berhak mengubah checklist kesiapan peminjaman milik pengguna lain.');
+    if (!operationalRoles.includes(currentUser.role)) {
+      throw new ForbiddenException('Hanya petugas ruangan atau Admin yang berhak mengubah checklist kesiapan operasional.');
     }
     const fieldMap: Record<string, string> = {
       ac: 'isAcReady',
@@ -872,6 +928,14 @@ export class BookingsService {
     };
   }
 
+  private getQuickActionSecret(): string {
+    const secret = process.env.JWT_SECRET;
+    if (!secret || secret.trim().length === 0) {
+      throw new InternalServerErrorException('Konfigurasi JWT_SECRET server tidak tersedia.');
+    }
+    return secret;
+  }
+
   /**
    * Tokenized Signed Link for 1-Click Executive Approval (Task 1.4)
    */
@@ -887,11 +951,75 @@ export class BookingsService {
     };
     const jsonStr = JSON.stringify(payload);
     const b64Payload = Buffer.from(jsonStr).toString('base64url');
-    const secret = process.env.JWT_SECRET || 'siperu-yarsi-secret-2026';
+    const secret = this.getQuickActionSecret();
     const hmac = createHmac('sha256', secret);
     hmac.update(b64Payload);
     const sig = hmac.digest('base64url');
     return `${b64Payload}.${sig}`;
+  }
+
+  /**
+   * Preview detail persetujuan cepat tanpa mengubah data (Task 1.4 / Sprint 2 Task 6)
+   */
+  async previewQuickAction(token: string) {
+    if (!token || !token.includes('.')) {
+      throw new BadRequestException('Format token persetujuan cepat tidak valid.');
+    }
+
+    const [b64Payload, sig] = token.split('.');
+    const secret = this.getQuickActionSecret();
+    const hmac = createHmac('sha256', secret);
+    hmac.update(b64Payload);
+    const expectedSig = hmac.digest('base64url');
+
+    if (sig !== expectedSig) {
+      throw new ForbiddenException('Tanda tangan digital token tidak cocok atau telah dimanipulasi.');
+    }
+
+    const payload = JSON.parse(Buffer.from(b64Payload, 'base64url').toString('utf8')) as {
+      bookingId?: unknown;
+      action?: unknown;
+      approverId?: unknown;
+      exp?: unknown;
+    };
+    if (typeof payload.exp !== 'number' || Date.now() > payload.exp) {
+      throw new BadRequestException('Tautan persetujuan cepat telah kadaluarsa (melebihi 48 jam).');
+    }
+
+    if (typeof payload.bookingId !== 'string' || typeof payload.approverId !== 'string') {
+      throw new BadRequestException('Token persetujuan cepat tidak memuat identitas penyetuju.');
+    }
+    const booking = await this.prisma.booking.findUnique({
+      where: { id: payload.bookingId },
+      include: { room: true, user: true },
+    });
+
+    if (!booking) {
+      throw new NotFoundException('Data peminjaman tidak ditemukan.');
+    }
+
+    const approver = await this.prisma.user.findUnique({ where: { id: payload.approverId } });
+    const isAlreadyProcessed =
+      booking.status === PrismaBookingStatus.APPROVED ||
+      booking.status === PrismaBookingStatus.REJECTED ||
+      booking.status === PrismaBookingStatus.CANCELED;
+
+    return {
+      bookingId: booking.id,
+      bookingCode: booking.id.slice(0, 8).toUpperCase(),
+      title: booking.title,
+      roomName: booking.room?.name || 'Ruangan',
+      applicantName: booking.user?.fullName || 'Pemohon',
+      startTime: booking.startTime,
+      endTime: booking.endTime,
+      action: payload.action === 'REJECT' ? 'REJECT' : 'APPROVE',
+      approverName: approver?.fullName || 'Penyetuju',
+      status: booking.status,
+      alreadyProcessed: isAlreadyProcessed,
+      message: isAlreadyProcessed
+        ? `Permohonan ini telah berstatus ${booking.status}.`
+        : undefined,
+    };
   }
 
   async verifyAndExecuteQuickAction(token: string, executor?: { id: string; role: string; fullName: string }) {
@@ -904,7 +1032,7 @@ export class BookingsService {
     }
 
     const [b64Payload, sig] = token.split('.');
-    const secret = process.env.JWT_SECRET || 'siperu-yarsi-secret-2026';
+    const secret = this.getQuickActionSecret();
     const hmac = createHmac('sha256', secret);
     hmac.update(b64Payload);
     const expectedSig = hmac.digest('base64url');
@@ -986,20 +1114,44 @@ export class BookingsService {
       targetStatus = PrismaBookingStatus.VERIFIED;
     }
 
+    const isReschedulePending = booking.status === PrismaBookingStatus.RESCHEDULE_PENDING;
+    const checkRoomId = (isReschedulePending && (booking as any).rescheduleRoomId) || booking.roomId;
+    const checkStartTime = (isReschedulePending && (booking as any).rescheduleStartTime) || booking.startTime;
+    const checkEndTime = (isReschedulePending && (booking as any).rescheduleEndTime) || booking.endTime;
+
     // Cegah double-booking via link: cek konflik slot seperti jalur normal.
     if (targetStatus === PrismaBookingStatus.APPROVED || targetStatus === PrismaBookingStatus.VERIFIED) {
-      await this.scheduling.assertAvailable(booking.roomId, booking.startTime, booking.endTime, booking.id);
+      await this.scheduling.assertAvailable(checkRoomId, checkStartTime, checkEndTime, booking.id);
     }
     const existingPassToken: string | undefined =
       'passToken' in booking && typeof booking.passToken === 'string' ? booking.passToken : undefined;
     const passToken = existingPassToken || (targetStatus === PrismaBookingStatus.APPROVED ? `PASS-${randomUUID().replace(/-/g, '').slice(0, 12).toUpperCase()}` : undefined);
 
     const updated = await this.scheduling.inSerializableTransaction(async (tx) => {
+      const rescheduleData = isReschedulePending && targetStatus === PrismaBookingStatus.APPROVED
+        ? {
+            startTime: checkStartTime,
+            endTime: checkEndTime,
+            roomId: checkRoomId,
+            rescheduleStartTime: null,
+            rescheduleEndTime: null,
+            rescheduleRoomId: null,
+            rescheduleReason: null,
+          }
+        : isReschedulePending && targetStatus === PrismaBookingStatus.REJECTED
+          ? {
+              rescheduleStartTime: null,
+              rescheduleEndTime: null,
+              rescheduleRoomId: null,
+            }
+          : {};
+
       const row = await tx.booking.update({
         where: { id: bookingId },
         data: {
           status: targetStatus,
           ...(passToken ? { passToken } : {}),
+          ...rescheduleData,
         },
       });
       await tx.approvalLog.create({
@@ -1103,9 +1255,9 @@ export class BookingsService {
       where: { id: booking.id },
       data: {
         status: 'RESCHEDULE_PENDING',
-        roomId: targetRoomId,
-        startTime: newStart,
-        endTime: newEnd,
+        rescheduleRoomId: dto.newRoomId || null,
+        rescheduleStartTime: newStart,
+        rescheduleEndTime: newEnd,
         rescheduleReason: dto.reason,
         originalSchedule: oldScheduleStr,
       },
@@ -1138,6 +1290,7 @@ export class BookingsService {
   async checkInBooking(
     bookingCodeOrId: string,
     currentUser: { id: string; fullName: string; role: string },
+    passTokenInput?: string,
   ) {
     const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(bookingCodeOrId);
     let booking: any = null;
@@ -1160,6 +1313,28 @@ export class BookingsService {
 
     if (!booking) {
       throw new NotFoundException('Data peminjaman tidak ditemukan.');
+    }
+
+    // Task 7: Validasi Otorisasi Check-In Kehadiran
+    const isRoomOfficer = currentUser.role === Role.ADMIN || currentUser.role === Role.SUPERADMIN;
+    const isBorrower = currentUser.id === booking.userId;
+
+    if (!isRoomOfficer && !isBorrower) {
+      throw new ForbiddenException(
+        'Hanya peminjam ruangan atau petugas ruangan/admin yang berwenang melakukan check-in kehadiran.',
+      );
+    }
+
+    // Cegah pemanggilan endpoint dari luar jadwal atau via script jarak jauh tanpa verifikasi token petugas:
+    // Jika dilakukan oleh peminjam (bukan petugas/admin), wajib menyertakan passToken valid
+    // (baik melalui URL parameter passToken atau body passToken) sebagai bukti verifikasi fisik pass.
+    if (!isRoomOfficer) {
+      const providedToken = passTokenInput || (!isUuid ? bookingCodeOrId : null);
+      if (!providedToken || (booking.passToken && providedToken !== booking.passToken)) {
+        throw new ForbiddenException(
+          'Check-in mandiri oleh peminjam memerlukan verifikasi token pass/QR fisik dari petugas ruangan.',
+        );
+      }
     }
 
     if (booking.status !== PrismaBookingStatus.APPROVED) {
@@ -1187,20 +1362,36 @@ export class BookingsService {
       throw new BadRequestException('Waktu check-in sudah lewat (jadwal sudah berakhir).');
     }
 
+    // Cek idempotensi check-in via kolom resmi isCheckedIn (Sprint 3 Task 13)
+    if (booking.isCheckedIn) {
+      return {
+        success: true,
+        alreadyCheckedIn: true,
+        message: `Peminjaman "${booking.title}" sudah melakukan check-in sebelumnya.`,
+        booking,
+      };
+    }
+
+    // Update flag isCheckedIn di database
+    await (this.prisma.booking as any).update({
+      where: { id: booking.id },
+      data: { isCheckedIn: true },
+    });
+
     await this.prisma.approvalLog.create({
       data: {
         bookingId: booking.id,
         approverId: currentUser.id,
         fromStatus: booking.status,
         toStatus: booking.status,
-        notes: `Check-in Kehadiran Berhasil: Petugas (${currentUser.fullName}) mengonfirmasi kehadiran peminjam di ruangan.`,
+        notes: `Check-in Kehadiran Berhasil: ${isRoomOfficer ? 'Petugas' : 'Peminjam terverifikasi'} (${currentUser.fullName}) mengonfirmasi kehadiran peminjam di ruangan.`,
       },
     });
 
     return {
       success: true,
       message: `Check-in berhasil dikonfirmasi untuk kegiatan "${booking.title}".`,
-      booking,
+      booking: { ...booking, isCheckedIn: true },
     };
   }
 
@@ -1212,9 +1403,11 @@ export class BookingsService {
     const fortyFiveMinutesAgo = new Date(now.getTime() - 45 * 60 * 1000);
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-    const activeApproved = await this.prisma.booking.findMany({
+    // Query langsung berdasarkan flag isCheckedIn: false di database (Sprint 3 Task 13)
+    const activeApproved = await (this.prisma.booking as any).findMany({
       where: {
         status: PrismaBookingStatus.APPROVED,
+        isCheckedIn: false,
         startTime: {
           gte: startOfToday,
           lte: fortyFiveMinutesAgo,
@@ -1231,27 +1424,22 @@ export class BookingsService {
     const penalizedUsers: string[] = [];
 
     for (const b of activeApproved) {
-      const hasCheckedIn = b.approvalLogs.some(
-        (log) => log.notes && log.notes.toLowerCase().includes('check-in'),
-      );
+      try {
+        await (this.prisma.booking as any).update({
+          where: { id: b.id },
+          data: { status: 'NO_SHOW' },
+        });
 
-      if (!hasCheckedIn) {
-        try {
-          await (this.prisma.booking as any).update({
-            where: { id: b.id },
-            data: { status: 'NO_SHOW' },
-          });
-
-          await this.prisma.approvalLog.create({
-            data: {
-              bookingId: b.id,
-              approverId: b.userId,
-              fromStatus: b.status,
-              toStatus: 'NO_SHOW' as any,
-              notes: 'Status otomatis diubah menjadi NO_SHOW karena tidak melakukan check-in setelah 45 menit jadwal dimulai.',
-            },
-          });
-          detectedCount++;
+        await this.prisma.approvalLog.create({
+          data: {
+            bookingId: b.id,
+            approverId: b.userId,
+            fromStatus: b.status,
+            toStatus: 'NO_SHOW' as any,
+            notes: 'Status otomatis diubah menjadi NO_SHOW karena tidak melakukan check-in setelah 45 menit jadwal dimulai.',
+          },
+        });
+        detectedCount++;
 
           const sixMonthsAgo = new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000);
           const totalNoShow = await this.prisma.booking.count({
@@ -1273,13 +1461,12 @@ export class BookingsService {
                 isActive: true,
               },
             });
-            penalizedUsers.push(b.user?.fullName || b.userId);
+            penalizedUsers.push((b as any).user?.fullName || b.userId);
           }
         } catch (err: any) {
           this.logger.warn(`Failed to process no-show for booking ${b.id}: ${err.message}`);
         }
       }
-    }
 
     return {
       detectedCount,
@@ -1287,6 +1474,23 @@ export class BookingsService {
       penalizedUsers,
       message: `Deteksi selesai: ${detectedCount} peminjaman ditandai NO-SHOW, ${penalizedUsers.length} pengguna dikenai sanksi cooling-down.`,
     };
+  }
+
+  /**
+   * Cron Scheduler Otomatis Scan No-Show (Sprint 3 Task 12)
+   * Dijalankan setiap 15 menit di latar belakang
+   */
+  @Cron('0 */15 * * * *')
+  async handleCronNoShowScan() {
+    this.logger.log('[CRON] Menjalankan pemindaian otomatis No-Show peminjaman...');
+    try {
+      const result = await this.detectNoShowBookings();
+      if (result.detectedCount > 0) {
+        this.logger.warn(`[CRON] Terdeteksi ${result.detectedCount} peminjaman No-Show.`);
+      }
+    } catch (err: any) {
+      this.logger.error(`[CRON] Gagal menjalankan pemindaian otomatis No-Show: ${err.message}`, err.stack);
+    }
   }
 
   async getMyPenalties(userId: string) {

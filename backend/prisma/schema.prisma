@@ -47,7 +47,9 @@ model User {
   email        String?
   unitName     String
   role         Role     @default(USER)
-  createdAt    DateTime @default(now()) @db.Timestamptz(3)
+  isActive           Boolean  @default(true)
+  mustChangePassword Boolean  @default(false)
+  createdAt          DateTime @default(now()) @db.Timestamptz(3)
   updatedAt    DateTime @updatedAt @db.Timestamptz(3)
 
   bookings    Booking[]
@@ -102,15 +104,19 @@ model Booking {
   attachmentUrl        String?
   dokumenUrl           String?
   passToken            String?       @unique @map("pass_token")
+  isCheckedIn          Boolean       @default(false)
   isLeaderApproved     Boolean       @default(false)
   isAcademicBulk       Boolean       @default(false)
   bulkGroupId          String?
   rescheduleReason     String?
   originalSchedule     String?
+  rescheduleRoomId     String?       @db.Uuid
+  rescheduleStartTime  DateTime?     @db.Timestamptz(3)
+  rescheduleEndTime    DateTime?     @db.Timestamptz(3)
   createdAt            DateTime      @default(now()) @db.Timestamptz(3)
   updatedAt            DateTime      @updatedAt @db.Timestamptz(3)
 
-  user               User                    @relation(fields: [userId], references: [id])
+  user               User                    @relation(fields: [userId], references: [id], onDelete: Restrict)
   room               Room                    @relation(fields: [roomId], references: [id])
   logistik           BookingLogistik[]
   approvalLogs       ApprovalLog[]
@@ -121,6 +127,7 @@ model Booking {
 
   @@index([roomId, startTime, endTime])
   @@index([status, startTime, endTime])
+  @@index([userId])
   @@map("bookings")
 }
 

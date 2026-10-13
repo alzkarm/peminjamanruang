@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query, UseGuards } from '@nestjs/common';
 import { BookingsService } from './bookings.service';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { RolesGuard } from '@/common/guards/roles.guard';
@@ -6,18 +6,27 @@ import { Roles } from '@/common/decorators/roles.decorator';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { Role } from '@/common/types';
 import { QuickActionQueryDto } from './dto/quick-action-query.dto';
+
 @Controller('verify')
 export class VerifyController {
   constructor(private readonly bookingsService: BookingsService) {}
 
-  @Get('quick-action/execute')
+  @Get('quick-action/preview')
+  async previewQuickAction(@Query() query: QuickActionQueryDto) {
+    return this.bookingsService.previewQuickAction(query.token);
+  }
+
+  @Post('quick-action/execute')
   @UseGuards(JwtAuthGuard)
   async executeQuickAction(
+    @Body() body: { token?: string },
     @Query() query: QuickActionQueryDto,
     @CurrentUser() executor: { id: string; role: string; fullName: string },
   ) {
-    return this.bookingsService.verifyAndExecuteQuickAction(query.token, executor);
+    const token = body?.token || query?.token;
+    return this.bookingsService.verifyAndExecuteQuickAction(token, executor);
   }
+
   @Get('quick-action/generate-link/:bookingId')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.SUPERADMIN, Role.ADMIN)
@@ -27,7 +36,7 @@ export class VerifyController {
     @CurrentUser('id') approverId: string,
   ) {
     const token = this.bookingsService.generateQuickActionToken(bookingId, action || 'APPROVE', approverId);
-    return { token, actionUrl: `/api/verify/quick-action/execute?token=${token}` };
+    return { token, actionUrl: `/approval/result?token=${token}` };
   }
 
   @Get(':code')

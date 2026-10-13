@@ -15,6 +15,7 @@ import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
 import { RolesGuard } from '@/common/guards/roles.guard';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { Role } from '@/common/types';
+import { CurrentUser } from '@/common/decorators/current-user.decorator';
 
 @Controller('users')
 export class UsersController {
@@ -37,8 +38,11 @@ export class UsersController {
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.SUPERADMIN, Role.ADMIN)
-  async remove(@Param('id') id: string) {
-    return this.usersService.remove(id);
+  @Roles(Role.SUPERADMIN)
+  async remove(
+    @Param('id') id: string,
+    @CurrentUser() currentUser: { id: string; role: Role },
+  ) {
+    return this.usersService.remove(id, currentUser);
   }
 }

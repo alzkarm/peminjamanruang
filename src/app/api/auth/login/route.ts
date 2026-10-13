@@ -10,11 +10,21 @@ export async function POST(req: NextRequest) {
       process.env.NEXT_PUBLIC_API_URL ||
       'http://127.0.0.1:4000/api';
 
+    const clientIp =
+      req.headers.get('x-forwarded-for')?.split(',')[0].trim() ||
+      req.headers.get('x-real-ip') ||
+      '';
+
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+    if (clientIp) {
+      headers['x-forwarded-for'] = clientIp;
+    }
+
     const backendRes = await fetch(`${backendUrl}/auth/login`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify(body),
     });
 

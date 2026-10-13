@@ -9,6 +9,8 @@ import {
 import { FeedbacksService } from './feedbacks.service';
 import { CreateFeedbackDto } from './dto/create-feedback.dto';
 import { JwtAuthGuard } from '@/common/guards/jwt-auth.guard';
+import { RolesGuard } from '@/common/guards/roles.guard';
+import { Roles } from '@/common/decorators/roles.decorator';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { Role } from '@/common/types';
 
@@ -25,7 +27,14 @@ export class FeedbacksController {
     return this.feedbacksService.create(currentUser.id, dto, currentUser.role);
   }
 
+  @Get('my')
+  async findMyFeedbacks(@CurrentUser('id') userId: string) {
+    return this.feedbacksService.findByUser(userId);
+  }
+
   @Get()
+  @UseGuards(RolesGuard)
+  @Roles(Role.SUPERADMIN, Role.ADMIN)
   async findAll() {
     return this.feedbacksService.findAll();
   }

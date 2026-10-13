@@ -111,6 +111,20 @@ async function request<T>(
       } catch (e) {
         // Non-JSON error body
       }
+
+      // Handle 401 Unauthorized / Expired Session automatically
+      if (res.status === 401 && typeof window !== 'undefined') {
+        const isAuthRoute =
+          window.location.pathname.startsWith('/auth/login') ||
+          window.location.pathname.startsWith('/verify');
+
+        if (token && !isAuthRoute) {
+          removeAuthToken();
+          const redirectPath = encodeURIComponent(window.location.pathname + window.location.search);
+          window.location.href = `/auth/login?expired=true&redirect=${redirectPath}`;
+        }
+      }
+
       throw new ApiError(errorMessage, res.status, errorBody);
     }
 
@@ -1167,8 +1181,15 @@ export const cleanupApi = {
 };
 
 export const quickApprovalApi = {
+  async preview(token: string): Promise<any> {
+    return request<any>(`/verify/quick-action/preview?token=${encodeURIComponent(token)}`);
+  },
+
   async execute(token: string): Promise<any> {
-    return request<any>(`/verify/quick-action/execute?token=${encodeURIComponent(token)}`);
+    return request<any>('/verify/quick-action/execute', {
+      method: 'POST',
+      body: JSON.stringify({ token }),
+    });
   },
 
   async generateLink(bookingId: string, action: 'APPROVE' | 'REJECT'): Promise<{ token: string; actionUrl: string }> {

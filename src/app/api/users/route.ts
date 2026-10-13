@@ -5,10 +5,28 @@ const BACKEND_URL =
   process.env.NEXT_PUBLIC_API_URL ||
   'http://127.0.0.1:4000/api';
 
-export async function GET() {
+function getForwardHeaders(req: NextRequest): Record<string, string> {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  const auth = req.headers.get('authorization');
+  if (auth) {
+    headers['authorization'] = auth;
+  } else {
+    const token =
+      req.cookies.get('siperu_auth_token')?.value ||
+      req.cookies.get('siperu_access_token')?.value;
+    if (token) {
+      headers['authorization'] = `Bearer ${token}`;
+    }
+  }
+  return headers;
+}
+
+export async function GET(req: NextRequest) {
   try {
     const res = await fetch(`${BACKEND_URL}/users`, {
-      headers: { 'Content-Type': 'application/json' },
+      headers: getForwardHeaders(req),
       cache: 'no-store',
     });
     const data = await res.json();
@@ -23,7 +41,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const res = await fetch(`${BACKEND_URL}/users/invite`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getForwardHeaders(req),
       body: JSON.stringify(body),
     });
     const data = await res.json();

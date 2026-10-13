@@ -57,6 +57,18 @@ function LoginFormContent() {
     }
   }, [toast]);
 
+  // Handle expired session notification
+  useEffect(() => {
+    if (searchParams.get('expired') === 'true') {
+      setToast({
+        show: true,
+        type: 'error',
+        title: 'Sesi Telah Berakhir',
+        message: 'Sesi login Anda telah berakhir demi keamanan. Silakan masuk kembali.',
+      });
+    }
+  }, [searchParams]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!username.trim()) {

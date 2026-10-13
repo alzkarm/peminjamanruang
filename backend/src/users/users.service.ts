@@ -2,6 +2,7 @@ import {
   Injectable,
   BadRequestException,
   ConflictException,
+  ForbiddenException,
   NotFoundException,
   Logger,
 } from '@nestjs/common';
@@ -29,6 +30,7 @@ export class UsersService {
         email: true,
         unitName: true,
         role: true,
+        isActive: true,
         passwordHash: true,
         createdAt: true,
         updatedAt: true,
@@ -43,6 +45,7 @@ export class UsersService {
       unitName: u.unitName,
       role: this.mapRole(u.role),
       rawRole: u.role,
+      isActive: u.isActive,
       hasLocalPassword: Boolean(u.passwordHash),
       createdAt: u.createdAt,
       updatedAt: u.updatedAt,
@@ -155,12 +158,42 @@ export class UsersService {
   }
 
   /**
-   * Delete / Remove user from whitelist
+   * Delete / Remove user from whitelist (Protected against Superadmin deletion and cascade data loss)
    */
-  async remove(id: string) {
-    const existing = await this.prisma.user.findUnique({ where: { id } });
+  async remove(id: string, currentUser?: { id: string; role: Role }) {
+    const existing = await this.prisma.user.findUnique({
+      where: { id },
+      include: {
+        bookings: { select: { id: true }, take: 1 },
+      },
+    });
     if (!existing) {
       throw new NotFoundException('Pengguna tidak ditemukan.');
+    }
+
+    // 1. Cegah menghapus akun sendiri
+    if (currentUser && currentUser.id === id) {
+      throw new BadRequestException('Anda tidak dapat menghapus akun Anda sendiri.');
+    }
+
+    // 2. Cegah menghapus akun berstatus Superadmin
+    const isTargetSuperadmin =
+      String(existing.role).toUpperCase() === 'SUPERADMIN' ||
+      existing.role === (PrismaRole.SUPERADMIN as any);
+    if (isTargetSuperadmin) {
+      throw new ForbiddenException('Akun Superadmin tidak dapat dihapus demi keamanan sistem.');
+    }
+
+    // 3. Jika user memiliki riwayat peminjaman, lakukan soft-delete (isActive: false) untuk melindungi integritas data
+    if (existing.bookings && existing.bookings.length > 0) {
+      await this.prisma.user.update({
+        where: { id },
+        data: { isActive: false },
+      });
+      this.logger.log(`User ${existing.username} (${id}) has booking history; soft-deleted (deactivated).`);
+      return {
+        message: `Pengguna ${existing.username} memiliki riwayat peminjaman, dinonaktifkan secara aman dari whitelist.`,
+      };
     }
 
     await this.prisma.user.delete({ where: { id } });

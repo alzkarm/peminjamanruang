@@ -81,6 +81,11 @@ export class AuthService {
       );
     }
 
+    if (!(user as any).isActive) {
+      this.logger.warn(`Rejected login attempt: User "${user.username}" is inactive.`);
+      throw new UnauthorizedException('Akun Anda telah dinonaktifkan oleh administrator.');
+    }
+
     // Step 2: Try LDAP authentication first (Primary Auth)
     let isLdapSuccess = false;
     let ldapAttributes: { displayName?: string } = {};
@@ -151,6 +156,7 @@ export class AuthService {
         faculty: user.unitName,
         role: mappedRole,
         identifier: user.username,
+        mustChangePassword: Boolean((user as any).mustChangePassword),
       },
     };
   }

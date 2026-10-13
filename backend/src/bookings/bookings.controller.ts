@@ -27,10 +27,11 @@ import { RolesGuard } from '@/common/guards/roles.guard';
 import { Roles } from '@/common/decorators/roles.decorator';
 import { CurrentUser } from '@/common/decorators/current-user.decorator';
 import { Role } from '@/common/types';
+import { StorageService } from '@/storage/storage.service';
 import { diskStorage } from 'multer';
-import { basename, extname, join } from 'path';
+import { basename, extname } from 'path';
 import { randomUUID } from 'crypto';
-import { existsSync, promises as fs } from 'fs';
+import { promises as fs } from 'fs';
 import { Response } from 'express';
 
 const ALLOWED_UPLOADS: Record<string, string[]> = {
@@ -46,14 +47,19 @@ const ALLOWED_UPLOADS: Record<string, string[]> = {
 
 @Controller('bookings')
 export class BookingsController {
-  constructor(private readonly bookingsService: BookingsService) {}
+  constructor(
+    private readonly bookingsService: BookingsService,
+    private readonly storageService: StorageService,
+  ) {}
 
   @Post()
   @UseGuards(JwtAuthGuard)
   @UseInterceptors(
     FileInterceptor('attachment', {
       storage: diskStorage({
-        destination: './uploads',
+        destination: (req, file, cb) => {
+          cb(null, StorageService.getUploadDir());
+        },
         filename: (req, file, cb) => {
           cb(null, `${randomUUID()}${extname(file.originalname).toLowerCase()}`);
         },
@@ -74,11 +80,17 @@ export class BookingsController {
       await fs.unlink(file.path).catch(() => undefined);
       throw new BadRequestException('Jenis file lampiran tidak valid.');
     }
-    const attachmentUrl = file ? `/attachments/${file.filename}` : undefined;
+    let persistedFilename: string | undefined;
+    if (file) {
+      persistedFilename = await this.storageService.persistUploadedFile(file);
+    }
+    const attachmentUrl = persistedFilename ? `/attachments/${persistedFilename}` : undefined;
     try {
       return await this.bookingsService.create(currentUser.id, dto, attachmentUrl, currentUser.fullName);
     } catch (error) {
-      if (file) await fs.unlink(file.path).catch(() => undefined);
+      if (persistedFilename) {
+        await this.storageService.deleteFile(persistedFilename).catch(() => undefined);
+      }
       throw error;
     }
   }
@@ -95,9 +107,7 @@ export class BookingsController {
     if (!filename || filename !== storedPath.split('/').pop()) {
       throw new NotFoundException('Lampiran tidak ditemukan.');
     }
-    const absolutePath = join(process.cwd(), 'uploads', filename);
-    if (!existsSync(absolutePath)) throw new NotFoundException('Lampiran tidak ditemukan.');
-    return response.download(absolutePath, filename);
+    return this.storageService.sendOrStreamFile(filename, response);
   }
 
   @Get()
@@ -110,13 +120,15 @@ export class BookingsController {
   }
 
   @Get('runsheet/daily')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.SUPERADMIN, Role.ADMIN)
   async getDailyRunsheet(@Query('date') date?: string) {
     return this.bookingsService.getDailyRunsheet(date);
   }
 
   @Patch('runsheet/:bookingId/toggle-check')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.SUPERADMIN, Role.ADMIN)
   async toggleRunsheetCheck(
     @Param('bookingId') bookingId: string,
     @CurrentUser() currentUser: { id: string; role: Role; fullName: string },
@@ -137,7 +149,8 @@ export class BookingsController {
   }
 
   @Post('cleanup-expired')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.SUPERADMIN, Role.ADMIN)
   async cleanupExpired() {
     return this.bookingsService.cleanupExpiredBookings();
   }
@@ -184,8 +197,9 @@ export class BookingsController {
   async checkIn(
     @Param('id') id: string,
     @CurrentUser() currentUser: { id: string; role: Role; fullName: string },
+    @Body() body?: { passToken?: string },
   ) {
-    return this.bookingsService.checkInBooking(id, currentUser);
+    return this.bookingsService.checkInBooking(id, currentUser, body?.passToken);
   }
 
   @Get(':id')

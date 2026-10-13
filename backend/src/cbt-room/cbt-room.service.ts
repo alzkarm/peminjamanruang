@@ -3,6 +3,7 @@ import {
   ConflictException,
   BadRequestException,
   NotFoundException,
+  ForbiddenException,
   Logger,
 } from '@nestjs/common';
 import { PrismaService } from '@/prisma/prisma.service';
@@ -60,6 +61,29 @@ export class CbtRoomService {
 
     if (startTime >= endTime) {
       throw new BadRequestException('Waktu mulai harus lebih awal dari waktu selesai.');
+    }
+
+    // Validate active penalty / cooling-down period (Task 26)
+    const activePenalty = await (this.prisma as any).userPenalty?.findFirst?.({
+      where: {
+        userId,
+        isActive: true,
+        coolingDownUntil: { gt: new Date() },
+      },
+      orderBy: { coolingDownUntil: 'desc' },
+    });
+
+    if (activePenalty) {
+      const untilDate = new Date(activePenalty.coolingDownUntil).toLocaleDateString('id-ID', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      });
+      throw new ForbiddenException(
+        `Akun Anda sedang dalam masa pembekuan peminjaman (Cooling-down) sampai ${untilDate} WIB karena pelanggaran: "${activePenalty.reason}".`,
+      );
     }
 
     if (dto.seatStart > dto.seatEnd) {
@@ -179,6 +203,21 @@ export class CbtRoomService {
   async getAllBookings(roomId?: 'A' | 'B') {
     return this.prisma.cbtSeatBooking.findMany({
       where: roomId ? { roomId } : {},
+      orderBy: { createdAt: 'desc' },
+      include: {
+        user: {
+          select: { id: true, fullName: true, unitName: true },
+        },
+      },
+    });
+  }
+
+  /**
+   * Get CBT bookings for a specific user (my-bookings).
+   */
+  async getUserBookings(userId: string) {
+    return this.prisma.cbtSeatBooking.findMany({
+      where: { userId },
       orderBy: { createdAt: 'desc' },
       include: {
         user: {

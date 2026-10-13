@@ -203,6 +203,7 @@ export interface Booking {
   logistik?: BookingLogistikItem[];
   documentUrl?: string;
   dokumenUrl?: string;
+  attachmentUrl?: string;
   documentName?: string;
   lpfNotes?: string;
   lpfApprovedAt?: string;
@@ -222,6 +223,9 @@ export interface Booking {
   feedbackSubmitted?: boolean;
   rescheduleReason?: string;
   originalSchedule?: string;
+  rescheduleStartTime?: string;
+  rescheduleEndTime?: string;
+  rescheduleRoomId?: string;
 }
 
 export interface Feedback {

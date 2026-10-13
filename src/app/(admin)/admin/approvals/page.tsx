@@ -31,6 +31,10 @@ import {
   ChevronDown,
   ChevronUp,
   CalendarRange,
+  FileText,
+  Download,
+  ExternalLink,
+  Eye,
 } from 'lucide-react';
 
 interface BookingGroup {
@@ -75,6 +79,13 @@ export default function AdminApprovalsPage() {
 
   // Bulk selection
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+
+  // Document preview modal state (Sprint 3 Task 11)
+  const [previewDocModal, setPreviewDocModal] = useState<{
+    isOpen: boolean;
+    url: string;
+    title: string;
+  }>({ isOpen: false, url: '', title: '' });
 
   // Dua tahap: admin verifikasi antrean PENDING -> VERIFIED; superadmin approval final VERIFIED -> APPROVED.
   const matchesSearch = (b: Booking) =>
@@ -577,6 +588,56 @@ export default function AdminApprovalsPage() {
                       </div>
                     )}
 
+                    {/* Dokumen & Lampiran Berkas (Sprint 3 Task 11) */}
+                    {(() => {
+                      const docUrl = booking.dokumenUrl || booking.attachmentUrl || booking.documentUrl;
+                      const docName = booking.documentName || 'Surat Pengantar & TOR Kegiatan';
+                      return (
+                        <div className="p-3 bg-slate-50/90 rounded-xl border border-slate-200/90 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs dark:bg-slate-800/70 dark:border-slate-700">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="w-8 h-8 rounded-lg bg-emerald-100/70 text-emerald-700 flex items-center justify-center shrink-0 dark:bg-emerald-500/20 dark:text-emerald-300">
+                              <FileText className="w-4 h-4" />
+                            </div>
+                            <div className="min-w-0">
+                              <p className="font-bold text-slate-800 truncate dark:text-slate-200">
+                                {docUrl ? docName : 'Surat Pengantar & TOR'}
+                              </p>
+                              <p className="text-[11px] text-slate-500 truncate dark:text-slate-400">
+                                {docUrl ? 'Berkas lampiran resmi peminjam' : 'Belum ada dokumen digital dilampirkan'}
+                              </p>
+                            </div>
+                          </div>
+
+                          {docUrl ? (
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              <button
+                                type="button"
+                                onClick={() => setPreviewDocModal({ isOpen: true, url: docUrl, title: docName })}
+                                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 text-xs font-semibold shadow-xs transition-colors dark:bg-slate-800 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-700"
+                              >
+                                <Eye className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" />
+                                <span>Lihat</span>
+                              </button>
+                              <a
+                                href={docUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                download
+                                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition-colors dark:bg-emerald-600 dark:hover:bg-emerald-500"
+                              >
+                                <Download className="w-3.5 h-3.5" />
+                                <span>Unduh</span>
+                              </a>
+                            </div>
+                          ) : (
+                            <span className="text-[11px] italic text-slate-400 shrink-0">
+                              Tidak ada berkas
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })()}
+
                     {/* Expandable Sessions List for Grouped Recurring Bookings */}
                     {isGroup && (
                       <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
@@ -966,6 +1027,69 @@ export default function AdminApprovalsPage() {
                 {applyRejectionToGroup && rejectionGroupBookings.length > 1
                   ? `Konfirmasi Tolak Seluruh ${rejectionGroupBookings.length} Sesi`
                   : 'Konfirmasi Tolak Permohonan'}
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* Modal Preview Dokumen Lampiran (Sprint 3 Task 11) */}
+      {previewDocModal.isOpen && (
+        <Modal
+          isOpen={previewDocModal.isOpen}
+          onClose={() => setPreviewDocModal({ isOpen: false, url: '', title: '' })}
+          title={`Preview Dokumen: ${previewDocModal.title}`}
+        >
+          <div className="space-y-4">
+            <div className="w-full h-96 border border-slate-200 rounded-xl overflow-hidden bg-slate-100 flex items-center justify-center dark:bg-slate-800 dark:border-slate-700">
+              {previewDocModal.url.endsWith('.pdf') ? (
+                <iframe
+                  src={previewDocModal.url}
+                  title={previewDocModal.title}
+                  className="w-full h-full"
+                />
+              ) : previewDocModal.url.match(/\.(jpeg|jpg|png|webp|svg)$/i) ? (
+                <img
+                  src={previewDocModal.url}
+                  alt={previewDocModal.title}
+                  className="max-h-full max-w-full object-contain"
+                />
+              ) : (
+                <div className="text-center p-6 space-y-3">
+                  <FileText className="w-12 h-12 text-slate-400 mx-auto" />
+                  <p className="text-xs text-slate-600 dark:text-slate-300">
+                    Format berkas tidak mendukung preview langsung dalam peramban. Silakan unduh dokumen untuk melihat isi berkas.
+                  </p>
+                  <a
+                    href={previewDocModal.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    download
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-sm"
+                  >
+                    <Download className="w-4 h-4" />
+                    <span>Unduh Berkas ({previewDocModal.title})</span>
+                  </a>
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-700">
+              <a
+                href={previewDocModal.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold flex items-center gap-1.5 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+              >
+                <ExternalLink className="w-3.5 h-3.5" />
+                <span>Buka di Tab Baru</span>
+              </a>
+              <button
+                type="button"
+                onClick={() => setPreviewDocModal({ isOpen: false, url: '', title: '' })}
+                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold"
+              >
+                Tutup
               </button>
             </div>
           </div>

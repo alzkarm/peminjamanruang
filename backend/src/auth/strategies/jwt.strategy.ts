@@ -17,10 +17,18 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     private readonly configService: ConfigService,
     private readonly prisma: PrismaService,
   ) {
+    const secret = configService.get<string>('JWT_SECRET');
+    if (!secret || secret.trim().length === 0) {
+      throw new Error(
+        'FATAL SECURITY ERROR: JWT_SECRET environment variable is missing or empty for JwtStrategy. Server cannot boot securely.',
+      );
+    }
+
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: configService.get<string>('JWT_SECRET') || 'YARSI_SMART_CAMPUS_SECRET_KEY_2026_SUPER_SECURE',
+      secretOrKey: secret,
+      algorithms: ['HS256'],
     });
   }
 
@@ -31,6 +39,10 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 
     if (!user) {
       throw new UnauthorizedException('Pengguna tidak ditemukan dalam sistem.');
+    }
+
+    if (!(user as any).isActive) {
+      throw new UnauthorizedException('Akun Anda telah dinonaktifkan oleh administrator.');
     }
 
     // Normalisasi defensif role legacy dari DB agar aman sebelum/sesudah migrasi.

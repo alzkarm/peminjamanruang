@@ -25,7 +25,6 @@ import {
 } from './api';
 import { getJakartaDateTimeIso, isRecurringBooking } from './utils';
 import {
-  DEMO_USERS,
   INITIAL_ROOMS,
   INITIAL_BOOKINGS,
   INITIAL_ACADEMIC_BLOCKS,
@@ -253,18 +252,8 @@ export const useAppStore = create<AppState>()(
         set({ currentUser: user });
       },
 
-      login: async (username, password, roleCategory) => {
+      login: async (username, password, _roleCategory) => {
         set({ isLoading: true, error: null, bookings: [] });
-
-        // Check local demo account first if matching
-        const cleanUser = username.trim().toLowerCase();
-        const demoUser = DEMO_USERS.find(
-          (u) =>
-            u.identifier.toLowerCase() === cleanUser ||
-            u.id.toLowerCase() === cleanUser ||
-            u.email.toLowerCase() === cleanUser ||
-            (roleCategory && u.role === roleCategory)
-        );
 
         try {
           const res = await authApi.login(username, password);
@@ -276,16 +265,10 @@ export const useAppStore = create<AppState>()(
           get().fetchNotifications();
           return res.user;
         } catch (err: unknown) {
-          // If backend API/LDAP is unavailable or returned error, fallback to local demo account
-          if (demoUser) {
-            setAuthRoleCookie(demoUser.role);
-            set({ currentUser: demoUser, isLoading: false, bookings: [] });
-            return demoUser;
-          }
-
           const errorMessage =
-            err instanceof Error ? err.message :
-            'Gagal terhubung ke server autentikasi LDAP YARSI. Pastikan Anda terhubung ke jaringan kampus.';
+            err instanceof Error
+              ? err.message
+              : 'Gagal terhubung ke server autentikasi LDAP YARSI. Pastikan kredensial benar dan terhubung ke jaringan kampus.';
           set({ isLoading: false, error: errorMessage });
           throw new Error(errorMessage);
         }

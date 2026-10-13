@@ -73,4 +73,14 @@ export class FeedbacksService {
       orderBy: { createdAt: 'desc' },
     });
   }
+
+  async findByUser(userId: string) {
+    return this.prisma.feedback.findMany({
+      where: { userId },
+      include: {
+        booking: { include: { room: { include: { floor: true } } } },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+  }
 }

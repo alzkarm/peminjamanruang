@@ -4,13 +4,33 @@ import { ValidationPipe, Logger } from '@nestjs/common';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter';
 import { join } from 'path';
 import * as fs from 'fs';
+import helmet from 'helmet';
 
 async function bootstrap() {
   const logger = new Logger('Bootstrap');
   const app = await NestFactory.create(AppModule);
 
-  // Ensure uploads directory exists
-  const uploadDir = join(process.cwd(), 'uploads');
+  // Trust proxy for reverse proxies (Next.js rewrites, Nginx, Docker)
+  app.getHttpAdapter().getInstance().set('trust proxy', true);
+
+  // Disable X-Powered-By to prevent technology stack leakage
+  app.getHttpAdapter().getInstance().disable('x-powered-by');
+
+  // Security Headers via Helmet
+  app.use(
+    helmet({
+      crossOriginResourcePolicy: { policy: 'cross-origin' },
+    }),
+  );
+
+  // Ensure persistent uploads directory exists
+  const configuredUploadPath =
+    process.env.STORAGE_LOCAL_PATH ||
+    process.env.STORAGE_PATH ||
+    process.env.UPLOAD_DIR;
+  const uploadDir = configuredUploadPath
+    ? join(process.cwd(), configuredUploadPath)
+    : join(process.cwd(), 'uploads');
   if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
   }

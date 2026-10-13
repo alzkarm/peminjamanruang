@@ -287,8 +287,14 @@ export class RoomsService {
       throw new BadRequestException('Parameter date, startTime, dan endTime wajib dicantumkan.');
     }
 
-    const sessionStart = new Date(`${date}T${startTime}:00.000Z`);
-    const sessionEnd = new Date(`${date}T${endTime}:00.000Z`);
+    const parseWibDate = (d: string, t: string) => {
+      const cleanTime = t.trim();
+      const timePart = cleanTime.length === 5 ? `${cleanTime}:00` : cleanTime;
+      return new Date(`${d}T${timePart}+07:00`);
+    };
+
+    const sessionStart = parseWibDate(date, startTime);
+    const sessionEnd = parseWibDate(date, endTime);
 
     const rooms = await this.prisma.room.findMany({
       where: {

@@ -13,6 +13,19 @@ export interface ReportFilterDto {
   status?: BookingStatus;
 }
 
+/**
+ * Sanitizes cell values to prevent Formula / CSV Injection (CWE-1236).
+ * Prepends a single quote (') if the string begins with '=', '+', '-', or '@'.
+ */
+export function sanitizeFormulaInjection<T>(value: T): T {
+  if (typeof value !== 'string') return value;
+  const trimmed = value.trimStart();
+  if (trimmed.length > 0 && ['=', '+', '-', '@'].includes(trimmed[0])) {
+    return `'${value}` as unknown as T;
+  }
+  return value;
+}
+
 @Injectable()
 export class ReportsService {
   private readonly logger = new Logger(ReportsService.name);
@@ -102,19 +115,19 @@ export class ReportsService {
     bookings.forEach((b, index) => {
       const row = worksheet.addRow({
         no: index + 1,
-        id: b.id,
-        roomName: b.room.name,
-        floor: b.room.floor.name,
-        userName: b.user.fullName,
-        identifier: b.user.username,
-        unitName: b.user.unitName,
-        title: b.title,
-        activityType: b.activityType,
-        startTime: b.startTime.toLocaleString('id-ID'),
-        endTime: b.endTime.toLocaleString('id-ID'),
-        status: b.status,
-        isSpecial: b.room.isSpecialRoom ? 'Ya (Yayasan)' : 'Tidak (Reguler)',
-        rating: b.feedback ? `${b.feedback.overallRating} / 5` : '-',
+        id: sanitizeFormulaInjection(b.id),
+        roomName: sanitizeFormulaInjection(b.room?.name),
+        floor: sanitizeFormulaInjection(b.room?.floor?.name),
+        userName: sanitizeFormulaInjection(b.user?.fullName),
+        identifier: sanitizeFormulaInjection(b.user?.username),
+        unitName: sanitizeFormulaInjection(b.user?.unitName),
+        title: sanitizeFormulaInjection(b.title),
+        activityType: sanitizeFormulaInjection(b.activityType),
+        startTime: sanitizeFormulaInjection(b.startTime ? b.startTime.toLocaleString('id-ID') : ''),
+        endTime: sanitizeFormulaInjection(b.endTime ? b.endTime.toLocaleString('id-ID') : ''),
+        status: sanitizeFormulaInjection(b.status),
+        isSpecial: sanitizeFormulaInjection(b.room?.isSpecialRoom ? 'Ya (Yayasan)' : 'Tidak (Reguler)'),
+        rating: sanitizeFormulaInjection(b.feedback ? `${b.feedback.overallRating} / 5` : '-'),
       });
 
       row.height = 22;
