@@ -17,7 +17,16 @@ function timeAgo(iso: string): string {
 }
 
 export function NotificationBell({ isHome = false }: { isHome?: boolean }) {
-  const { currentUser, notifications, unreadNotifications, queuePending, queueAwaitingApproval, fetchNotifications, markNotificationRead } = useAppStore();
+  const {
+    currentUser,
+    notifications,
+    unreadNotifications,
+    queuePending,
+    queueAwaitingApproval,
+    fetchNotifications,
+    markNotificationRead,
+    markNotificationsRead,
+  } = useAppStore();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -83,9 +92,22 @@ export function NotificationBell({ isHome = false }: { isHome?: boolean }) {
               <p className="text-[11px] text-amber-600 dark:text-amber-400">Klik untuk memproses antrean →</p>
             </Link>
           )}
-          <div className="border-b border-slate-100 px-4 py-3 dark:border-slate-700">
-            <p className="text-xs font-bold text-slate-800 dark:text-slate-100">Notifikasi Pengajuan</p>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">Status terbaru pengajuan Anda</p>
+          <div className="flex items-center justify-between border-b border-slate-100 px-4 py-3 dark:border-slate-700">
+            <div>
+              <p className="text-xs font-bold text-slate-800 dark:text-slate-100">Notifikasi Pengajuan</p>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">Status terbaru pengajuan Anda</p>
+            </div>
+            {notifications.length > 0 && (
+              <button
+                type="button"
+                onClick={() => void markNotificationsRead()}
+                disabled={unreadNotifications === 0}
+                className="rounded-lg px-2.5 py-1 text-[11px] font-semibold text-emerald-600 transition-colors hover:bg-emerald-50 hover:text-emerald-700 dark:text-emerald-400 dark:hover:bg-emerald-950/40 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent"
+                title="Tandai semua notifikasi telah dibaca"
+              >
+                Telah dibaca semua
+              </button>
+            )}
           </div>
           <div className="max-h-80 overflow-y-auto">
             {notifications.length === 0 ? (
@@ -98,8 +120,18 @@ export function NotificationBell({ isHome = false }: { isHome?: boolean }) {
                   key={n.id}
                   href={notifHref(n)}
                   onClick={() => { void markNotificationRead(n.id); setOpen(false); }}
+                  className={`block border-b border-slate-100 px-4 py-3 transition-colors hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/60 ${
+                    !n.isRead ? 'bg-emerald-50/40 dark:bg-emerald-950/20' : ''
+                  }`}
                 >
-                  <p className="text-xs font-bold text-slate-800 dark:text-slate-100">{n.title}</p>
+                  <div className="flex items-start justify-between gap-2">
+                    <p className={`text-xs ${!n.isRead ? 'font-bold text-slate-900 dark:text-slate-100' : 'font-medium text-slate-700 dark:text-slate-300'}`}>
+                      {n.title}
+                    </p>
+                    {!n.isRead && (
+                      <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-emerald-500" title="Belum dibaca" />
+                    )}
+                  </div>
                   <p className="mt-0.5 line-clamp-2 text-[11px] leading-4 text-slate-600 dark:text-slate-300">{n.message}</p>
                   <p className="mt-1 text-[10px] text-slate-400">{timeAgo(n.createdAt)}</p>
                 </Link>

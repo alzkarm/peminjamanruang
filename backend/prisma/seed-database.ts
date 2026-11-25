@@ -153,37 +153,37 @@ export async function seedDatabase(
   const users = {
     student: await prisma.user.upsert({
       where: { username: '1402022001' },
-      update: { role: 'USER' },
+      update: { role: 'USER', passwordHash },
       create: { username: '1402022001', fullName: 'Ahmad Fikri Pratama', email: 'ahmad.fikri@mhs.yarsi.ac.id', unitName: 'BEM Fakultas Teknologi Informasi', passwordHash, role: 'USER' },
     }),
     lecturer: await prisma.user.upsert({
       where: { username: '0314058201' },
-      update: { role: 'USER' },
+      update: { role: 'USER', passwordHash },
       create: { username: '0314058201', fullName: 'Dr. dr. Siti Nurhaliza, Sp.A', email: 'siti.nurhaliza@yarsi.ac.id', unitName: 'Fakultas Kedokteran', passwordHash, role: 'USER' },
     }),
     adminUniv: await prisma.user.upsert({
       where: { username: 'lpf.admin' },
-      update: { role: 'ADMIN', mustChangePassword: mustChange },
+      update: { role: 'ADMIN', mustChangePassword: mustChange, passwordHash },
       create: { username: 'lpf.admin', fullName: 'Bambang Sudibyo, S.T. (LPF)', email: 'lpf@yarsi.ac.id', unitName: 'Biro Layanan Pengelolaan Fasilitas (LPF)', passwordHash, role: 'ADMIN', mustChangePassword: mustChange },
     }),
     adminYayasan: await prisma.user.upsert({
       where: { username: 'yayasan.admin' },
-      update: { role: 'ADMIN', mustChangePassword: mustChange },
+      update: { role: 'ADMIN', mustChangePassword: mustChange, passwordHash },
       create: { username: 'yayasan.admin', fullName: 'Drs. H. Muhammad Shadiq, M.M.', email: 'sekretariat.yayasan@yarsi.ac.id', unitName: 'Biro Sekretariat & Aset Yayasan YARSI', passwordHash, role: 'ADMIN', mustChangePassword: mustChange },
     }),
     admin: await prisma.user.upsert({
       where: { username: 'admin' },
-      update: { role: 'ADMIN', mustChangePassword: mustChange },
+      update: { role: 'ADMIN', mustChangePassword: mustChange, passwordHash },
       create: { username: 'admin', fullName: 'Administrator Umum Kampus', email: 'admin@yarsi.ac.id', unitName: 'Bagian Administrasi Umum Kampus', passwordHash, role: 'ADMIN', mustChangePassword: mustChange },
     }),
     adminUmum: await prisma.user.upsert({
       where: { username: 'admin.umum' },
-      update: { role: 'ADMIN', mustChangePassword: mustChange },
+      update: { role: 'ADMIN', mustChangePassword: mustChange, passwordHash },
       create: { username: 'admin.umum', fullName: 'Budi Santoso, S.Kom (Admin Umum)', email: 'admin.umum@yarsi.ac.id', unitName: 'Bagian Administrasi Umum Kampus', passwordHash, role: 'ADMIN', mustChangePassword: mustChange },
     }),
     superadmin: await prisma.user.upsert({
       where: { username: 'superadmin' },
-      update: { role: 'SUPERADMIN', mustChangePassword: mustChange },
+      update: { role: 'SUPERADMIN', mustChangePassword: mustChange, passwordHash },
       create: { username: 'superadmin', fullName: 'Super Administrator YARSI', email: 'superadmin@yarsi.ac.id', unitName: 'Pusat Data dan Informasi (PUSDATIN)', passwordHash, role: 'SUPERADMIN', mustChangePassword: mustChange },
     }),
   };

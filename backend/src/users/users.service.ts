@@ -80,8 +80,8 @@ export class UsersService {
     const existing = await this.prisma.user.findFirst({
       where: {
         OR: [
-          { username: { equals: username, mode: 'insensitive' } },
-          { email: { equals: email, mode: 'insensitive' } },
+          { username: { equals: username } },
+          { email: { equals: email } },
         ],
       },
     });

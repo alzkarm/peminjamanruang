@@ -1,0 +1,99 @@
+{
+  "roles": {
+    "Mahasiswa": {
+      "status": "LOGIN_OK",
+      "pages": {
+        "/dashboard": {
+          "hasName": true
+        },
+        "/dashboard/booking": {
+          "inputsCount": 0,
+          "hasRooms": true,
+          "textSample": "Universitas YARSI · Sistem Informasi Peminjaman Ruangan Terpadu Jadwal ruangan terpusat WIB · Jadwal langsung SIPERU YARSI  Peminjaman Ruang Kampus  B"
+        },
+        "/peminjaman-saya": {
+          "loaded": true
+        },
+        "/cbt-room": {
+          "seatsCount": 3,
+          "hasLegend": true
+        }
+      },
+      "rbacAdminProtected": true
+    },
+    "Dosen": {
+      "status": "LOGIN_OK",
+      "pages": {
+        "/dashboard": {
+          "hasName": true
+        }
+      }
+    },
+    "Admin LPF": {
+      "status": "LOGIN_OK",
+      "pages": {
+        "/admin": {
+          "title": "SIPERU YARSI - Sistem Informasi Peminjaman Ruangan Terpadu",
+          "rows": 0,
+          "buttons": 25,
+          "preview": "Sesi Admin Anda sedang di Dashboard Pengelolaan Internal. SIPERU YARSI  Peminjaman Ruang Kampus  Ber"
+        },
+        "/admin/approvals": {
+          "title": "SIPERU YARSI - Sistem Informasi Peminjaman Ruangan Terpadu",
+          "rows": 0,
+          "buttons": 25,
+          "preview": "Sesi Admin Anda sedang di Dashboard Pengelolaan Internal. SIPERU YARSI  Peminjaman Ruang Kampus  Ber"
+        },
+        "/admin/rooms": {
+          "title": "SIPERU YARSI - Sistem Informasi Peminjaman Ruangan Terpadu",
+          "rows": 0,
+          "buttons": 6,
+          "preview": "Sesi Admin Anda sedang di Dashboard Pengelolaan Internal. SIPERU YARSI  Peminjaman Ruang Kampus  Ber"
+        },
+        "/admin/reports": {
+          "title": "SIPERU YARSI - Sistem Informasi Peminjaman Ruangan Terpadu",
+          "rows": 2,
+          "buttons": 8,
+          "preview": "Sesi Admin Anda sedang di Dashboard Pengelolaan Internal. SIPERU YARSI  Peminjaman Ruang Kampus  Ber"
+        },
+        "/admin/maintenance": {
+          "title": "SIPERU YARSI - Sistem Informasi Peminjaman Ruangan Terpadu",
+          "rows": 0,
+          "buttons": 8,
+          "preview": "Sesi Admin Anda sedang di Dashboard Pengelolaan Internal. SIPERU YARSI  Peminjaman Ruang Kampus  Ber"
+        },
+        "/admin/runsheet": {
+          "title": "SIPERU YARSI - Sistem Informasi Peminjaman Ruangan Terpadu",
+          "rows": 0,
+          "buttons": 13,
+          "preview": "Sesi Admin Anda sedang di Dashboard Pengelolaan Internal. SIPERU YARSI  Peminjaman Ruang Kampus  Ber"
+        },
+        "/admin/facilities": {
+          "title": "SIPERU YARSI - Sistem Informasi Peminjaman Ruangan Terpadu",
+          "rows": 0,
+          "buttons": 6,
+          "preview": "Sesi Admin Anda sedang di Dashboard Pengelolaan Internal. SIPERU YARSI  Peminjaman Ruang Kampus  Ber"
+        }
+      }
+    },
+    "Admin Yayasan": {
+      "status": "LOGIN_OK",
+      "pages": {
+        "/admin/approvals": {
+          "hasApprovals": true
+        }
+      }
+    },
+    "Superadmin": {
+      "status": "LOGIN_OK",
+      "pages": {
+        "/admin/users": {
+          "userRowsCount": 7,
+          "hasAddButton": true,
+          "hasRoleLabels": true
+        }
+      }
+    }
+  },
+  "issues": []
+}

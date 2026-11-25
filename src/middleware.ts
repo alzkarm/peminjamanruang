@@ -114,7 +114,12 @@ export function middleware(request: NextRequest) {
   // 3. Jika sudah login dan membuka /auth/login -> redirect ke panel yang sesuai
   if (pathname === '/auth/login' && isAuthenticated && role) {
     const redirectParam = request.nextUrl.searchParams.get('redirect');
-    if (redirectParam && redirectParam.startsWith('/')) {
+    const isSafeRedirect =
+      typeof redirectParam === 'string' &&
+      redirectParam.startsWith('/') &&
+      !redirectParam.startsWith('//') &&
+      !redirectParam.includes('\\');
+    if (isSafeRedirect) {
       return NextResponse.redirect(new URL(redirectParam, request.url));
     }
     const destination = isManagerialRole(role) ? '/admin/approvals' : '/dashboard';

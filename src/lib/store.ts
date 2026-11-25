@@ -144,10 +144,14 @@ export const useAppStore = create<AppState>()(
       fetchInitialData: async () => {
         set({ isSyncing: true, error: null });
         try {
+          const token = typeof window !== 'undefined' ? localStorage.getItem('siperu_yarsi_auth_token') : null;
+          const userRole = get().currentUser?.role;
+          const isManager = userRole === 'admin' || userRole === 'superadmin';
+
           const [roomsData, bookingsData, academicData] = await Promise.allSettled([
             roomsApi.getAll(),
-            bookingsApi.getAll(),
-            academicBulkApi.getAll(),
+            token ? bookingsApi.getAll() : Promise.resolve([]),
+            token && isManager ? academicBulkApi.getAll() : Promise.resolve([]),
           ]);
 
           set({
@@ -198,6 +202,8 @@ export const useAppStore = create<AppState>()(
       },
 
       fetchAcademicBlocks: async () => {
+        const userRole = get().currentUser?.role;
+        if (userRole !== 'admin' && userRole !== 'superadmin') return;
         try {
           const academicBlocks = await academicBulkApi.getAll();
           set({ academicBlocks });

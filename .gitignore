@@ -41,6 +41,12 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 *.log
+*-test-report.json
+*-verification-report.json
+scratch/
+test-*.mjs
+verify-*.mjs
+run-test.ps1
 
 # Editor & OS
 .vscode/

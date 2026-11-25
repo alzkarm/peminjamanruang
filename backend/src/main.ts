@@ -80,7 +80,7 @@ async function bootstrap() {
   logger.log(`=======================================================`);
   logger.log(`🚀 SIPERU YARSI Backend running on: http://localhost:${port}/api`);
   logger.log(`🌐 Mode: ${currentEnv.toUpperCase()}`);
-  logger.log(`📦 Database ORM: Prisma Client (PostgreSQL)`);
+  logger.log(`📦 Database ORM: Prisma Client (MariaDB/MySQL)`);
   logger.log(`🔐 Authentication: Passport-JWT & LDAP YARSI SSO`);
   logger.log(`=======================================================`);
 }

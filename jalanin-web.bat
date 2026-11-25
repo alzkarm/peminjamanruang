@@ -22,4 +22,4 @@ netstat -aon | findstr :4000 | findstr LISTENING >nul && (echo [OK] Backend jala
 netstat -aon | findstr :3000 | findstr LISTENING >nul && (echo [OK] Frontend jalan :3000) || (echo [X] Frontend GAGAL - cek frontend.log)
 echo.
 echo Buka: http://localhost:3000
-pause
+rem pause

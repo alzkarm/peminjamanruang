@@ -650,25 +650,25 @@ export class BookingsService {
         });
       } else if (isShortUuid) {
         try {
-          const matchedRows: any[] = await this.prisma.$queryRaw`
-            SELECT id FROM bookings WHERE id::text ILIKE ${cleanPrefix + '-%'} ORDER BY "createdAt" DESC LIMIT 1
-          `;
-          if (matchedRows && matchedRows.length > 0) {
-            booking = await this.prisma.booking.findUnique({
-              where: { id: matchedRows[0].id },
-              include: {
-                room: { include: { floor: true } },
-                user: { select: { id: true, fullName: true, username: true, unitName: true, email: true, role: true } },
-                logistik: true,
-                approvalLogs: {
-                  include: { approver: { select: { fullName: true, role: true } } },
-                  orderBy: { createdAt: 'desc' },
-                },
+          booking = await this.prisma.booking.findFirst({
+            where: {
+              id: {
+                startsWith: cleanPrefix,
               },
-            });
-          }
+            },
+            include: {
+              room: { include: { floor: true } },
+              user: { select: { id: true, fullName: true, username: true, unitName: true, email: true, role: true } },
+              logistik: true,
+              approvalLogs: {
+                include: { approver: { select: { fullName: true, role: true } } },
+                orderBy: { createdAt: 'desc' },
+              },
+            },
+            orderBy: { createdAt: 'desc' },
+          });
         } catch (err: any) {
-          this.logger.warn(`Failed raw query search for booking code ${cleanPrefix}: ${err.message}`);
+          this.logger.warn(`Failed search for booking code ${cleanPrefix}: ${err.message}`);
         }
       }
     }

@@ -300,7 +300,7 @@ export class RoomsService {
       where: {
         isActive: true,
         ...(minCapacity ? { capacity: { gte: Number(minCapacity) } } : {}),
-        ...(building ? { building: { contains: building, mode: 'insensitive' } } : {}),
+        ...(building ? { building: { contains: building } } : {}),
       },
       include: {
         floor: true,

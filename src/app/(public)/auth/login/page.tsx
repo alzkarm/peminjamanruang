@@ -167,7 +167,7 @@ function LoginFormContent() {
       });
 
       if (data.accessToken) {
-        setAuthToken(data.accessToken);
+        setAuthToken(data.accessToken, data.user?.role);
       }
       if (data.user) {
         setCurrentUser(data.user);
@@ -176,8 +176,14 @@ function LoginFormContent() {
 
       setIsLoading(false);
 
-      // Redirect ke halaman tujuan
-      if (redirectUrl) {
+      // Keamanan: Validasi redirectUrl untuk mencegah Open Redirect Vulnerability
+      const isSafeRedirect =
+        Boolean(redirectUrl) &&
+        redirectUrl.startsWith('/') &&
+        !redirectUrl.startsWith('//') &&
+        !redirectUrl.includes('\\');
+
+      if (isSafeRedirect) {
         const targetParams = new URLSearchParams();
         if (prefilledRoomId) targetParams.append('roomId', prefilledRoomId);
         if (prefilledDate) targetParams.append('date', prefilledDate);
@@ -245,7 +251,7 @@ function LoginFormContent() {
         return;
       }
 
-      if (data.accessToken) setAuthToken(data.accessToken);
+      if (data.accessToken) setAuthToken(data.accessToken, data.user?.role);
       if (data.user) setCurrentUser(data.user);
       useAppStore.getState().fetchBookings();
 
@@ -258,7 +264,13 @@ function LoginFormContent() {
 
       setIsLoading(false);
 
-      if (redirectUrl) {
+      const isSafeRedirect =
+        Boolean(redirectUrl) &&
+        redirectUrl.startsWith('/') &&
+        !redirectUrl.startsWith('//') &&
+        !redirectUrl.includes('\\');
+
+      if (isSafeRedirect) {
         router.push(redirectUrl);
       } else if (
         data.user?.role === 'admin' ||

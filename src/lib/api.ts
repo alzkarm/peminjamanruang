@@ -41,9 +41,10 @@ export const getAuthToken = (): string | null => {
 export const setAuthToken = (token: string, role?: string): void => {
   if (typeof window !== 'undefined') {
     localStorage.setItem(TOKEN_STORAGE_KEY, token);
-    document.cookie = `siperu_auth_token=${encodeURIComponent(token)}; path=/; max-age=604800; SameSite=Lax`;
+    const secureFlag = window.location.protocol === 'https:' ? '; Secure' : '';
+    document.cookie = `siperu_auth_token=${encodeURIComponent(token)}; path=/; max-age=604800; SameSite=Lax${secureFlag}`;
     if (role) {
-      document.cookie = `siperu_user_role=${encodeURIComponent(role)}; path=/; max-age=604800; SameSite=Lax`;
+      document.cookie = `siperu_user_role=${encodeURIComponent(role)}; path=/; max-age=604800; SameSite=Lax${secureFlag}`;
     }
   }
 };

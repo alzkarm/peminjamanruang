@@ -64,11 +64,11 @@ export class AuthService {
     let user = await this.prisma.user.findFirst({
       where: {
         OR: [
-          { username: { equals: cleanUsername, mode: 'insensitive' as const } },
-          ...(cleanUsername === 'admin' ? [{ username: { equals: 'admin.umum', mode: 'insensitive' as const } }] : []),
-          { username: { equals: rawSearch, mode: 'insensitive' as const } },
-          { email: { equals: rawSearch, mode: 'insensitive' as const } },
-          { email: { startsWith: cleanUsername + '@', mode: 'insensitive' as const } },
+          { username: { equals: cleanUsername } },
+          ...(cleanUsername === 'admin' ? [{ username: { equals: 'admin.umum' } }] : []),
+          { username: { equals: rawSearch } },
+          { email: { equals: rawSearch } },
+          { email: { startsWith: cleanUsername + '@' } },
         ],
       },
     });
